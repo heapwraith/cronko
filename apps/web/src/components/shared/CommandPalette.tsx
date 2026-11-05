@@ -1,19 +1,14 @@
-"use client"
-
 import {
   Activity,
   AlertTriangle,
   Bell,
   LayoutDashboard,
-  Monitor,
-  Moon,
   Plus,
   Search,
   Settings,
-  Sun,
 } from "lucide-react"
-import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useRef, useState } from "react"
+import { useNavigate } from "react-router"
 
 interface CommandItem {
   id: string
@@ -24,7 +19,7 @@ interface CommandItem {
 }
 
 export function CommandPalette() {
-  const router = useRouter()
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -35,42 +30,42 @@ export function CommandPalette() {
       id: "dashboard",
       label: "Go to Dashboard",
       icon: LayoutDashboard,
-      action: () => router.push("/dashboard"),
+      action: () => navigate("/dashboard"),
       keywords: ["home", "overview"],
     },
     {
       id: "monitors",
       label: "Go to Monitors",
       icon: Activity,
-      action: () => router.push("/monitors"),
+      action: () => navigate("/monitors"),
       keywords: ["list", "all"],
     },
     {
       id: "incidents",
       label: "Go to Incidents",
       icon: AlertTriangle,
-      action: () => router.push("/incidents"),
+      action: () => navigate("/incidents"),
       keywords: ["alerts", "issues"],
     },
     {
       id: "notifications",
       label: "Go to Notifications",
       icon: Bell,
-      action: () => router.push("/notifications"),
+      action: () => navigate("/notifications"),
       keywords: ["alerts", "channels"],
     },
     {
       id: "settings",
       label: "Go to Settings",
       icon: Settings,
-      action: () => router.push("/settings"),
+      action: () => navigate("/settings"),
       keywords: ["config", "preferences"],
     },
     {
       id: "new-monitor",
       label: "New Monitor",
       icon: Plus,
-      action: () => router.push("/monitors/new"),
+      action: () => navigate("/monitors/new"),
       keywords: ["create", "add"],
     },
   ]

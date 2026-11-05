@@ -1,5 +1,4 @@
 import { Hono } from "hono"
-import { cors } from "hono/cors"
 import { env } from "./env"
 import { AppError, ErrorCode, errorResponse } from "./lib/errors"
 import { logger } from "./lib/logger"
@@ -36,29 +35,6 @@ app.use("*", async (c, next) => {
 
 app.use("*", securityHeaders)
 
-const corsOrigins: string[] = ["http://localhost:3000"]
-
-if (env.NEXT_PUBLIC_API_URL) {
-  corsOrigins.push(env.NEXT_PUBLIC_API_URL)
-}
-
-if (env.CORS_ORIGINS) {
-  const extra = env.CORS_ORIGINS.split(",")
-    .map((s) => s.trim())
-    .filter(Boolean)
-  corsOrigins.push(...extra)
-}
-
-app.use(
-  "*",
-  cors({
-    origin: corsOrigins,
-    credentials: true,
-    allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization"],
-  }),
-)
-
 app.onError((err, c) => {
   const requestId = c.get("requestId") as string | undefined
 
@@ -84,6 +60,7 @@ app.onError((err, c) => {
 })
 
 app.route("/ping", pingRoute)
+app.use("/auth/*", csrf)
 app.route("/auth", authRoute)
 
 app.get("/badge/:token", async (c) => {

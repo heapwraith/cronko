@@ -19,8 +19,12 @@ const envSchema = z.object({
   SMTP_PASS: z.string().optional(),
   SMTP_FROM: z.email().optional(),
   TELEGRAM_BOT_TOKEN: z.string().optional(),
-  NEXT_PUBLIC_API_URL: z.url().optional(),
-  CORS_ORIGINS: z.string().optional(),
+  // Extra origins allowed to make state-changing requests (reverse proxy / custom domain)
+  // Honour X-Forwarded-For / X-Real-IP (only behind a reverse proxy you control)
+  TRUST_PROXY: z.enum(["true", "false"]).default("false"),
+  TRUSTED_ORIGINS: z.string().optional(),
+  // Directory with the built web app (apps/web/dist). Auto-detected when unset.
+  WEB_DIST: z.string().optional(),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   AUTO_MIGRATE: z
     .enum(["true", "false"])

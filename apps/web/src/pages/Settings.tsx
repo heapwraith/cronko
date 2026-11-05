@@ -1,5 +1,3 @@
-"use client"
-
 import type { Locale } from "@cronko/shared/translations"
 import {
   ChevronDown,

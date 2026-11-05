@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useState } from "react"
 
 interface NextPingCountdownProps {
@@ -16,8 +14,9 @@ export function NextPingCountdown({ lastPingIso, intervalSeconds }: NextPingCoun
       return
     }
 
+    const lastMs = new Date(lastPingIso).getTime()
+
     function tick() {
-      const lastMs = new Date(lastPingIso!).getTime()
       const nextMs = lastMs + intervalSeconds * 1000
       const remaining = Math.max(0, Math.floor((nextMs - Date.now()) / 1000))
 

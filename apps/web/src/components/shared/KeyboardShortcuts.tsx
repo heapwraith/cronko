@@ -1,6 +1,4 @@
-"use client"
-
-import { Command, X } from "lucide-react"
+import { X } from "lucide-react"
 import { useEffect, useState } from "react"
 
 const shortcuts = [

@@ -1,11 +1,8 @@
-"use client"
-
-import { usePathname, useSearchParams } from "next/navigation"
 import { useEffect } from "react"
+import { useLocation } from "react-router"
 
 export function NProgress() {
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
+  const { pathname, search } = useLocation()
 
   useEffect(() => {
     const style = document.createElement("style")
@@ -56,7 +53,7 @@ export function NProgress() {
     }, 3500)
 
     return () => clearTimeout(timer)
-  }, [pathname, searchParams])
+  }, [pathname, search])
 
   return null
 }

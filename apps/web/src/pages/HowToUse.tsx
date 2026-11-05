@@ -1,5 +1,3 @@
-"use client"
-
 import { Activity, ArrowRight, BellRing, BookOpen, Code, Link2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/shared/Card"

@@ -1,7 +1,5 @@
-"use client"
-
 import { GripVertical } from "lucide-react"
-import { useRef, useState } from "react"
+import { useState } from "react"
 
 interface ReorderableListProps<T> {
   items: T[]
@@ -35,8 +33,10 @@ export function ReorderableList<T>({
     if (dragIndex !== null && overIndex !== null && dragIndex !== overIndex) {
       const newItems = [...items]
       const [removed] = newItems.splice(dragIndex, 1)
-      newItems.splice(overIndex, 0, removed!)
-      onChange(newItems)
+      if (removed !== undefined) {
+        newItems.splice(overIndex, 0, removed)
+        onChange(newItems)
+      }
     }
     setDragIndex(null)
     setOverIndex(null)

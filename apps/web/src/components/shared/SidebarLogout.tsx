@@ -1,7 +1,5 @@
-"use client"
-
 import { LogOut } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useNavigate } from "react-router"
 import { api } from "@/lib/api"
 
 export function SidebarLogout({
@@ -11,7 +9,7 @@ export function SidebarLogout({
   collapsed?: boolean
   iconOnly?: boolean
 }) {
-  const router = useRouter()
+  const navigate = useNavigate()
 
   async function handleLogout() {
     try {
@@ -19,7 +17,7 @@ export function SidebarLogout({
     } catch {
       /* logout best-effort */
     }
-    router.push("/login")
+    navigate("/login")
   }
 
   return (

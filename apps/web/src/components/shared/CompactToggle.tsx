@@ -1,5 +1,3 @@
-"use client"
-
 import { Maximize2, Minimize2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useT } from "@/lib/i18n"

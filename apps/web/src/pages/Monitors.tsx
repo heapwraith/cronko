@@ -1,9 +1,8 @@
-"use client"
-
 import { formatRelativeTime } from "@cronko/shared/utils"
+import { useQuery } from "@tanstack/react-query"
 import { Activity, Plus, Search } from "lucide-react"
-import Link from "next/link"
 import { useEffect, useState } from "react"
+import { Link } from "react-router"
 import { DeleteMonitorButton } from "@/components/monitors/DeleteMonitorButton"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { SkeletonTable } from "@/components/shared/Skeleton"
@@ -26,16 +25,18 @@ export default function MonitorsPage() {
   const { t } = useT()
   const { toast } = useToast()
   const [search, setSearch] = useState("")
-  const [monitors, setMonitors] = useState<MonitorRow[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const {
+    data: monitors = [],
+    isPending: isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["monitors"],
+    queryFn: () => api.monitors.list() as Promise<MonitorRow[]>,
+  })
 
   useEffect(() => {
-    api.monitors
-      .list()
-      .then(setMonitors)
-      .catch(() => toast(t("monitors.failedLoad"), "error"))
-      .finally(() => setIsLoading(false))
-  }, [toast])
+    if (error) toast(t("monitors.failedLoad"), "error")
+  }, [error, toast, t])
 
   const filtered = monitors.filter((m: MonitorRow) =>
     m.name.toLowerCase().includes(search.toLowerCase()),
@@ -58,7 +59,7 @@ export default function MonitorsPage() {
           {t("monitors.title")}
         </h1>
         <Link
-          href="/monitors/new"
+          to="/monitors/new"
           className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors shrink-0"
         >
           <Plus className="h-4 w-4" />
@@ -123,7 +124,7 @@ export default function MonitorsPage() {
                   >
                     <td className="px-5 py-3.5">
                       <Link
-                        href={`/monitors/${m.id}`}
+                        to={`/monitors/${m.id}`}
                         className="text-sm text-[#1a1f36] dark:text-zinc-100 hover:text-[#5e6ad2] dark:hover:text-emerald-400 transition-colors"
                       >
                         {m.name}

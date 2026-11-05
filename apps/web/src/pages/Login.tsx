@@ -1,8 +1,6 @@
-"use client"
-
 import { Eye, EyeOff, Loader2, Moon, Sun } from "lucide-react"
-import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState, useTransition } from "react"
+import { useNavigate } from "react-router"
 import { CronkoLogo } from "@/components/shared/CronkoLogo"
 import { useTheme } from "@/components/shared/ThemeProvider"
 import { ApiError, api } from "@/lib/api"
@@ -36,7 +34,7 @@ function ThemeToggle() {
 
 export default function LoginPage() {
   const { t } = useT()
-  const router = useRouter()
+  const navigate = useNavigate()
   const [isPending, startTransition] = useTransition()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -49,9 +47,9 @@ export default function LoginPage() {
   useEffect(() => {
     api.auth
       .me()
-      .then(() => router.replace("/dashboard"))
+      .then(() => navigate("/dashboard", { replace: true }))
       .catch(() => setChecking(false))
-  }, [router])
+  }, [navigate])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -60,7 +58,7 @@ export default function LoginPage() {
 
     try {
       await api.auth.login({ email, password })
-      startTransition(() => router.push("/dashboard"))
+      startTransition(() => navigate("/dashboard"))
     } catch (err) {
       if (err instanceof ApiError && err.status === 429) {
         setError(t("auth.tooManyAttempts"))

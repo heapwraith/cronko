@@ -1,10 +1,7 @@
-"use client"
-
 import { formatDuration, formatRelativeTime } from "@cronko/shared/utils"
 import { AlertTriangle } from "lucide-react"
-import Link from "next/link"
-import { useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
+import { Link, useSearchParams } from "react-router"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { StatusBadge } from "@/components/shared/StatusBadge"
 import { api } from "@/lib/api"
@@ -12,7 +9,7 @@ import { useT } from "@/lib/i18n"
 
 export default function IncidentsPage() {
   const { t } = useT()
-  const sp = useSearchParams()
+  const [sp] = useSearchParams()
   const status = sp.get("status") as "open" | "resolved" | null
   const limit = Math.min(Math.max(1, parseInt(sp.get("limit") ?? "50", 10) || 50), 200)
   const offset = Math.max(0, parseInt(sp.get("offset") ?? "0", 10) || 0)
@@ -87,15 +84,15 @@ export default function IncidentsPage() {
       </div>
 
       <div className="flex gap-2">
-        <Link href="/incidents" className={tabClass(!status)}>
+        <Link to="/incidents" className={tabClass(!status)}>
           {t("incidents.all")}
           <span className="text-[10px] text-[#8e99a8]">{incidents.length}</span>
         </Link>
-        <Link href="/incidents?status=open" className={tabClass(status === "open")}>
+        <Link to="/incidents?status=open" className={tabClass(status === "open")}>
           {t("incidents.open")}
           <span className="text-[10px] text-[#8e99a8]">{openCount}</span>
         </Link>
-        <Link href="/incidents?status=resolved" className={tabClass(status === "resolved")}>
+        <Link to="/incidents?status=resolved" className={tabClass(status === "resolved")}>
           {t("incidents.resolved")}
           <span className="text-[10px] text-[#8e99a8]">{resolvedCount}</span>
         </Link>
@@ -156,7 +153,7 @@ export default function IncidentsPage() {
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <Link
-                              href={`/monitors/${inc.monitorId}`}
+                              to={`/monitors/${inc.monitorId}`}
                               className="text-sm text-[#1a1f36] dark:text-zinc-100 hover:text-[#5e6ad2] dark:hover:text-emerald-400 transition-colors"
                             >
                               {m.name}
@@ -215,7 +212,7 @@ export default function IncidentsPage() {
             </div>
             <div className="border-t border-[#e8eaed] dark:border-zinc-800/80 px-4 py-2.5 flex items-center justify-between">
               <Link
-                href={`/incidents?${new URLSearchParams({ ...(status ? { status } : {}), limit: String(limit), offset: String(Math.max(0, offset - limit)) }).toString()}`}
+                to={`/incidents?${new URLSearchParams({ ...(status ? { status } : {}), limit: String(limit), offset: String(Math.max(0, offset - limit)) }).toString()}`}
                 className={`rounded-lg border border-[#e8eaed] dark:border-zinc-700 px-3 py-1.5 text-xs font-medium text-[#697386] dark:text-zinc-400 hover:bg-[#f6f8fa] dark:hover:bg-zinc-800 transition-colors ${
                   offset === 0 ? "opacity-50 pointer-events-none" : ""
                 }`}
@@ -226,7 +223,7 @@ export default function IncidentsPage() {
                 {incidents.length > 0 ? `${offset + 1}–${offset + incidents.length}` : "—"}
               </span>
               <Link
-                href={`/incidents?${new URLSearchParams({ ...(status ? { status } : {}), limit: String(limit), offset: String(offset + limit) }).toString()}`}
+                to={`/incidents?${new URLSearchParams({ ...(status ? { status } : {}), limit: String(limit), offset: String(offset + limit) }).toString()}`}
                 className={`rounded-lg border border-[#e8eaed] dark:border-zinc-700 px-3 py-1.5 text-xs font-medium text-[#697386] dark:text-zinc-400 hover:bg-[#f6f8fa] dark:hover:bg-zinc-800 transition-colors ${
                   incidents.length < limit ? "opacity-50 pointer-events-none" : ""
                 }`}

@@ -1,5 +1,3 @@
-"use client"
-
 interface ToggleProps {
   label: string
   checked: boolean

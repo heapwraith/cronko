@@ -1,9 +1,7 @@
-"use client"
-
+import { useQueryClient } from "@tanstack/react-query"
 import { Pause, Pencil, Play, Trash2 } from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { Link, useNavigate } from "react-router"
 import { ConfirmModal } from "@/components/shared/ConfirmModal"
 import { useToast } from "@/components/shared/Toast"
 import { api } from "@/lib/api"
@@ -11,7 +9,8 @@ import { useT } from "@/lib/i18n"
 
 export function MonitorActions({ monitorId, status }: { monitorId: string; status: string }) {
   const { t } = useT()
-  const router = useRouter()
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { toast } = useToast()
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [pauseLoading, setPauseLoading] = useState(false)
@@ -23,7 +22,7 @@ export function MonitorActions({ monitorId, status }: { monitorId: string; statu
     try {
       await api.monitors.pause(monitorId)
       toast(t("monitors.pausedSuccess"), "info")
-      router.refresh()
+      queryClient.invalidateQueries()
     } catch {
       toast(t("monitors.failedPause"), "error")
     } finally {
@@ -36,7 +35,7 @@ export function MonitorActions({ monitorId, status }: { monitorId: string; statu
     try {
       await api.monitors.resume(monitorId)
       toast(t("monitors.resumedSuccess"), "success")
-      router.refresh()
+      queryClient.invalidateQueries()
     } catch {
       toast(t("monitors.failedResume"), "error")
     } finally {
@@ -50,7 +49,7 @@ export function MonitorActions({ monitorId, status }: { monitorId: string; statu
       await api.monitors.delete(monitorId)
       toast(t("monitors.deleted"), "success")
       setConfirmOpen(false)
-      router.push("/monitors")
+      navigate("/monitors")
     } catch {
       toast(t("monitors.failedDelete"), "error")
     } finally {
@@ -61,7 +60,7 @@ export function MonitorActions({ monitorId, status }: { monitorId: string; statu
   return (
     <div className="flex items-center gap-2">
       <Link
-        href={`/monitors/${monitorId}/edit`}
+        to={`/monitors/${monitorId}/edit`}
         className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-100 hover:bg-zinc-700 transition-colors"
       >
         <Pencil className="h-3 w-3" />

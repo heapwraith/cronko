@@ -1,8 +1,6 @@
-"use client"
-
 import { Trash2 } from "lucide-react"
-import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { useNavigate } from "react-router"
 import { z } from "zod"
 import { ConfirmModal } from "@/components/shared/ConfirmModal"
 import { useToast } from "@/components/shared/Toast"
@@ -41,7 +39,7 @@ export function MonitorEditForm({
 }) {
   const { t } = useT()
   const schema = useMonitorEditSchema()
-  const router = useRouter()
+  const navigate = useNavigate()
   const { toast } = useToast()
   const [name, setName] = useState(monitor.name)
   const [expectedIntervalSeconds, setExpectedIntervalSeconds] = useState(
@@ -82,7 +80,7 @@ export function MonitorEditForm({
         expectedIntervalSeconds: result.data.expectedIntervalSeconds,
         gracePeriodSeconds: result.data.gracePeriodSeconds,
       })
-      router.push(`/monitors/${monitor.id}`)
+      navigate(`/monitors/${monitor.id}`)
     } catch (err) {
       setError(
         err instanceof ApiError
@@ -100,7 +98,7 @@ export function MonitorEditForm({
     setDeleting(true)
     try {
       await api.monitors.delete(monitor.id)
-      router.push("/monitors")
+      navigate("/monitors")
     } catch {
       toast(t("monitors.failedDelete"), "error")
       setDeleting(false)

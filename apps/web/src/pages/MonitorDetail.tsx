@@ -1,8 +1,8 @@
 import { t } from "@cronko/shared/translations"
 import { formatDuration, formatRelativeTime } from "@cronko/shared/utils"
+import { useQuery } from "@tanstack/react-query"
 import { AlertTriangle, CheckCircle2, Pencil } from "lucide-react"
-import Link from "next/link"
-import { notFound } from "next/navigation"
+import { Link, useParams } from "react-router"
 import { Sparkline } from "@/components/dashboard/Sparkline"
 import { HeartbeatHistory } from "@/components/monitors/HeartbeatHistory"
 import { MonitorActions } from "@/components/monitors/MonitorActions"
@@ -12,67 +12,40 @@ import { Card, CardBody, CardHeader, CardTitle } from "@/components/shared/Card"
 import { CopyButton } from "@/components/shared/CopyButton"
 import { StatusBadge } from "@/components/shared/StatusBadge"
 import { api } from "@/lib/api"
+import NotFound from "@/pages/NotFound"
+import MonitorDetailSkeleton from "@/pages/skeletons/MonitorDetailSkeleton"
 
-export default async function MonitorDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
+export default function MonitorDetailPage() {
+  const { id = "" } = useParams()
+  const { data, error, isPending } = useQuery({
+    queryKey: ["monitor", id],
+    queryFn: async () => ({
+      monitor: await api.monitors.get(id),
+      incidents: await api.monitors.incidents(id, { limit: 20 }),
+    }),
+    refetchInterval: 15_000,
+  })
 
-  let monitor: {
-    id: string
-    name: string
-    status: string
-    expectedIntervalSeconds: number
-    gracePeriodSeconds: number
-    paused: boolean
-    slug: string
-    token: string
-    createdAt: string
-    updatedAt: string
-    recentHeartbeats: Array<{
-      id: string
-      monitorId: string
-      receivedAt: string
-      sourceIp: string | null
-      userAgent: string | null
-      durationMs: number | null
-      exitCode: number | null
-      body?: string | null
-    }>
-    openIncident: {
-      id: string
-      monitorId: string
-      status: string
-      startedAt: string
-      resolvedAt: string | null
-    } | null
-  } | null = null
+  if (isPending) return <MonitorDetailSkeleton />
+  if (error || !data) return <NotFound />
+  return <MonitorDetailView monitor={data.monitor} incidents={data.incidents} />
+}
 
-  let incidents: Array<{
-    id: string
-    monitorId: string
-    status: string
-    startedAt: string
-    resolvedAt: string | null
-  }> = []
-
-  try {
-    monitor = await api.monitors.get(id)
-    incidents = await api.monitors.incidents(id, { limit: 20 })
-  } catch (e) {
-    if (!(e instanceof Error && e.message === "API 404")) {
-      // eslint-disable-next-line no-console
-      console.error("Failed to load monitor:", e)
-    }
-  }
-  if (!monitor) notFound()
-
-  const pingUrl = `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"}/ping/${monitor.token}`
+function MonitorDetailView({
+  monitor,
+  incidents,
+}: {
+  monitor: Awaited<ReturnType<typeof api.monitors.get>>
+  incidents: Awaited<ReturnType<typeof api.monitors.incidents>>
+}) {
+  const pingUrl = `${window.location.origin}/ping/${monitor.token}`
   const latestHeartbeat = monitor.recentHeartbeats[0]
 
   const durationData = monitor.recentHeartbeats
     .filter((hb) => hb.durationMs !== null && hb.durationMs !== undefined && hb.durationMs > 0)
     .reverse()
     .slice(-30)
-    .map((hb) => hb.durationMs!)
+    .flatMap((hb) => (hb.durationMs === null ? [] : [hb.durationMs]))
 
   const formatMs = (ms: number) => {
     if (ms < 1000) return `${Math.round(ms)}ms`
@@ -183,7 +156,7 @@ export default async function MonitorDetailPage({ params }: { params: Promise<{ 
               {t("pt-BR", "monitor.created")} {createdAgo} {t("pt-BR", "common.ago")}
             </span>
             <Link
-              href={`/monitors/${monitor.id}/edit`}
+              to={`/monitors/${monitor.id}/edit`}
               className="inline-flex items-center gap-1 text-[#697386] dark:text-zinc-500 hover:text-[#5e6ad2] dark:hover:text-emerald-400 transition-colors"
             >
               <Pencil className="h-3 w-3" />

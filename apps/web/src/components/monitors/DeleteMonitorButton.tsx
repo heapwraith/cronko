@@ -1,8 +1,7 @@
-"use client"
-
+import { useQueryClient } from "@tanstack/react-query"
 import { Trash2 } from "lucide-react"
-import { useRouter } from "next/navigation"
 import { useRef, useState } from "react"
+import { useNavigate } from "react-router"
 import { ConfirmModal } from "@/components/shared/ConfirmModal"
 import { useToast } from "@/components/shared/Toast"
 import { api } from "@/lib/api"
@@ -10,7 +9,8 @@ import { useT } from "@/lib/i18n"
 
 export function DeleteMonitorButton({ monitorId }: { monitorId: string }) {
   const { t } = useT()
-  const router = useRouter()
+  const _navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { toast } = useToast()
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -37,7 +37,7 @@ export function DeleteMonitorButton({ monitorId }: { monitorId: string }) {
     try {
       await api.monitors.delete(monitorId)
       setConfirmOpen(false)
-      router.refresh()
+      queryClient.invalidateQueries()
       toast(t("monitors.deleted"), "success")
     } catch {
       toast(t("monitors.failedDelete"), "error")

@@ -9,6 +9,7 @@ import { env } from "./env"
 import { logger } from "./lib/logger"
 import { hashPassword } from "./services/auth"
 import { schedulerMetrics, startScheduler, stopScheduler } from "./services/scheduler"
+import { registerWeb } from "./web"
 
 // Migrations ship next to the code: ./packages/database/src/migrations in the
 // Docker image (cwd=/app) and ../../packages/... when running from apps/api.
@@ -80,6 +81,9 @@ async function bootstrap() {
       memory: process.memoryUsage(),
     }),
   )
+
+  // Web app + SPA fallback must be registered last so API routes win.
+  registerWeb(app)
 
   // 3. Start scheduler and HTTP server
   startScheduler()

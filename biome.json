@@ -13,8 +13,7 @@
       "!**/node_modules",
       "!pnpm-lock.yaml",
       "!**/migrations/meta",
-      "!**/public/sw.js",
-      "!apps/web"
+      "!**/public/sw.js"
     ]
   },
   "formatter": {
@@ -90,6 +89,27 @@
         "rules": {
           "suspicious": {
             "noConsole": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/web/**"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "useButtonType": "warn",
+            "noLabelWithoutControl": "warn",
+            "noStaticElementInteractions": "warn",
+            "useKeyWithClickEvents": "warn",
+            "noSvgWithoutTitle": "warn",
+            "useSemanticElements": "warn",
+            "useAriaPropsSupportedByRole": "warn",
+            "useFocusableInteractive": "warn",
+            "noAutofocus": "warn"
+          },
+          "suspicious": {
+            "noArrayIndexKey": "warn"
           }
         }
       }

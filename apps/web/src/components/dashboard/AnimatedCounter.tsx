@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useRef, useState } from "react"
 
 export function AnimatedCounter({ value, duration = 1000 }: { value: number; duration?: number }) {

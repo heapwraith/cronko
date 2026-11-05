@@ -1,9 +1,7 @@
-"use client"
-
 import { formatRelativeTime } from "@cronko/shared/utils"
+import { useQuery } from "@tanstack/react-query"
 import { Activity, AlertTriangle, BarChart3, Heart, TrendingUp } from "lucide-react"
-import Link from "next/link"
-import { useCallback, useEffect, useState } from "react"
+import { Link } from "react-router"
 import { AnimatedCounter } from "@/components/dashboard/AnimatedCounter"
 import { DonutChart } from "@/components/dashboard/DonutChart"
 import { Sparkline } from "@/components/dashboard/Sparkline"
@@ -97,30 +95,16 @@ function Legend({ color, label, count }: { color: string; label: string; count: 
 
 export default function DashboardPage() {
   const { t } = useT()
-  const [stats, setStats] = useState<DashboardStats>(null)
-  const [monitors, setMonitors] = useState<MonitorRow[]>([])
-  const [initialLoading, setInitialLoading] = useState(true)
-
-  const fetchData = useCallback(async () => {
-    try {
-      const [s, m] = await Promise.all([api.stats.get(), api.monitors.list()])
-      setStats(s)
-      setMonitors(m)
-    } catch (e) {
-      if (!(e instanceof Error && e.message === "API 401")) {
-        // eslint-disable-next-line no-console
-        console.error("Failed to load dashboard data:", e)
-      }
-    } finally {
-      setInitialLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchData()
-    const id = setInterval(fetchData, POLL_INTERVAL_MS)
-    return () => clearInterval(id)
-  }, [fetchData])
+  const { data, isPending: initialLoading } = useQuery({
+    queryKey: ["dashboard"],
+    queryFn: async () => {
+      const [stats, monitors] = await Promise.all([api.stats.get(), api.monitors.list()])
+      return { stats: stats as DashboardStats, monitors: monitors as MonitorRow[] }
+    },
+    refetchInterval: POLL_INTERVAL_MS,
+  })
+  const stats = data?.stats ?? null
+  const monitors = data?.monitors ?? []
 
   const healthyCount = stats?.healthyCount ?? 0
   const downCount = stats?.downCount ?? 0
@@ -293,7 +277,7 @@ export default function DashboardPage() {
                     >
                       <td className="px-4 py-3">
                         <Link
-                          href={`/monitors/${m.id}`}
+                          to={`/monitors/${m.id}`}
                           className="text-sm text-[#1a1f36] dark:text-zinc-100 hover:text-[#5e6ad2] dark:hover:text-emerald-400 transition-colors"
                         >
                           {m.name}

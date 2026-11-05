@@ -1,5 +1,5 @@
-import Link from "next/link"
 import type { ButtonHTMLAttributes, ReactNode } from "react"
+import { Link } from "react-router"
 
 type Variant = "primary" | "secondary" | "ghost" | "danger"
 
@@ -39,22 +39,36 @@ const sizes: Record<"sm" | "md", string> = {
 }
 
 export function Button(props: ButtonProps) {
-  const { variant = "primary", size = "md", className = "", children, ...rest } = props
-
-  const classes = `${base} ${variants[variant]} ${sizes[size]} ${className}`
-
-  if ("href" in props && props.href) {
-    const { href, target, rel, ...linkRest } = props as ButtonAsLink
+  if (props.href !== undefined) {
+    const { variant = "primary", size = "md", className = "", children, href, target, rel } = props
     return (
-      <Link href={href} className={classes} target={target} rel={rel}>
+      <Link
+        to={href}
+        className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}
+        target={target}
+        rel={rel}
+      >
         {children}
       </Link>
     )
   }
 
-  const { ...buttonRest } = props as ButtonAsButton
+  const {
+    variant = "primary",
+    size = "md",
+    className = "",
+    children,
+    type = "button",
+    href: _href,
+    ...rest
+  } = props
   return (
-    <button className={classes} {...buttonRest}>
+    // biome-ignore lint/a11y/useButtonType: type defaults to "button" above and is overridable
+    <button
+      {...rest}
+      type={type}
+      className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}
+    >
       {children}
     </button>
   )

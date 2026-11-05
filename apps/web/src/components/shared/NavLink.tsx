@@ -1,8 +1,5 @@
-"use client"
-
-import Link from "next/link"
-import { usePathname } from "next/navigation"
 import type { ReactNode } from "react"
+import { Link, useLocation } from "react-router"
 
 export function NavLink({
   href,
@@ -15,12 +12,12 @@ export function NavLink({
   children: ReactNode
   collapsed?: boolean
 }) {
-  const pathname = usePathname()
+  const pathname = useLocation().pathname
   const isActive = pathname.startsWith(href)
 
   return (
     <Link
-      href={href}
+      to={href}
       title={collapsed ? label : undefined}
       aria-current={isActive ? "page" : undefined}
       className={`relative flex items-center gap-2.5 mx-1.5 px-3 py-2 text-[13px] rounded-md transition-colors ${

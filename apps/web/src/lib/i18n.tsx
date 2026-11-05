@@ -1,5 +1,3 @@
-"use client"
-
 import { type Locale, t } from "@cronko/shared/translations"
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from "react"
 

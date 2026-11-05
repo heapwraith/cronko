@@ -1,6 +1,4 @@
-"use client"
-
-import { groupHeartbeatsByDay, HEARTBEAT_HISTORY_DAYS } from "@cronko/shared"
+import { groupHeartbeatsByDay } from "@cronko/shared"
 import { useState } from "react"
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/shared/Card"
 import { useT } from "@/lib/i18n"

@@ -1,5 +1,3 @@
-"use client"
-
 import { Bell, ChevronRight, Mail, MessageSquare, Plus, Send, Trash2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { ConfirmModal } from "@/components/shared/ConfirmModal"
@@ -567,7 +565,7 @@ export default function NotificationsPage() {
                 >
                   {TYPE_OPTIONS.map((t) => (
                     <option key={t} value={t}>
-                      {TYPE_META[t]!.label}
+                      {TYPE_META[t]?.label}
                     </option>
                   ))}
                 </select>

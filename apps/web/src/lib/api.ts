@@ -1,5 +1,3 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"
-
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -11,103 +9,26 @@ export class ApiError extends Error {
   }
 }
 
-let isRefreshing = false
 let refreshPromise: Promise<boolean> | null = null
 
-async function refreshToken(): Promise<boolean> {
-  try {
-    const res = await fetch(`${BASE_URL}/auth/refresh`, {
-      method: "POST",
-      credentials: "include",
+/** Refresh the session once, even if several requests hit a 401 together. */
+function refreshSession(): Promise<boolean> {
+  refreshPromise ??= fetch("/auth/refresh", { method: "POST", credentials: "same-origin" })
+    .then((res) => res.ok)
+    .catch(() => false)
+    .finally(() => {
+      refreshPromise = null
     })
-    return res.ok
-  } catch {
-    return false
-  }
-}
-
-async function handleRefresh(): Promise<boolean> {
-  if (isRefreshing && refreshPromise) {
-    return refreshPromise
-  }
-
-  isRefreshing = true
-  refreshPromise = refreshToken().finally(() => {
-    isRefreshing = false
-    refreshPromise = null
-  })
-
   return refreshPromise
 }
 
 async function authFetch(path: string, init: RequestInit = {}): Promise<Response> {
-  const headers: Record<string, string> = {
-    ...((init.headers as Record<string, string>) ?? {}),
+  const request = () => fetch(path, { ...init, credentials: "same-origin" })
+
+  const res = await request()
+  if (res.status === 401 && !path.startsWith("/auth/") && (await refreshSession())) {
+    return request()
   }
-
-  // Read auth + CSRF cookies server-side (SSR)
-  if (typeof window === "undefined") {
-    try {
-      const { cookies } = await import("next/headers")
-      const cookieStore = await cookies()
-      const token = cookieStore.get("cronko_token")?.value
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`
-      }
-      // Also read CSRF token server-side for SSR mutations
-      const csrfToken = cookieStore.get("csrf_token")?.value
-      if (csrfToken) {
-        headers["x-csrf-token"] = csrfToken
-      }
-    } catch {
-      // cookies() not available in client context
-    }
-  }
-
-  // Read CSRF token client-side (browser)
-  if (!headers["x-csrf-token"]) {
-    const method = (init.method ?? "GET").toUpperCase()
-    if (method !== "GET" && method !== "HEAD" && method !== "OPTIONS") {
-      if (typeof document !== "undefined") {
-        const match = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]*)/)
-        const csrfToken = match?.[1]
-        if (csrfToken) {
-          headers["x-csrf-token"] = csrfToken
-        }
-      }
-    }
-  }
-
-  let res = await fetch(`${BASE_URL}${path}`, {
-    ...init,
-    credentials: "include",
-    headers,
-  })
-
-  if (res.status === 401 && !path.startsWith("/auth/")) {
-    const refreshed = await handleRefresh()
-    if (refreshed) {
-      if (typeof window === "undefined") {
-        try {
-          const { cookies } = await import("next/headers")
-          const cookieStore = await cookies()
-          const newToken = cookieStore.get("cronko_token")?.value
-          if (newToken) {
-            headers["Authorization"] = `Bearer ${newToken}`
-          }
-        } catch {
-          // cookies() not available in client context
-        }
-      }
-
-      res = await fetch(`${BASE_URL}${path}`, {
-        ...init,
-        credentials: "include",
-        headers,
-      })
-    }
-  }
-
   return res
 }
 
@@ -240,6 +161,7 @@ export const api = {
           userAgent: string | null
           durationMs: number | null
           exitCode: number | null
+          body?: string | null
         }>
         openIncident: {
           id: string

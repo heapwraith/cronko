@@ -18,7 +18,7 @@ describe("ping route", () => {
     expect(body.code).toBe("PAYLOAD_TOO_LARGE")
   })
 
-  it("strips HTML tags from body", async () => {
+  it("accepts job output containing markup (stored verbatim)", async () => {
     const res = await app.request("/ping/test-token-2", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

@@ -1,7 +1,5 @@
-"use client"
-
 import { ChevronRight } from "lucide-react"
-import Link from "next/link"
+import { Link } from "react-router"
 
 interface Crumb {
   label: string
@@ -25,7 +23,7 @@ export function Breadcrumb({ items }: BreadcrumbProps) {
             {i > 0 && <ChevronRight className="h-3 w-3 text-[#8e99a8] dark:text-zinc-600" />}
             {item.href && !isLast ? (
               <Link
-                href={item.href}
+                to={item.href}
                 className="hover:text-[#1a1f36] dark:hover:text-zinc-300 transition-colors"
               >
                 {item.label}

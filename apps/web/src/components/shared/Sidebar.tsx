@@ -1,5 +1,3 @@
-"use client"
-
 import {
   Activity,
   AlertTriangle,
@@ -15,9 +13,8 @@ import {
   Sun,
   X,
 } from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { Link, useNavigate } from "react-router"
 import { api } from "@/lib/api"
 import { useT } from "@/lib/i18n"
 import { CompactToggle } from "./CompactToggle"
@@ -54,7 +51,7 @@ function ThemeToggle() {
 
 function LogoutButton() {
   const { t } = useT()
-  const router = useRouter()
+  const navigate = useNavigate()
   return (
     <button
       onClick={async () => {
@@ -63,7 +60,7 @@ function LogoutButton() {
         } catch {
           /* logout best-effort */
         }
-        router.push("/login")
+        navigate("/login")
       }}
       className="flex items-center justify-center h-8 w-8 rounded-lg text-[#697386] dark:text-zinc-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all duration-200"
       title={t("nav.logout")}
@@ -146,7 +143,7 @@ export function Sidebar({ instanceName }: { instanceName?: string }) {
             </button>
           ) : (
             <>
-              <Link href="/dashboard" className="flex items-center gap-2 overflow-hidden">
+              <Link to="/dashboard" className="flex items-center gap-2 overflow-hidden">
                 <CronkoLogo className="h-5 w-5 text-emerald-400 shrink-0" />
                 <span className="font-semibold text-sm truncate text-zinc-900 dark:text-zinc-100">
                   {instanceName ?? "Cronko"}
@@ -201,7 +198,7 @@ export function Sidebar({ instanceName }: { instanceName?: string }) {
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-4 border-b border-zinc-200 dark:border-zinc-800/80">
-          <Link href="/dashboard" className="flex items-center gap-2 overflow-hidden">
+          <Link to="/dashboard" className="flex items-center gap-2 overflow-hidden">
             <CronkoLogo className="h-5 w-5 text-emerald-400 shrink-0" />
             <span className="font-semibold text-sm truncate text-zinc-900 dark:text-zinc-100">
               {instanceName ?? "Cronko"}

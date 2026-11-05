@@ -1,9 +1,6 @@
-"use client"
-
 import { Activity, ArrowRight, CalendarClock, CheckCircle2, Clock, Timer } from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { Link, useNavigate } from "react-router"
 import { z } from "zod"
 import { Breadcrumb } from "@/components/shared/Breadcrumb"
 import { CopyButton } from "@/components/shared/CopyButton"
@@ -60,7 +57,7 @@ const hintClass = "text-[10px] text-[#8e99a8] dark:text-zinc-500 mt-1 leading-re
 
 export default function NewMonitorPage() {
   const { t } = useT()
-  const router = useRouter()
+  const _navigate = useNavigate()
   const [name, setName] = useState("")
   const [expectedIntervalSeconds, setExpectedIntervalSeconds] = useState("")
   const [gracePeriodSeconds, setGracePeriodSeconds] = useState("120")
@@ -191,7 +188,7 @@ export default function NewMonitorPage() {
 
             <div className="flex gap-3 pt-2">
               <Link
-                href={`/monitors/${created.slug}`}
+                to={`/monitors/${created.slug}`}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white transition-colors"
               >
                 {t("monitor.overview")} <ArrowRight className="h-3.5 w-3.5" />
@@ -427,7 +424,7 @@ export default function NewMonitorPage() {
               {submitting ? t("monitors.creating") : t("monitors.create")}
             </button>
             <Link
-              href="/monitors"
+              to="/monitors"
               className="rounded-lg border border-[#e8eaed] dark:border-zinc-700 px-4 py-2.5 text-sm font-medium text-[#697386] dark:text-zinc-400 hover:bg-[#f6f8fa] dark:hover:bg-zinc-800 transition-colors"
             >
               {t("common.cancel")}

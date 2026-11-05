@@ -1,5 +1,3 @@
-"use client"
-
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from "react"
 
 type Theme = "dark" | "light" | "system"

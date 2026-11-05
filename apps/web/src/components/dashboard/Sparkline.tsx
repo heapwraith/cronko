@@ -1,5 +1,3 @@
-"use client"
-
 interface SparklineProps {
   data: number[]
   color?: string
@@ -36,8 +34,6 @@ export function Sparkline({
 
   const areaPoints = `0,${height} ${points.join(" ")} ${width},${height}`
 
-  const trend = data[data.length - 1]! > data[0]! ? "up" : "down"
-
   return (
     <svg
       viewBox={`0 0 ${width} ${height}`}
@@ -62,7 +58,7 @@ export function Sparkline({
       {data.length > 0 &&
         (() => {
           const lastPoint = points[points.length - 1]
-          const [cx, cy] = lastPoint!.split(",")
+          const [cx, cy] = lastPoint?.split(",") ?? []
           return <circle cx={cx ?? "0"} cy={cy ?? "0"} r="2" fill={color} />
         })()}
     </svg>
