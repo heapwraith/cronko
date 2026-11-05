@@ -19,7 +19,6 @@ import { findHeartbeatsByMonitor, findLatestHeartbeats } from "@cronko/database/
 import { findOpenIncident, findIncidentsByMonitor } from "@cronko/database/queries/incidents"
 import { DEFAULT_GRACE_PERIOD_SECONDS } from "@cronko/shared/constants"
 import { logAuditEvent } from "../services/audit"
-import { cacheOrFetch, invalidateCache } from "../lib/cache"
 
 type MonitorRow = InferSelectModel<typeof monitorsTable>
 
@@ -49,7 +48,7 @@ const updateMonitorSchema = z.object({
 })
 
 monitorsRoute.get("/", async (c) => {
-  const monitors = await cacheOrFetch("monitors:all", 30_000, () => findAllMonitors())
+  const monitors = await findAllMonitors()
 
   const ids = monitors.map((m: MonitorRow) => m.id)
   const heartbeats = await findLatestHeartbeats(ids)
@@ -89,7 +88,6 @@ monitorsRoute.post("/", zValidator("json", createMonitorSchema), async (c) => {
   }
 
     const now = new Date()
-    invalidateCache("monitors:all").catch(() => {})
     const monitor = await createMonitor({
     id: crypto.randomUUID(),
     name: body.name,
@@ -162,8 +160,6 @@ monitorsRoute.patch(
 
 monitorsRoute.delete("/:id", async (c) => {
   const { id } = pathParamSchema.parse({ id: c.req.param("id") })
-  invalidateCache("monitors:all").catch(() => {})
-  invalidateCache(`monitors:${id}`).catch(() => {})
   await deleteMonitor(id)
   logAuditEvent({
     userId: (c.get("jwtPayload") as { sub: string })?.sub,

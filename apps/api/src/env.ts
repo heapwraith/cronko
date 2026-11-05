@@ -24,7 +24,6 @@ const envSchema = z.object({
   NODE_ENV: z
     .enum(["development", "production", "test"])
     .default("development"),
-  REDIS_URL: z.url().optional(),
   AUTO_MIGRATE: z
     .enum(["true", "false"])
     .default(process.env.NODE_ENV === "production" ? "false" : "true"),

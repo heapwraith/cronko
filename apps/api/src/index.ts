@@ -9,7 +9,6 @@ import { hashPassword } from "./services/auth"
 import { startScheduler, stopScheduler, schedulerMetrics } from "./services/scheduler"
 import { app } from "./app"
 import { logger } from "./lib/logger"
-import { getRedis } from "./lib/redis"
 
 // Migrations ship next to the code: ./packages/database/src/migrations in the
 // Docker image (cwd=/app) and ../../packages/... when running from apps/api.
@@ -102,17 +101,6 @@ async function bootstrap() {
     logger.info({ signal }, "shutting down gracefully")
 
     stopScheduler()
-
-    // Close Redis connection gracefully
-    const redis = getRedis()
-    if (redis) {
-      try {
-        await redis.quit()
-        logger.info("redis disconnected")
-      } catch {
-        redis.disconnect()
-      }
-    }
 
     // Close HTTP server — allow in-flight requests to finish
     server.close(() => {
