@@ -1,14 +1,14 @@
 pre-commit:
   parallel: true
   commands:
+    check:
+      glob: "*.{ts,tsx,js,mjs,json,css}"
+      run: pnpm exec biome check --staged --no-errors-on-unmatched
     typecheck:
       glob: "*.{ts,tsx}"
       run: pnpm typecheck
-    lint:
-      glob: "*.{ts,tsx,js,jsx}"
-      run: pnpm lint
 
 commit-msg:
   commands:
     conventional:
-      run: npx commitlint --edit "$1"
+      run: pnpm exec commitlint --edit "{1}"

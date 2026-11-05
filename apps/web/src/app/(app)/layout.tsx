@@ -1,14 +1,10 @@
-import { Suspense } from "react"
 import { redirect } from "next/navigation"
-import { Sidebar } from "@/components/shared/Sidebar"
+import { Suspense } from "react"
 import { NProgress } from "@/components/shared/NProgress"
-import { api, ApiError } from "@/lib/api"
+import { Sidebar } from "@/components/shared/Sidebar"
+import { ApiError, api } from "@/lib/api"
 
-export default async function AppLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
   try {
     await api.auth.me()
   } catch (e) {
@@ -31,12 +27,16 @@ export default async function AppLayout({
 
   return (
     <div className="flex h-screen">
-      <a href="#main-content" className="skip-link">Skip to content</a>
+      <a href="#main-content" className="skip-link">
+        Skip to content
+      </a>
       <Suspense fallback={null}>
         <NProgress />
       </Suspense>
       <Sidebar {...(instanceName !== undefined ? { instanceName } : {})} />
-      <main id="main-content" className="flex-1 overflow-auto p-6">{children}</main>
+      <main id="main-content" className="flex-1 overflow-auto p-6">
+        {children}
+      </main>
     </div>
   )
 }

@@ -1,19 +1,19 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
-import { useRouter } from "next/navigation"
 import {
-  LayoutDashboard,
   Activity,
   AlertTriangle,
   Bell,
-  Settings,
+  LayoutDashboard,
+  Monitor,
+  Moon,
   Plus,
   Search,
-  Monitor,
+  Settings,
   Sun,
-  Moon,
 } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 interface CommandItem {
   id: string
@@ -79,9 +79,7 @@ export function CommandPalette() {
     ? commands.filter(
         (cmd) =>
           cmd.label.toLowerCase().includes(query.toLowerCase()) ||
-          cmd.keywords?.some((kw) =>
-            kw.toLowerCase().includes(query.toLowerCase()),
-          ),
+          cmd.keywords?.some((kw) => kw.toLowerCase().includes(query.toLowerCase())),
       )
     : commands
 
@@ -105,14 +103,10 @@ export function CommandPalette() {
 
       if (e.key === "ArrowDown") {
         e.preventDefault()
-        setSelectedIndex((prev) =>
-          prev < filtered.length - 1 ? prev + 1 : 0,
-        )
+        setSelectedIndex((prev) => (prev < filtered.length - 1 ? prev + 1 : 0))
       } else if (e.key === "ArrowUp") {
         e.preventDefault()
-        setSelectedIndex((prev) =>
-          prev > 0 ? prev - 1 : filtered.length - 1,
-        )
+        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : filtered.length - 1))
       } else if (e.key === "Enter") {
         e.preventDefault()
         const selected = filtered[selectedIndex]
@@ -188,9 +182,7 @@ export function CommandPalette() {
                   <Icon className="h-4 w-4 shrink-0" />
                   <span className="flex-1 text-left">{cmd.label}</span>
                   {isSelected && (
-                    <kbd className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono">
-                      ↵
-                    </kbd>
+                    <kbd className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono">↵</kbd>
                   )}
                 </button>
               )

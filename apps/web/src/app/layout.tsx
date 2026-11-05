@@ -24,11 +24,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className="dark" suppressHydrationWarning>
       <body className="bg-[#f6f8fa] text-[#1a1f36] dark:bg-zinc-950 dark:text-zinc-100 font-sans antialiased transition-colors">

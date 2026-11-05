@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, useRef } from "react"
-import { useRouter } from "next/navigation"
 import { Trash2 } from "lucide-react"
-import { api } from "@/lib/api"
+import { useRouter } from "next/navigation"
+import { useRef, useState } from "react"
 import { ConfirmModal } from "@/components/shared/ConfirmModal"
 import { useToast } from "@/components/shared/Toast"
+import { api } from "@/lib/api"
 import { useT } from "@/lib/i18n"
 
 export function DeleteMonitorButton({ monitorId }: { monitorId: string }) {
@@ -14,7 +14,11 @@ export function DeleteMonitorButton({ monitorId }: { monitorId: string }) {
   const { toast } = useToast()
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [loading, setLoading] = useState(false)
-  const undoData = useRef<{ name: string; expectedIntervalSeconds: number; gracePeriodSeconds: number } | null>(null)
+  const undoData = useRef<{
+    name: string
+    expectedIntervalSeconds: number
+    gracePeriodSeconds: number
+  } | null>(null)
 
   async function handleDelete() {
     setLoading(true)
@@ -26,7 +30,9 @@ export function DeleteMonitorButton({ monitorId }: { monitorId: string }) {
         expectedIntervalSeconds: monitor.expectedIntervalSeconds,
         gracePeriodSeconds: monitor.gracePeriodSeconds,
       }
-    } catch (e) { console.error("Failed to save monitor data for undo:", e) }
+    } catch (e) {
+      console.error("Failed to save monitor data for undo:", e)
+    }
 
     try {
       await api.monitors.delete(monitorId)

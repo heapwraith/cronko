@@ -18,6 +18,7 @@ API runs on `:3001`, web on `:3000`.
 - Create a feature branch from `main`: `git checkout -b feat/my-feature`
 - Make your changes
 - Run quality checks locally before pushing:
+
   ```bash
   pnpm typecheck    # TypeScript strict check across all workspaces
   pnpm lint         # ESLint + Prettier across all workspaces
@@ -64,11 +65,11 @@ pnpm test -- --coverage # Run tests with coverage report
 
 ## CI/CD Pipeline
 
-| Workflow | Trigger | Purpose |
-|---|---|---|
-| `ci.yml` | Push/PR to `main` | typecheck → lint → test → build |
-| `security.yml` | Weekly (Mon 9AM UTC) + manual | `pnpm audit` + CodeQL + SBOM |
-| `deploy.yml` | Tag `v*` | Build & push Docker images to GHCR |
+| Workflow       | Trigger                       | Purpose                            |
+| -------------- | ----------------------------- | ---------------------------------- |
+| `ci.yml`       | Push/PR to `main`             | typecheck → lint → test → build    |
+| `security.yml` | Weekly (Mon 9AM UTC) + manual | `pnpm audit` + CodeQL + SBOM       |
+| `deploy.yml`   | Tag `v*`                      | Build & push Docker images to GHCR |
 
 ## Project Structure
 
@@ -82,7 +83,6 @@ cronko/
 │   └── shared/       # Types, constants, utils, i18n
 ├── scripts/          # Dev utilities + backup/restore
 ```
-
 
 ## Need Help?
 

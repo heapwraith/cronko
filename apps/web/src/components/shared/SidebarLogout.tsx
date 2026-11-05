@@ -1,7 +1,7 @@
 "use client"
 
-import { useRouter } from "next/navigation"
 import { LogOut } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { api } from "@/lib/api"
 
 export function SidebarLogout({
@@ -14,7 +14,11 @@ export function SidebarLogout({
   const router = useRouter()
 
   async function handleLogout() {
-    try { await api.auth.logout() } catch { /* logout best-effort */ }
+    try {
+      await api.auth.logout()
+    } catch {
+      /* logout best-effort */
+    }
     router.push("/login")
   }
 

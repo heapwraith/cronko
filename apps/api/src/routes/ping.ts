@@ -1,5 +1,5 @@
-import { Hono } from "hono"
 import type { Context } from "hono"
+import { Hono } from "hono"
 import sanitizeHtml from "sanitize-html"
 import { rateLimit } from "../middleware/rateLimit"
 import { processHeartbeat } from "../services/heartbeat"
@@ -40,10 +40,7 @@ async function handlePing(c: Context) {
 
       if (rawBody !== undefined) {
         if (rawBody.length > MAX_BODY_LENGTH) {
-          return c.json(
-            { error: "Body too large", code: "PAYLOAD_TOO_LARGE" },
-            413,
-          )
+          return c.json({ error: "Body too large", code: "PAYLOAD_TOO_LARGE" }, 413)
         }
         body = sanitizeBody(rawBody)
       }
@@ -58,8 +55,10 @@ async function handlePing(c: Context) {
   const result = await processHeartbeat(token ?? "", {
     ...(sourceIp !== undefined && { sourceIp }),
     ...(userAgent !== undefined && { userAgent }),
-    ...(parsedDurationMs !== undefined && !isNaN(parsedDurationMs) && { durationMs: parsedDurationMs }),
-    ...(parsedExitCode !== undefined && !isNaN(parsedExitCode) && { exitCode: parsedExitCode }),
+    ...(parsedDurationMs !== undefined &&
+      !Number.isNaN(parsedDurationMs) && { durationMs: parsedDurationMs }),
+    ...(parsedExitCode !== undefined &&
+      !Number.isNaN(parsedExitCode) && { exitCode: parsedExitCode }),
     ...(body !== undefined && { body }),
   })
 
@@ -107,8 +106,10 @@ async function handlePulseFinish(c: Context) {
   const result = await processHeartbeat(token ?? "", {
     sourceIp,
     ...(userAgent !== undefined && { userAgent }),
-    ...(parsedDurationMs !== undefined && !isNaN(parsedDurationMs) && { durationMs: parsedDurationMs }),
-    ...(parsedExitCode !== undefined && !isNaN(parsedExitCode) && { exitCode: parsedExitCode }),
+    ...(parsedDurationMs !== undefined &&
+      !Number.isNaN(parsedDurationMs) && { durationMs: parsedDurationMs }),
+    ...(parsedExitCode !== undefined &&
+      !Number.isNaN(parsedExitCode) && { exitCode: parsedExitCode }),
     pulseType: "finish",
   })
 

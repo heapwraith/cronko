@@ -44,7 +44,7 @@ export const translations = {
     "monitors.searchMonitors": "Buscar monitores...",
     "monitors.noMonitors": "Nenhum monitor ainda",
     "monitors.noMonitorsDesc": "Crie seu primeiro monitor para começar a monitorar cron jobs.",
-    "monitors.noMatch": "Nenhum monitor corresponde a \"{search}\"",
+    "monitors.noMatch": 'Nenhum monitor corresponde a "{search}"',
     "monitors.name": "Nome",
     "monitors.interval": "Intervalo",
     "monitors.lastPing": "Último Ping",
@@ -62,11 +62,14 @@ export const translations = {
     "monitors.cancel": "Cancelar",
     "monitors.monitorDetails": "Detalhes do Monitor",
     "monitors.monitorName": "Nome do Monitor",
-    "monitors.monitorNameHint": "Um nome descritivo para este monitor. Exibido em alertas e dashboards.",
+    "monitors.monitorNameHint":
+      "Um nome descritivo para este monitor. Exibido em alertas e dashboards.",
     "monitors.expectedInterval": "Intervalo Esperado (segundos)",
-    "monitors.expectedIntervalHint": "Com que frequência este cron job deve fazer ping. Janelas perdidas disparam alertas.",
+    "monitors.expectedIntervalHint":
+      "Com que frequência este cron job deve fazer ping. Janelas perdidas disparam alertas.",
     "monitors.gracePeriod": "Período de Tolerância (segundos)",
-    "monitors.gracePeriodHint": "Tolerância extra antes de marcar como atrasado. Recomendado: pelo menos 2× o intervalo esperado.",
+    "monitors.gracePeriodHint":
+      "Tolerância extra antes de marcar como atrasado. Recomendado: pelo menos 2× o intervalo esperado.",
     "monitors.nameRequired": "Nome é obrigatório",
     "monitors.failedLoad": "Falha ao carregar monitores",
     "monitors.failedCreate": "Falha ao criar monitor",
@@ -75,11 +78,14 @@ export const translations = {
     "monitors.failedResume": "Falha ao retomar monitor",
     "monitors.channelCreated": "Canal criado com sucesso",
     "monitors.monitorCreated": "Monitor criado com sucesso",
-    "monitors.monitorCreatedDesc": "Crie um monitor para rastrear seu cron job. Você receberá uma URL única para configurar no seu script — o Cronko alertará se parar de pingar.",
+    "monitors.monitorCreatedDesc":
+      "Crie um monitor para rastrear seu cron job. Você receberá uma URL única para configurar no seu script — o Cronko alertará se parar de pingar.",
     "monitors.deleteConfirmTitle": "Deletar Monitor",
-    "monitors.deleteConfirmMessage": "Tem certeza que deseja deletar \"{name}\"? Todos os heartbeats e incidents serão permanentemente removidos.",
+    "monitors.deleteConfirmMessage":
+      'Tem certeza que deseja deletar "{name}"? Todos os heartbeats e incidents serão permanentemente removidos.',
     "monitors.dangerZone": "Zona de Perigo",
-    "monitors.dangerZoneDesc": "Deletar permanentemente este monitor e todos os heartbeats e incidents associados. Esta ação não pode ser desfeita.",
+    "monitors.dangerZoneDesc":
+      "Deletar permanentemente este monitor e todos os heartbeats e incidents associados. Esta ação não pode ser desfeita.",
     "monitors.deleteMonitor": "Deletar Monitor",
     "monitors.deleting": "Deletando...",
     "monitors.deleted": "Monitor deletado com sucesso",
@@ -125,7 +131,8 @@ export const translations = {
     "monitor.dueNow": "atrasado",
     "monitor.never": "Nunca",
     "monitor.createAnother": "Criar outro",
-    "monitor.setupInstructions": "Configure seu cron job ou tarefa agendada para chamar esta URL a cada {interval}. O Cronko rastreará cada ping e alertará se o job parar de rodar.",
+    "monitor.setupInstructions":
+      "Configure seu cron job ou tarefa agendada para chamar esta URL a cada {interval}. O Cronko rastreará cada ping e alertará se o job parar de rodar.",
     "monitor.log": "Log",
     "monitor.csv": "↓ CSV",
     "monitor.heartbeatHistory": "Histórico de Heartbeats",
@@ -149,7 +156,8 @@ export const translations = {
     "incidents.resolvedAt": "Resolvido",
     "incidents.noIncidents": "Nenhum incidente",
     "incidents.allResolved": "Todos os incidentes foram resolvidos.",
-    "incidents.noneYet": "Nenhum incidente ocorreu ainda. Incidentes são criados quando monitores perdem seus pings esperados.",
+    "incidents.noneYet":
+      "Nenhum incidente ocorreu ainda. Incidentes são criados quando monitores perdem seus pings esperados.",
     "incidents.monitor": "Monitor",
     "incidents.started": "Iniciado",
     "incidents.colResolved": "Resolvido",
@@ -166,7 +174,8 @@ export const translations = {
     "notifications.addChannel": "Adicionar Canal",
     "notifications.channels": "Canais",
     "notifications.noChannels": "Nenhum canal de notificação",
-    "notifications.noChannelsDesc": "Crie um canal Discord, Telegram ou Email para receber alertas quando monitores ficarem fora do ar.",
+    "notifications.noChannelsDesc":
+      "Crie um canal Discord, Telegram ou Email para receber alertas quando monitores ficarem fora do ar.",
     "notifications.type": "Tipo",
     "notifications.name": "Nome",
     "notifications.webhookUrl": "URL do Webhook",
@@ -186,7 +195,8 @@ export const translations = {
     "notifications.channelUpdated": "Canal atualizado",
     "notifications.deleted": "Deletado",
     "notifications.deleteTitle": "Deletar Canal",
-    "notifications.deleteMessage": "Tem certeza que deseja deletar \"{name}\"? Esta ação não pode ser desfeita.",
+    "notifications.deleteMessage":
+      'Tem certeza que deseja deletar "{name}"? Esta ação não pode ser desfeita.',
     "notifications.webhookUrlRequired": "URL do Webhook é obrigatória",
     "notifications.webhookUrlInvalid": "Deve ser uma URL válida começando com https://",
     "notifications.botTokenRequired": "Token do Bot é obrigatório",
@@ -220,10 +230,12 @@ export const translations = {
     "settings.heartbeatHistory": "Histórico de Heartbeats (dias)",
     "settings.heartbeatHistoryHint": "Dias exibidos no calendário de heatmap.",
     "settings.dangerZone": "Zona de Perigo",
-    "settings.dangerZoneDesc": "Restaurar todas as configurações para os padrões de fábrica. Esta ação não pode ser desfeita.",
+    "settings.dangerZoneDesc":
+      "Restaurar todas as configurações para os padrões de fábrica. Esta ação não pode ser desfeita.",
     "settings.resetDefaults": "Restaurar Padrões",
     "settings.resetTitle": "Restaurar Padrões",
-    "settings.resetMessage": "Todas as configurações serão restauradas para os padrões de fábrica. Isso não pode ser desfeito.",
+    "settings.resetMessage":
+      "Todas as configurações serão restauradas para os padrões de fábrica. Isso não pode ser desfeito.",
     "settings.saveSettings": "Salvar Configurações",
     "settings.saving": "Salvando...",
     "settings.saved": "✓ Salvo",
@@ -276,36 +288,45 @@ export const translations = {
     "howto.title": "Como Usar",
     "howto.subtitle": "Aprenda a integrar o Cronko com seus jobs, scripts e cron tabs em minutos.",
     "howto.whatIs.title": "O que é o Cronko?",
-    "howto.whatIs.p1": "Cronko é um serviço de monitoramento de cron jobs e tarefas agendadas. Seus jobs enviam pings (heartbeats) e o Cronko te alerta quando algo para de funcionar.",
+    "howto.whatIs.p1":
+      "Cronko é um serviço de monitoramento de cron jobs e tarefas agendadas. Seus jobs enviam pings (heartbeats) e o Cronko te alerta quando algo para de funcionar.",
     "howto.create.title": "Criando seu Primeiro Monitor",
-    "howto.create.p1": "Cada monitor representa um job ou tarefa que você quer acompanhar. Siga os passos:",
+    "howto.create.p1":
+      "Cada monitor representa um job ou tarefa que você quer acompanhar. Siga os passos:",
     "howto.create.step1name": "Acesse Monitores → Novo Monitor",
     "howto.create.step1desc": "Preencha nome e intervalo esperado (ex: 3600 segundos = 1 hora).",
     "howto.create.step2name": "Defina o período de tolerância (grace period)",
-    "howto.create.step2desc": "Tempo extra antes de marcar como 'missed'. Ex: 300s = tolerância de 5 minutos.",
+    "howto.create.step2desc":
+      "Tempo extra antes de marcar como 'missed'. Ex: 300s = tolerância de 5 minutos.",
     "howto.create.step3name": "Opcional: defina duração máxima",
-    "howto.create.step3desc": "Se o job demorar mais que isso, um incidente é gerado automaticamente.",
+    "howto.create.step3desc":
+      "Se o job demorar mais que isso, um incidente é gerado automaticamente.",
     "howto.create.step4name": "Copie o token gerado",
     "howto.create.step4desc": "O token é único para cada monitor. Use-o nos exemplos abaixo.",
     "howto.ping.title": "Enviando Pings",
-    "howto.ping.p1": "Seu job deve fazer uma requisição HTTP para o Cronko ao finalizar. Use os exemplos abaixo com seu token:",
+    "howto.ping.p1":
+      "Seu job deve fazer uma requisição HTTP para o Cronko ao finalizar. Use os exemplos abaixo com seu token:",
     "howto.ping.simple": "Ping simples",
     "howto.ping.withDuration": "Com duração (ms)",
     "howto.ping.withExit": "Com exit code",
     "howto.ping.withLog": "Com log (últimas 50 linhas)",
     "howto.crontab.title": "Integração com Crontab",
-    "howto.crontab.p1": "Exemplo prático de integração com crontab. O && garante que o ping só é enviado se o job terminar com sucesso.",
+    "howto.crontab.p1":
+      "Exemplo prático de integração com crontab. O && garante que o ping só é enviado se o job terminar com sucesso.",
     "howto.crontab.bashOnly": "Script Bash com medição de duração",
     "howto.pulse.title": "Pulse — Medindo Duração (Start/Finish)",
-    "howto.pulse.p1": "Para jobs longos, use o padrão pulse: envie /start antes de começar e /finish ao terminar. A duração é calculada automaticamente.",
+    "howto.pulse.p1":
+      "Para jobs longos, use o padrão pulse: envie /start antes de começar e /finish ao terminar. A duração é calculada automaticamente.",
     "howto.status.title": "Ciclo de Status",
     "howto.status.p1": "Entenda o ciclo de vida de um monitor:",
     "howto.badge.title": "Badge de Status Público",
-    "howto.badge.p1": "Exiba o status do seu monitor em qualquer lugar com uma badge SVG pública. Não requer autenticação.",
+    "howto.badge.p1":
+      "Exiba o status do seu monitor em qualquer lugar com uma badge SVG pública. Não requer autenticação.",
     "howto.badge.preview": "Pré-visualização ao vivo",
     "howto.badge.markdown": "Embed no README (Markdown)",
     "howto.notifications.title": "Notificações",
-    "howto.notifications.p1": "Configure canais de notificação em Configurações → Notificações. Alertas são enviados quando um monitor muda para missed, down ou recovered.",
+    "howto.notifications.p1":
+      "Configure canais de notificação em Configurações → Notificações. Alertas são enviados quando um monitor muda para missed, down ou recovered.",
     "howto.notifications.discord": "Webhook do Discord — receba alertas em qualquer canal.",
     "howto.notifications.telegram": "Bot do Telegram — envie alertas para um chat.",
     "howto.notifications.email": "Email SMTP — alertas por email.",
@@ -326,10 +347,12 @@ export const translations = {
 
     // Monitor Form
     "monitors.cronExpression": "Expressão Cron",
-    "monitors.cronExamples": "Exemplos: * * * * * (1min), 0 * * * * (hourly), 0 2 * * * (daily 2am)",
+    "monitors.cronExamples":
+      "Exemplos: * * * * * (1min), 0 * * * * (hourly), 0 2 * * * (daily 2am)",
     "monitors.cronParseError": "Não foi possível interpretar a expressão",
     "monitors.maxDuration": "Duração Máxima (ms, opcional)",
-    "monitors.maxDurationHint": "Alertar se a duração do ping exceder este limite. Deixe vazio para desabilitar.",
+    "monitors.maxDurationHint":
+      "Alertar se a duração do ping exceder este limite. Deixe vazio para desabilitar.",
   },
 
   "en-US": {
@@ -373,7 +396,7 @@ export const translations = {
     "monitors.searchMonitors": "Search monitors...",
     "monitors.noMonitors": "No monitors yet",
     "monitors.noMonitorsDesc": "Create your first monitor to start tracking cron jobs.",
-    "monitors.noMatch": "No monitors match \"{search}\"",
+    "monitors.noMatch": 'No monitors match "{search}"',
     "monitors.name": "Name",
     "monitors.interval": "Interval",
     "monitors.lastPing": "Last Ping",
@@ -391,11 +414,14 @@ export const translations = {
     "monitors.cancel": "Cancel",
     "monitors.monitorDetails": "Monitor Details",
     "monitors.monitorName": "Monitor Name",
-    "monitors.monitorNameHint": "A descriptive name for this monitor. Shown in alerts and dashboards.",
+    "monitors.monitorNameHint":
+      "A descriptive name for this monitor. Shown in alerts and dashboards.",
     "monitors.expectedInterval": "Expected Interval (seconds)",
-    "monitors.expectedIntervalHint": "How often this cron job should ping. Missed windows trigger alerts.",
+    "monitors.expectedIntervalHint":
+      "How often this cron job should ping. Missed windows trigger alerts.",
     "monitors.gracePeriod": "Grace Period (seconds)",
-    "monitors.gracePeriodHint": "Extra tolerance before marking as missed. Recommended: at least 2× the expected interval.",
+    "monitors.gracePeriodHint":
+      "Extra tolerance before marking as missed. Recommended: at least 2× the expected interval.",
     "monitors.nameRequired": "Name is required",
     "monitors.failedLoad": "Failed to load monitors",
     "monitors.failedCreate": "Failed to create monitor",
@@ -404,11 +430,14 @@ export const translations = {
     "monitors.failedResume": "Failed to resume monitor",
     "monitors.channelCreated": "Channel successfully created",
     "monitors.monitorCreated": "Monitor created successfully",
-    "monitors.monitorCreatedDesc": "Create a monitor to track your cron job. You'll get a unique URL to configure in your script — Cronko will alert you if it stops pinging.",
+    "monitors.monitorCreatedDesc":
+      "Create a monitor to track your cron job. You'll get a unique URL to configure in your script — Cronko will alert you if it stops pinging.",
     "monitors.deleteConfirmTitle": "Delete Monitor",
-    "monitors.deleteConfirmMessage": "Are you sure you want to delete \"{name}\"? All heartbeats and incidents will be permanently removed.",
+    "monitors.deleteConfirmMessage":
+      'Are you sure you want to delete "{name}"? All heartbeats and incidents will be permanently removed.',
     "monitors.dangerZone": "Danger Zone",
-    "monitors.dangerZoneDesc": "Permanently delete this monitor and all associated heartbeats and incidents. This action cannot be undone.",
+    "monitors.dangerZoneDesc":
+      "Permanently delete this monitor and all associated heartbeats and incidents. This action cannot be undone.",
     "monitors.deleteMonitor": "Delete Monitor",
     "monitors.deleting": "Deleting...",
     "monitors.deleted": "Monitor successfully deleted",
@@ -454,7 +483,8 @@ export const translations = {
     "monitor.dueNow": "due now",
     "monitor.never": "Never",
     "monitor.createAnother": "Create another",
-    "monitor.setupInstructions": "Configure your cron job or scheduled task to call this URL every {interval}. Cronko will track every ping and alert you if the job stops running.",
+    "monitor.setupInstructions":
+      "Configure your cron job or scheduled task to call this URL every {interval}. Cronko will track every ping and alert you if the job stops running.",
     "monitor.log": "Log",
     "monitor.csv": "↓ CSV",
     "monitor.heartbeatHistory": "Heartbeat History",
@@ -478,7 +508,8 @@ export const translations = {
     "incidents.resolvedAt": "Resolved",
     "incidents.noIncidents": "No incidents",
     "incidents.allResolved": "All incidents have been resolved.",
-    "incidents.noneYet": "No incidents have occurred yet. Incidents are created when monitors miss their expected pings.",
+    "incidents.noneYet":
+      "No incidents have occurred yet. Incidents are created when monitors miss their expected pings.",
     "incidents.monitor": "Monitor",
     "incidents.started": "Started",
     "incidents.colResolved": "Resolved",
@@ -495,7 +526,8 @@ export const translations = {
     "notifications.addChannel": "Add Channel",
     "notifications.channels": "Channels",
     "notifications.noChannels": "No notification channels",
-    "notifications.noChannelsDesc": "Create a Discord, Telegram, or Email channel to receive alerts when monitors go down.",
+    "notifications.noChannelsDesc":
+      "Create a Discord, Telegram, or Email channel to receive alerts when monitors go down.",
     "notifications.type": "Type",
     "notifications.name": "Name",
     "notifications.webhookUrl": "Webhook URL",
@@ -515,7 +547,8 @@ export const translations = {
     "notifications.channelUpdated": "Channel updated successfully",
     "notifications.deleted": "Deleted",
     "notifications.deleteTitle": "Delete Channel",
-    "notifications.deleteMessage": "Are you sure you want to delete \"{name}\"? This action cannot be undone.",
+    "notifications.deleteMessage":
+      'Are you sure you want to delete "{name}"? This action cannot be undone.',
     "notifications.webhookUrlRequired": "Webhook URL is required",
     "notifications.webhookUrlInvalid": "Must be a valid URL starting with https://",
     "notifications.botTokenRequired": "Bot Token is required",
@@ -549,10 +582,12 @@ export const translations = {
     "settings.heartbeatHistory": "Heartbeat History (days)",
     "settings.heartbeatHistoryHint": "Days shown in calendar heatmap.",
     "settings.dangerZone": "Danger Zone",
-    "settings.dangerZoneDesc": "Restore all settings to their original factory defaults. This action cannot be undone.",
+    "settings.dangerZoneDesc":
+      "Restore all settings to their original factory defaults. This action cannot be undone.",
     "settings.resetDefaults": "Reset to Defaults",
     "settings.resetTitle": "Reset to Defaults",
-    "settings.resetMessage": "All settings will be restored to their factory defaults. This cannot be undone.",
+    "settings.resetMessage":
+      "All settings will be restored to their factory defaults. This cannot be undone.",
     "settings.saveSettings": "Save Settings",
     "settings.saving": "Saving...",
     "settings.saved": "✓ Saved",
@@ -603,38 +638,48 @@ export const translations = {
 
     // How to Use
     "howto.title": "How to Use",
-    "howto.subtitle": "Learn how to integrate Cronko with your jobs, scripts and cron tabs in minutes.",
+    "howto.subtitle":
+      "Learn how to integrate Cronko with your jobs, scripts and cron tabs in minutes.",
     "howto.whatIs.title": "What is Cronko?",
-    "howto.whatIs.p1": "Cronko is a monitoring service for cron jobs and scheduled tasks. Your jobs send pings (heartbeats) and Cronko alerts you when something stops working.",
+    "howto.whatIs.p1":
+      "Cronko is a monitoring service for cron jobs and scheduled tasks. Your jobs send pings (heartbeats) and Cronko alerts you when something stops working.",
     "howto.create.title": "Creating Your First Monitor",
-    "howto.create.p1": "Each monitor represents a job or task you want to track. Follow these steps:",
+    "howto.create.p1":
+      "Each monitor represents a job or task you want to track. Follow these steps:",
     "howto.create.step1name": "Go to Monitors → New Monitor",
     "howto.create.step1desc": "Fill in name and expected interval (e.g., 3600 seconds = 1 hour).",
     "howto.create.step2name": "Set the grace period",
-    "howto.create.step2desc": "Extra time before marking as 'missed'. E.g., 300s = 5 minutes tolerance.",
+    "howto.create.step2desc":
+      "Extra time before marking as 'missed'. E.g., 300s = 5 minutes tolerance.",
     "howto.create.step3name": "Optional: set max duration",
-    "howto.create.step3desc": "If the job takes longer than this, an incident is automatically generated.",
+    "howto.create.step3desc":
+      "If the job takes longer than this, an incident is automatically generated.",
     "howto.create.step4name": "Copy the generated token",
     "howto.create.step4desc": "The token is unique for each monitor. Use it in the examples below.",
     "howto.ping.title": "Sending Pings",
-    "howto.ping.p1": "Your job should make an HTTP request to Cronko when it finishes. Use the examples below with your token:",
+    "howto.ping.p1":
+      "Your job should make an HTTP request to Cronko when it finishes. Use the examples below with your token:",
     "howto.ping.simple": "Simple ping",
     "howto.ping.withDuration": "With duration (ms)",
     "howto.ping.withExit": "With exit code",
     "howto.ping.withLog": "With log (last 50 lines)",
     "howto.crontab.title": "Crontab Integration",
-    "howto.crontab.p1": "Practical crontab integration example. The && ensures the ping is only sent if the job succeeds.",
+    "howto.crontab.p1":
+      "Practical crontab integration example. The && ensures the ping is only sent if the job succeeds.",
     "howto.crontab.bashOnly": "Bash script with duration measurement",
     "howto.pulse.title": "Pulse — Measuring Duration (Start/Finish)",
-    "howto.pulse.p1": "For long-running jobs, use the pulse pattern: send /start before starting and /finish when done. Duration is calculated automatically.",
+    "howto.pulse.p1":
+      "For long-running jobs, use the pulse pattern: send /start before starting and /finish when done. Duration is calculated automatically.",
     "howto.status.title": "Status Cycle",
     "howto.status.p1": "Understand a monitor's lifecycle:",
     "howto.badge.title": "Public Status Badge",
-    "howto.badge.p1": "Display your monitor's status anywhere with a public SVG badge. No authentication required.",
+    "howto.badge.p1":
+      "Display your monitor's status anywhere with a public SVG badge. No authentication required.",
     "howto.badge.preview": "Live preview",
     "howto.badge.markdown": "Embed in README (Markdown)",
     "howto.notifications.title": "Notifications",
-    "howto.notifications.p1": "Configure notification channels in Settings → Notifications. Alerts are sent when a monitor changes to missed, down, or recovered.",
+    "howto.notifications.p1":
+      "Configure notification channels in Settings → Notifications. Alerts are sent when a monitor changes to missed, down, or recovered.",
     "howto.notifications.discord": "Discord Webhook — receive alerts in any channel.",
     "howto.notifications.telegram": "Telegram Bot — send alerts to a chat.",
     "howto.notifications.email": "SMTP Email — email alerts.",
@@ -655,14 +700,20 @@ export const translations = {
 
     // Monitor Form
     "monitors.cronExpression": "Cron Expression",
-    "monitors.cronExamples": "Examples: * * * * * (1min), 0 * * * * (hourly), 0 2 * * * (daily 2am)",
+    "monitors.cronExamples":
+      "Examples: * * * * * (1min), 0 * * * * (hourly), 0 2 * * * (daily 2am)",
     "monitors.cronParseError": "Could not parse expression",
     "monitors.maxDuration": "Max Duration (ms, optional)",
-    "monitors.maxDurationHint": "Alert if ping duration exceeds this limit. Leave empty to disable.",
+    "monitors.maxDurationHint":
+      "Alert if ping duration exceeds this limit. Leave empty to disable.",
   },
 } as const
 
-export function t(locale: Locale, key: TranslationKey, params?: Record<string, string | number>): string {
+export function t(
+  locale: Locale,
+  key: TranslationKey,
+  params?: Record<string, string | number>,
+): string {
   const dict = translations[locale] as Record<string, string> | undefined
   const fallback = translations["en-US"] as Record<string, string>
   let text = dict?.[key] ?? fallback[key] ?? key

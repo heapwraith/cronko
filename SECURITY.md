@@ -11,13 +11,14 @@ release timeline.
 
 ## Supported Versions
 
-| Version | Supported          |
-|---|---|
-| latest  | Yes |
+| Version | Supported |
+| ------- | --------- |
+| latest  | Yes       |
 
 ## Security Model
 
 ### Authentication
+
 - **JWT with Zod validation**: Claims (`sub`, `email`, `iat`, `exp`, `iss`, `aud`) are validated with Zod schema before use — no `as` casting.
 - **Access token**: 15-minute expiry, signed with HS256, stored in httpOnly cookie (`cronko_token`).
 - **Refresh token**: 7-day expiry, stored in httpOnly cookie (`cronko_refresh`), path-restricted to `/api/auth`.
@@ -26,13 +27,16 @@ release timeline.
 - **Login rate limiting**: 5 attempts per 15-minute window per IP+email combination.
 
 ### Transport Security
+
 - **Cookies**: httpOnly, SameSite=Strict (Lax for legacy), Secure in production.
 - **CORS**: Origins validated via environment variables (`CORS_ORIGINS`, `NEXT_PUBLIC_API_URL`). No wildcard origins.
 - **HSTS**: `Strict-Transport-Security: max-age=31536000; includeSubDomains` in production.
 - **CSRF Protection**: Double-submit cookie pattern on all authenticated mutating endpoints (POST/PATCH/DELETE).
 
 ### HTTP Security Headers
+
 All responses include:
+
 - `Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'`
 - `X-Content-Type-Options: nosniff`
 - `X-Frame-Options: DENY`
@@ -41,27 +45,32 @@ All responses include:
 - `X-Request-Id` on every response for traceability
 
 ### Input Sanitization
+
 - **Ping body**: Stripped of all HTML tags via `sanitize-html`, HTML entities escaped, trimmed.
 - **Body size limit**: 10KB max — requests exceeding this receive HTTP 413.
 - **Zod validation**: All API inputs validated with Zod schemas (monitors, notifications, settings, auth).
 
 ### Rate Limiting
+
 - **Ping endpoints**: Rate-limited per token (60 req/min default). Headers `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset` included.
 - **Memory store**: Default (dev/local). Map-based with periodic cleanup.
 - **Redis**: Optional for distributed deployments. Configured via `REDIS_URL`. Automatic fallback to memory store if Redis is unavailable.
 
 ### Error Handling
+
 - **Structured errors**: All errors return `{ error, code, requestId }` format.
 - **Production mode**: Stack traces hidden from responses.
 - **Development mode**: Verbose error details for debugging.
 - **Request ID**: UUID generated for every request, returned in `X-Request-Id` header and error responses.
 
 ### Database
+
 - **No hardcoded credentials**: `POSTGRES_PASSWORD` required via environment variable in Docker Compose.
 - **Health checks**: `/health` (uptime), `/health/live` (process alive), `/health/ready` (database connectivity).
 - **Secure defaults**: `POSTGRES_USER` and `POSTGRES_DB` have safe defaults but passwords are mandatory.
 
 ### Supply Chain
+
 - **pnpm lockfile**: All dependencies pinned.
 - **Dependency audit**: `pnpm audit --audit-level high` runs weekly via GitHub Actions.
 - **SBOM**: CycloneDX SBOM generated weekly and uploaded as CI artifact.

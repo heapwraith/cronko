@@ -1,10 +1,10 @@
-import { findMonitorByToken } from "@cronko/database/queries/monitors"
-import { markSlow, recoverOnPing } from "./monitor-state"
 import {
   createHeartbeat,
   findLatestHeartbeat,
   updateHeartbeatDuration,
 } from "@cronko/database/queries/heartbeats"
+import { findMonitorByToken } from "@cronko/database/queries/monitors"
+import { markSlow, recoverOnPing } from "./monitor-state"
 
 export async function processHeartbeat(
   token: string,
@@ -31,7 +31,11 @@ export async function processHeartbeat(
 
   const prevPulse = await findLatestHeartbeat(monitor.id)
 
-  if (options.pulseType === "finish" && options.durationMs !== undefined && options.durationMs !== null) {
+  if (
+    options.pulseType === "finish" &&
+    options.durationMs !== undefined &&
+    options.durationMs !== null
+  ) {
     if (prevPulse && prevPulse.durationMs === null) {
       await updateHeartbeatDuration(prevPulse.id, options.durationMs)
       await createHeartbeat({

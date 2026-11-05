@@ -1,11 +1,9 @@
 import {
-  transitionMonitorStatus,
-} from "@cronko/database/queries/monitors"
-import {
   createIncident,
   findOpenIncident,
   resolveIncident,
 } from "@cronko/database/queries/incidents"
+import { transitionMonitorStatus } from "@cronko/database/queries/monitors"
 import { sendNotification } from "./notifier"
 
 export type MonitorStatus = "healthy" | "missed" | "down" | "paused" | "pending"

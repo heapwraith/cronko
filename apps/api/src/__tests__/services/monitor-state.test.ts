@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeAll, beforeEach, vi } from "vitest"
-import type * as StateModule from "../../services/monitor-state"
-import type * as MonitorQueries from "@cronko/database/queries/monitors"
 import type * as HeartbeatQueries from "@cronko/database/queries/heartbeats"
 import type * as IncidentQueries from "@cronko/database/queries/incidents"
-import type * as SchedulerModule from "../../services/scheduler"
+import type * as MonitorQueries from "@cronko/database/queries/monitors"
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest"
 import type * as HeartbeatService from "../../services/heartbeat"
+import type * as StateModule from "../../services/monitor-state"
+import type * as SchedulerModule from "../../services/scheduler"
 import { setupTestDb } from "../helpers/testDb"
 
 const sent: Array<{ name: string; event: string }> = []

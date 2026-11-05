@@ -1,4 +1,4 @@
-import { and, eq, asc } from "drizzle-orm"
+import { and, asc, eq } from "drizzle-orm"
 import { db } from "../index"
 import { monitors } from "../schema"
 
@@ -117,10 +117,7 @@ export async function updateMonitorStatus(
   id: string,
   status: "healthy" | "missed" | "down" | "paused" | "pending",
 ) {
-  await db
-    .update(monitors)
-    .set({ status, updatedAt: new Date() })
-    .where(eq(monitors.id, id))
+  await db.update(monitors).set({ status, updatedAt: new Date() }).where(eq(monitors.id, id))
 
   return findMonitorById(id)
 }

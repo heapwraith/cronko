@@ -1,8 +1,8 @@
-import { Hono } from "hono"
 import { findHeartbeatsSince } from "@cronko/database/queries/heartbeats"
 import { findAllMonitors } from "@cronko/database/queries/monitors"
-import { calculateUptime } from "@cronko/shared/utils"
 import type { Heartbeat } from "@cronko/shared"
+import { calculateUptime } from "@cronko/shared/utils"
+import { Hono } from "hono"
 import { logger } from "../lib/logger"
 
 export const statsRoute = new Hono()
@@ -28,7 +28,9 @@ statsRoute.get("/", async (c) => {
 
     // Exclude heartbeats from paused monitors
     const pausedIds = new Set(
-      monitors.filter((m: { status: string }) => m.status === "paused").map((m: { id: string }) => m.id),
+      monitors
+        .filter((m: { status: string }) => m.status === "paused")
+        .map((m: { id: string }) => m.id),
     )
     const activeHeartbeats = recentHeartbeats.filter(
       (hb: { monitorId: string }) => !pausedIds.has(hb.monitorId),
@@ -47,10 +49,9 @@ statsRoute.get("/", async (c) => {
         (hb: { monitorId: string }) => hb.monitorId === monitor.id,
       )
 
-      const uptime = calculateUptime(
-        monitorHeartbeats as unknown as Heartbeat[],
-        { expectedIntervalSeconds: monitor.expectedIntervalSeconds },
-      )
+      const uptime = calculateUptime(monitorHeartbeats as unknown as Heartbeat[], {
+        expectedIntervalSeconds: monitor.expectedIntervalSeconds,
+      })
       uptimeTotal += uptime
       monitorsWithHeartbeats++
     }
@@ -64,8 +65,7 @@ statsRoute.get("/", async (c) => {
       const hourStart = new Date(twentyFourHoursAgo.getTime() + i * 60 * 60 * 1000)
       const hourEnd = new Date(hourStart.getTime() + 60 * 60 * 1000)
       return activeHeartbeats.filter(
-        (hb: { receivedAt: Date }) =>
-          hb.receivedAt >= hourStart && hb.receivedAt < hourEnd,
+        (hb: { receivedAt: Date }) => hb.receivedAt >= hourStart && hb.receivedAt < hourEnd,
       ).length
     })
 

@@ -1,11 +1,11 @@
 "use client"
 
+import { Activity, ArrowRight, BellRing, BookOpen, Code, Link2 } from "lucide-react"
 import { useEffect, useState } from "react"
-import { BookOpen, Code, Link2, BellRing, Activity, ArrowRight } from "lucide-react"
-import { Card, CardHeader, CardTitle, CardBody } from "@/components/shared/Card"
+import { Card, CardBody, CardHeader, CardTitle } from "@/components/shared/Card"
 import { CopyButton } from "@/components/shared/CopyButton"
-import { useT } from "@/lib/i18n"
 import { api } from "@/lib/api"
+import { useT } from "@/lib/i18n"
 
 function CodeBlock({ children }: { children: string }) {
   return (
@@ -36,11 +36,14 @@ export default function HowToUsePage() {
   useEffect(() => {
     setBaseUrl(window.location.origin.replace("3000", "3001"))
 
-    api.monitors.list().then((monitors) => {
-      if (monitors.length > 0 && monitors[0]) {
-        setExampleToken(monitors[0].token)
-      }
-    }).catch(() => {})
+    api.monitors
+      .list()
+      .then((monitors) => {
+        if (monitors.length > 0 && monitors[0]) {
+          setExampleToken(monitors[0].token)
+        }
+      })
+      .catch(() => {})
   }, [])
 
   const pingUrl = `${baseUrl}/ping/${exampleToken}`
@@ -51,7 +54,9 @@ export default function HowToUsePage() {
       <div>
         <div className="flex items-center gap-2 mb-2">
           <BookOpen className="h-5 w-5 text-emerald-400" strokeWidth={1.5} />
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{t("howto.title")}</h1>
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+            {t("howto.title")}
+          </h1>
         </div>
         <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed">{t("howto.subtitle")}</p>
       </div>
@@ -62,9 +67,7 @@ export default function HowToUsePage() {
           <CardTitle>{t("howto.whatIs.title")}</CardTitle>
         </CardHeader>
         <CardBody className="space-y-4">
-          <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed">
-            {t("howto.whatIs.p1")}
-          </p>
+          <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed">{t("howto.whatIs.p1")}</p>
           <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-lg p-4 border border-zinc-200 dark:border-zinc-700">
             <div className="flex items-center gap-4 flex-wrap justify-center text-sm text-zinc-600 dark:text-zinc-300">
               <span className="flex items-center gap-1.5">
@@ -74,12 +77,16 @@ export default function HowToUsePage() {
               <ArrowRight className="h-4 w-4 text-zinc-400" strokeWidth={1.5} />
               <span className="flex items-center gap-1.5">
                 <Code className="h-4 w-4 text-blue-500" strokeWidth={1.5} />
-                <strong className="text-blue-600 dark:text-blue-400">Cronko espera intervalo</strong>
+                <strong className="text-blue-600 dark:text-blue-400">
+                  Cronko espera intervalo
+                </strong>
               </span>
               <ArrowRight className="h-4 w-4 text-zinc-400" strokeWidth={1.5} />
               <span className="flex items-center gap-1.5">
                 <BellRing className="h-4 w-4 text-red-500" strokeWidth={1.5} />
-                <strong className="text-red-600 dark:text-red-400">Se atrasar, dispara alerta</strong>
+                <strong className="text-red-600 dark:text-red-400">
+                  Se atrasar, dispara alerta
+                </strong>
               </span>
             </div>
           </div>
@@ -92,25 +99,31 @@ export default function HowToUsePage() {
           <CardTitle>{t("howto.create.title")}</CardTitle>
         </CardHeader>
         <CardBody className="space-y-4">
-          <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed">
-            {t("howto.create.p1")}
-          </p>
+          <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed">{t("howto.create.p1")}</p>
           <ul className="space-y-3 text-sm text-zinc-600 dark:text-zinc-300">
             <li className="flex items-start gap-2">
               <StepBadge num={1} />
-              <span><strong>{t("howto.create.step1name")}</strong> — {t("howto.create.step1desc")}</span>
+              <span>
+                <strong>{t("howto.create.step1name")}</strong> — {t("howto.create.step1desc")}
+              </span>
             </li>
             <li className="flex items-start gap-2">
               <StepBadge num={2} />
-              <span><strong>{t("howto.create.step2name")}</strong> — {t("howto.create.step2desc")}</span>
+              <span>
+                <strong>{t("howto.create.step2name")}</strong> — {t("howto.create.step2desc")}
+              </span>
             </li>
             <li className="flex items-start gap-2">
               <StepBadge num={3} />
-              <span><strong>{t("howto.create.step3name")}</strong> — {t("howto.create.step3desc")}</span>
+              <span>
+                <strong>{t("howto.create.step3name")}</strong> — {t("howto.create.step3desc")}
+              </span>
             </li>
             <li className="flex items-start gap-2">
               <StepBadge num={4} />
-              <span><strong>{t("howto.create.step4name")}</strong> — {t("howto.create.step4desc")}</span>
+              <span>
+                <strong>{t("howto.create.step4name")}</strong> — {t("howto.create.step4desc")}
+              </span>
             </li>
           </ul>
         </CardBody>
@@ -122,20 +135,26 @@ export default function HowToUsePage() {
           <CardTitle>{t("howto.ping.title")}</CardTitle>
         </CardHeader>
         <CardBody className="space-y-4">
-          <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed">
-            {t("howto.ping.p1")}
-          </p>
+          <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed">{t("howto.ping.p1")}</p>
 
-          <h4 className="font-semibold text-sm text-zinc-800 dark:text-zinc-200">{t("howto.ping.simple")}</h4>
+          <h4 className="font-semibold text-sm text-zinc-800 dark:text-zinc-200">
+            {t("howto.ping.simple")}
+          </h4>
           <CodeBlock>{`curl -X POST ${pingUrl}`}</CodeBlock>
 
-          <h4 className="font-semibold text-sm text-zinc-800 dark:text-zinc-200">{t("howto.ping.withDuration")}</h4>
+          <h4 className="font-semibold text-sm text-zinc-800 dark:text-zinc-200">
+            {t("howto.ping.withDuration")}
+          </h4>
           <CodeBlock>{`curl "${pingUrl}?d=1234"`}</CodeBlock>
 
-          <h4 className="font-semibold text-sm text-zinc-800 dark:text-zinc-200">{t("howto.ping.withExit")}</h4>
+          <h4 className="font-semibold text-sm text-zinc-800 dark:text-zinc-200">
+            {t("howto.ping.withExit")}
+          </h4>
           <CodeBlock>{`curl "${pingUrl}?exit=0"`}</CodeBlock>
 
-          <h4 className="font-semibold text-sm text-zinc-800 dark:text-zinc-200">{t("howto.ping.withLog")}</h4>
+          <h4 className="font-semibold text-sm text-zinc-800 dark:text-zinc-200">
+            {t("howto.ping.withLog")}
+          </h4>
           <CodeBlock>{`curl -X POST ${pingUrl} \\
   -H "Content-Type: text/plain" \\
   -d "$(tail -n 50 /var/log/meu-job.log)"`}</CodeBlock>
@@ -152,14 +171,16 @@ export default function HowToUsePage() {
             {t("howto.crontab.p1")}
           </p>
           <CodeBlock>{`# Exemplo: job roda a cada 30 minutos
-*/30 * * * * /usr/local/bin/meu-job.sh && curl -s "${pingUrl}?d=\$SECONDS\&exit=\$?"`}</CodeBlock>
+*/30 * * * * /usr/local/bin/meu-job.sh && curl -s "${pingUrl}?d=$SECONDS&exit=$?"`}</CodeBlock>
 
-          <h4 className="font-semibold text-sm text-zinc-800 dark:text-zinc-200">{t("howto.crontab.bashOnly")}</h4>
+          <h4 className="font-semibold text-sm text-zinc-800 dark:text-zinc-200">
+            {t("howto.crontab.bashOnly")}
+          </h4>
           <CodeBlock>{`#!/bin/bash
-START=\$SECONDS
+START=$SECONDS
 /usr/local/bin/meu-job.sh
-EXIT=\$?
-DURATION=\$(( SECONDS - START ))
+EXIT=$?
+DURATION=$(( SECONDS - START ))
 curl -s "${pingUrl}?d=\${DURATION}&exit=\${EXIT}"`}</CodeBlock>
         </CardBody>
       </Card>
@@ -170,9 +191,7 @@ curl -s "${pingUrl}?d=\${DURATION}&exit=\${EXIT}"`}</CodeBlock>
           <CardTitle>{t("howto.pulse.title")}</CardTitle>
         </CardHeader>
         <CardBody className="space-y-4">
-          <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed">
-            {t("howto.pulse.p1")}
-          </p>
+          <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed">{t("howto.pulse.p1")}</p>
           <CodeBlock>{`# Envia "start" antes do job
 curl -X POST ${baseUrl}/ping/${exampleToken}/start
 
@@ -180,7 +199,7 @@ curl -X POST ${baseUrl}/ping/${exampleToken}/start
 ./meu-job-longo.sh
 
 # Envia "finish" com duração e exit code
-curl -X POST "${baseUrl}/ping/${exampleToken}/finish?d=\$SECONDS&exit=\$?"`}</CodeBlock>
+curl -X POST "${baseUrl}/ping/${exampleToken}/finish?d=$SECONDS&exit=$?"`}</CodeBlock>
         </CardBody>
       </Card>
 
@@ -190,20 +209,28 @@ curl -X POST "${baseUrl}/ping/${exampleToken}/finish?d=\$SECONDS&exit=\$?"`}</Co
           <CardTitle>{t("howto.status.title")}</CardTitle>
         </CardHeader>
         <CardBody className="space-y-4">
-          <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed">
-            {t("howto.status.p1")}
-          </p>
+          <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed">{t("howto.status.p1")}</p>
           <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-lg p-4 border border-zinc-200 dark:border-zinc-700">
             <div className="flex items-center gap-2 flex-wrap justify-center text-sm font-mono">
-              <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">pending</span>
+              <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                pending
+              </span>
               <ArrowRight className="h-3 w-3 text-zinc-400" strokeWidth={1.5} />
-              <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">healthy</span>
+              <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                healthy
+              </span>
               <ArrowRight className="h-3 w-3 text-zinc-400" strokeWidth={1.5} />
-              <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">missed</span>
+              <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                missed
+              </span>
               <ArrowRight className="h-3 w-3 text-zinc-400" strokeWidth={1.5} />
-              <span className="px-2 py-0.5 rounded bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20">down</span>
+              <span className="px-2 py-0.5 rounded bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20">
+                down
+              </span>
               <ArrowRight className="h-3 w-3 text-zinc-400" strokeWidth={1.5} />
-              <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">healthy</span>
+              <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                healthy
+              </span>
             </div>
           </div>
         </CardBody>
@@ -215,18 +242,16 @@ curl -X POST "${baseUrl}/ping/${exampleToken}/finish?d=\$SECONDS&exit=\$?"`}</Co
           <CardTitle>{t("howto.badge.title")}</CardTitle>
         </CardHeader>
         <CardBody className="space-y-4">
-          <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed">
-            {t("howto.badge.p1")}
-          </p>
+          <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed">{t("howto.badge.p1")}</p>
           <div className="flex items-center gap-3">
-            <img
-              src={`${baseUrl}/badge/${exampleToken}`}
-              alt="Status badge"
-              className="h-5"
-            />
-            <span className="text-sm text-zinc-500 dark:text-zinc-400">{t("howto.badge.preview")}</span>
+            <img src={`${baseUrl}/badge/${exampleToken}`} alt="Status badge" className="h-5" />
+            <span className="text-sm text-zinc-500 dark:text-zinc-400">
+              {t("howto.badge.preview")}
+            </span>
           </div>
-          <h4 className="font-semibold text-sm text-zinc-800 dark:text-zinc-200">{t("howto.badge.markdown")}</h4>
+          <h4 className="font-semibold text-sm text-zinc-800 dark:text-zinc-200">
+            {t("howto.badge.markdown")}
+          </h4>
           <CodeBlock>{`![Cronko](${baseUrl}/badge/${exampleToken})`}</CodeBlock>
         </CardBody>
       </Card>

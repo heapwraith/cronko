@@ -2,13 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 
-export function AnimatedCounter({
-  value,
-  duration = 1000,
-}: {
-  value: number
-  duration?: number
-}) {
+export function AnimatedCounter({ value, duration = 1000 }: { value: number; duration?: number }) {
   const [display, setDisplay] = useState(0)
   const prevRef = useRef(0)
   const frameRef = useRef<number | null>(null)
@@ -21,7 +15,7 @@ export function AnimatedCounter({
     const animate = (now: number) => {
       const elapsed = now - startTime
       const progress = Math.min(elapsed / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
+      const eased = 1 - (1 - progress) ** 3
       const current = Math.round(start + (end - start) * eased)
       setDisplay(current)
 

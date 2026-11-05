@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useTransition, useRef, useEffect } from "react"
+import { Eye, EyeOff, Loader2, Moon, Sun } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { api, ApiError } from "@/lib/api"
-import { useT } from "@/lib/i18n"
-import { Loader2, Sun, Moon, Eye, EyeOff } from "lucide-react"
+import { useEffect, useRef, useState, useTransition } from "react"
 import { CronkoLogo } from "@/components/shared/CronkoLogo"
 import { useTheme } from "@/components/shared/ThemeProvider"
+import { ApiError, api } from "@/lib/api"
+import { useT } from "@/lib/i18n"
 
 function ThemeToggle() {
   const { t } = useT()
@@ -16,7 +16,8 @@ function ThemeToggle() {
   const label = theme === "dark" ? t("auth.switchToLight") : t("auth.switchToDark")
 
   const handleClick = (e: React.MouseEvent) => {
-    const fn = (window as Window & { __cronkoSetOrigin?: (x: number, y: number) => void }).__cronkoSetOrigin
+    const fn = (window as Window & { __cronkoSetOrigin?: (x: number, y: number) => void })
+      .__cronkoSetOrigin
     if (fn) fn(e.clientX, e.clientY)
     setTheme(next)
   }
@@ -25,7 +26,8 @@ function ThemeToggle() {
     <button
       onClick={handleClick}
       className="flex items-center justify-center h-9 w-9 rounded-lg text-[#697386] dark:text-zinc-400 hover:text-[#1a1f36] dark:hover:text-zinc-200 hover:bg-[#f4f2ee] dark:hover:bg-zinc-800 transition-all duration-200"
-      title={label} aria-label={label}
+      title={label}
+      aria-label={label}
     >
       <Icon className="h-4.5 w-4.5 transition-transform duration-300 rotate-0 hover:rotate-12" />
     </button>
@@ -45,7 +47,10 @@ export default function LoginPage() {
   const [checking, setChecking] = useState(true)
 
   useEffect(() => {
-    api.auth.me().then(() => router.replace("/dashboard")).catch(() => setChecking(false))
+    api.auth
+      .me()
+      .then(() => router.replace("/dashboard"))
+      .catch(() => setChecking(false))
   }, [router])
 
   async function handleSubmit(e: React.FormEvent) {
@@ -82,36 +87,55 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[#f6f8fa] dark:bg-zinc-950 flex items-center justify-center p-4 transition-colors">
-      <div className="fixed top-4 right-4 z-50"><ThemeToggle /></div>
+      <div className="fixed top-4 right-4 z-50">
+        <ThemeToggle />
+      </div>
 
       <div className="w-full max-w-85">
         <div className="flex flex-col items-center mb-10">
           <div className="rounded-xl bg-emerald-500/10 p-3 mb-4">
             <CronkoLogo className="h-6 w-6 text-emerald-500" />
           </div>
-          <span className="text-xl font-semibold text-[#1a1f36] dark:text-zinc-100 tracking-tight">Cronko</span>
+          <span className="text-xl font-semibold text-[#1a1f36] dark:text-zinc-100 tracking-tight">
+            Cronko
+          </span>
         </div>
 
         <div className="rounded-2xl border border-[#e8eaed] dark:border-zinc-800/80 bg-white dark:bg-zinc-900 shadow-sm transition-colors">
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
             {error && (
-              <div className="rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 px-3 py-2.5 text-[13px] text-red-600 dark:text-red-400">{error}</div>
+              <div className="rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 px-3 py-2.5 text-[13px] text-red-600 dark:text-red-400">
+                {error}
+              </div>
             )}
             <div>
               <input
-                type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                required autoFocus disabled={loading}
-                className={inputClass} placeholder={t("auth.email")}
-                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); passwordRef.current?.focus() } }}
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoFocus
+                disabled={loading}
+                className={inputClass}
+                placeholder={t("auth.email")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault()
+                    passwordRef.current?.focus()
+                  }
+                }}
               />
             </div>
             <div className="relative">
               <input
                 ref={passwordRef}
                 type={showPassword ? "text" : "password"}
-                value={password} onChange={(e) => setPassword(e.target.value)}
-                required disabled={loading}
-                className={inputClass} placeholder={t("auth.password")}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={loading}
+                className={inputClass}
+                placeholder={t("auth.password")}
               />
               <button
                 type="button"
@@ -122,13 +146,28 @@ export default function LoginPage() {
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-            <button type="submit" disabled={loading || isPending} className="w-full rounded-lg bg-[#1a1f36] hover:bg-[#2d3348] dark:bg-zinc-800 dark:hover:bg-zinc-700 px-4 py-3 text-[15px] font-medium text-white transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2">
-              {loading ? <><Loader2 className="h-4 w-4 animate-spin" />{t("auth.signingIn")}</> : isPending ? t("auth.redirecting") : t("auth.signIn")}
+            <button
+              type="submit"
+              disabled={loading || isPending}
+              className="w-full rounded-lg bg-[#1a1f36] hover:bg-[#2d3348] dark:bg-zinc-800 dark:hover:bg-zinc-700 px-4 py-3 text-[15px] font-medium text-white transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {t("auth.signingIn")}
+                </>
+              ) : isPending ? (
+                t("auth.redirecting")
+              ) : (
+                t("auth.signIn")
+              )}
             </button>
           </form>
         </div>
 
-        <p className="mt-8 text-center text-xs text-[#8e99a8] dark:text-zinc-500">{t("auth.selfHosted")}</p>
+        <p className="mt-8 text-center text-xs text-[#8e99a8] dark:text-zinc-500">
+          {t("auth.selfHosted")}
+        </p>
       </div>
     </div>
   )

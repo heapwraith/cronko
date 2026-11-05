@@ -1,8 +1,11 @@
+import {
+  deleteHeartbeatsOlderThan,
+  findLatestHeartbeatTimes,
+} from "@cronko/database/queries/heartbeats"
 import { findAllMonitors } from "@cronko/database/queries/monitors"
-import { findLatestHeartbeatTimes, deleteHeartbeatsOlderThan } from "@cronko/database/queries/heartbeats"
-import { evaluateMonitor, markOverdue } from "./monitor-state"
-import { currentSettings } from "../routes/settings"
 import { logger } from "../lib/logger"
+import { currentSettings } from "../routes/settings"
+import { evaluateMonitor, markOverdue } from "./monitor-state"
 
 let intervalId: ReturnType<typeof setInterval> | null = null
 let isRunning = false
@@ -76,7 +79,10 @@ export async function runTick(now = Date.now()) {
         if (target) await markOverdue(monitor, target, new Date(now))
       } catch (err) {
         schedulerMetrics.tickErrors++
-        logger.error({ err, monitorId: monitor.id, monitorName: monitor.name }, "scheduler check failed")
+        logger.error(
+          { err, monitorId: monitor.id, monitorName: monitor.name },
+          "scheduler check failed",
+        )
       }
     }
   } finally {

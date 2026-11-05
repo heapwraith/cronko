@@ -1,7 +1,7 @@
 "use client"
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react"
-import { X, CheckCircle, AlertTriangle, AlertCircle, Info } from "lucide-react"
+import { AlertCircle, AlertTriangle, CheckCircle, Info, X } from "lucide-react"
+import { createContext, type ReactNode, useCallback, useContext, useState } from "react"
 
 type ToastType = "success" | "error" | "warning" | "info"
 
@@ -40,9 +40,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setToasts((prev) => [...prev, { id, type, message }])
 
     setTimeout(() => {
-      setToasts((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, exiting: true } : t)),
-      )
+      setToasts((prev) => prev.map((t) => (t.id === id ? { ...t, exiting: true } : t)))
       setTimeout(() => {
         setToasts((prev) => prev.filter((t) => t.id !== id))
       }, 300)
@@ -72,9 +70,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               <button
                 onClick={() => {
                   setToasts((prev) =>
-                    prev.map((to) =>
-                      to.id === t.id ? { ...to, exiting: true } : to,
-                    ),
+                    prev.map((to) => (to.id === t.id ? { ...to, exiting: true } : to)),
                   )
                   setTimeout(() => {
                     setToasts((prev) => prev.filter((to) => to.id !== t.id))

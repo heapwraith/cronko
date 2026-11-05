@@ -1,4 +1,4 @@
-import { and, eq, desc, lt, gte, lte, inArray, sql } from "drizzle-orm"
+import { and, desc, eq, gte, inArray, lt, lte, sql } from "drizzle-orm"
 import { db } from "../index"
 import { heartbeats } from "../schema"
 
@@ -7,10 +7,7 @@ export async function findHeartbeatsByMonitor(
   options: { limit: number; before?: string },
 ) {
   const where = options.before
-    ? and(
-        eq(heartbeats.monitorId, monitorId),
-        lt(heartbeats.receivedAt, new Date(options.before)),
-      )
+    ? and(eq(heartbeats.monitorId, monitorId), lt(heartbeats.receivedAt, new Date(options.before)))
     : eq(heartbeats.monitorId, monitorId)
 
   return db
@@ -33,11 +30,7 @@ export async function findLatestHeartbeat(monitorId: string) {
 }
 
 export async function findHeartbeatsSince(since: Date) {
-  return db
-    .select()
-    .from(heartbeats)
-    .where(gte(heartbeats.receivedAt, since))
-    .all()
+  return db.select().from(heartbeats).where(gte(heartbeats.receivedAt, since)).all()
 }
 
 export async function createHeartbeat(input: {
@@ -80,7 +73,9 @@ export async function findLatestHeartbeats(
       monitorId: heartbeats.monitorId,
       receivedAt: heartbeats.receivedAt,
       durationMs: heartbeats.durationMs,
-      rn: sql<number>`ROW_NUMBER() OVER (PARTITION BY ${heartbeats.monitorId} ORDER BY ${heartbeats.receivedAt} DESC)`.as("rn"),
+      rn: sql<number>`ROW_NUMBER() OVER (PARTITION BY ${heartbeats.monitorId} ORDER BY ${heartbeats.receivedAt} DESC)`.as(
+        "rn",
+      ),
     })
     .from(heartbeats)
     .where(inArray(heartbeats.monitorId, monitorIds))

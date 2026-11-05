@@ -28,17 +28,11 @@ export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 12)
 }
 
-export async function verifyPassword(
-  password: string,
-  hash: string,
-): Promise<boolean> {
+export async function verifyPassword(password: string, hash: string): Promise<boolean> {
   return bcrypt.compare(password, hash)
 }
 
-export async function generateAccessToken(
-  userId: string,
-  email: string,
-): Promise<string> {
+export async function generateAccessToken(userId: string, email: string): Promise<string> {
   const now = Math.floor(Date.now() / 1000)
   const exp = now + 15 * 60 // 15 minutes
 
@@ -56,10 +50,7 @@ export async function generateAccessToken(
   )
 }
 
-export async function generateRefreshToken(
-  userId: string,
-  email: string,
-): Promise<string> {
+export async function generateRefreshToken(userId: string, email: string): Promise<string> {
   const now = Math.floor(Date.now() / 1000)
   const exp = now + 7 * 24 * 60 * 60 // 7 days
 
@@ -77,16 +68,12 @@ export async function generateRefreshToken(
   )
 }
 
-export async function verifyAccessToken(
-  token: string,
-): Promise<JwtPayload> {
+export async function verifyAccessToken(token: string): Promise<JwtPayload> {
   const payload = await verify(token, env.JWT_SECRET, "HS256")
   return jwtPayloadSchema.parse(payload)
 }
 
-export async function verifyRefreshToken(
-  token: string,
-): Promise<JwtRefreshPayload> {
+export async function verifyRefreshToken(token: string): Promise<JwtRefreshPayload> {
   const payload = await verify(token, env.JWT_SECRET, "HS256")
   return jwtRefreshSchema.parse(payload)
 }

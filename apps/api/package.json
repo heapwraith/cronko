@@ -8,7 +8,6 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsup src/index.ts --format esm --target node24 --out-dir dist --clean",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"

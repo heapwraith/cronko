@@ -32,8 +32,7 @@ export function ResponseTimeChart({ heartbeats }: ResponseTimeChartProps) {
     return `${x},${y}`
   })
 
-  const avg =
-    values.reduce((sum, v) => sum + v, 0) / values.length
+  const avg = values.reduce((sum, v) => sum + v, 0) / values.length
   const sorted = [...values].sort((a, b) => a - b)
   const p95 = sorted[Math.floor(sorted.length * 0.95)] ?? sorted[sorted.length - 1] ?? 0
   const p50 = sorted[Math.floor(sorted.length * 0.5)] ?? 0

@@ -1,14 +1,14 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { api } from "@/lib/api"
-import { useT } from "@/lib/i18n"
-import { StatusBadge } from "@/components/shared/StatusBadge"
-import { EmptyState } from "@/components/shared/EmptyState"
 import { formatDuration, formatRelativeTime } from "@cronko/shared/utils"
+import { AlertTriangle } from "lucide-react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { AlertTriangle } from "lucide-react"
+import { useEffect, useState } from "react"
+import { EmptyState } from "@/components/shared/EmptyState"
+import { StatusBadge } from "@/components/shared/StatusBadge"
+import { api } from "@/lib/api"
+import { useT } from "@/lib/i18n"
 
 export default function IncidentsPage() {
   const { t } = useT()
@@ -17,23 +17,37 @@ export default function IncidentsPage() {
   const limit = Math.min(Math.max(1, parseInt(sp.get("limit") ?? "50", 10) || 50), 200)
   const offset = Math.max(0, parseInt(sp.get("offset") ?? "0", 10) || 0)
 
-  const [incidents, setIncidents] = useState<Array<{ id: string; monitorId: string; status: string; startedAt: string; resolvedAt: string | null }>>([])
+  const [incidents, setIncidents] = useState<
+    Array<{
+      id: string
+      monitorId: string
+      status: string
+      startedAt: string
+      resolvedAt: string | null
+    }>
+  >([])
   const [monitors, setMonitors] = useState<Array<{ id: string; name: string; status: string }>>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const statusParam = status ?? undefined
     Promise.all([
-      api.incidents.list({ ...(statusParam !== undefined && { status: statusParam }), limit, offset }),
+      api.incidents.list({
+        ...(statusParam !== undefined && { status: statusParam }),
+        limit,
+        offset,
+      }),
       api.monitors.list(),
-    ]).then(([inc, mon]) => {
-      setIncidents(inc)
-      setMonitors(mon.map((m) => ({ id: m.id, name: m.name, status: m.status })))
-    }).catch((e) => {
-      // eslint-disable-next-line no-console
-      console.error("Failed to load incidents:", e)
-    })
-    .finally(() => setLoading(false))
+    ])
+      .then(([inc, mon]) => {
+        setIncidents(inc)
+        setMonitors(mon.map((m) => ({ id: m.id, name: m.name, status: m.status })))
+      })
+      .catch((e) => {
+        // eslint-disable-next-line no-console
+        console.error("Failed to load incidents:", e)
+      })
+      .finally(() => setLoading(false))
   }, [status, limit, offset])
 
   const monitorMeta = (monitorId: string) => {
@@ -54,17 +68,21 @@ export default function IncidentsPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-[#1a1f36] dark:text-zinc-100">{t("incidents.title")}</h1>
+        <h1 className="text-lg font-semibold text-[#1a1f36] dark:text-zinc-100">
+          {t("incidents.title")}
+        </h1>
       </div>
 
       <div className="flex items-center gap-4 text-xs text-[#697386] dark:text-zinc-400">
         <span className="inline-flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-red-500" />
-          <span className="font-medium text-[#1a1f36] dark:text-zinc-100">{openCount}</span> {t("incidents.openCount", { count: openCount })}
+          <span className="font-medium text-[#1a1f36] dark:text-zinc-100">{openCount}</span>{" "}
+          {t("incidents.openCount", { count: openCount })}
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-emerald-500" />
-          <span className="font-medium text-[#1a1f36] dark:text-zinc-100">{resolvedCount}</span> {t("incidents.resolvedCount", { count: resolvedCount })}
+          <span className="font-medium text-[#1a1f36] dark:text-zinc-100">{resolvedCount}</span>{" "}
+          {t("incidents.resolvedCount", { count: resolvedCount })}
         </span>
       </div>
 
@@ -85,7 +103,9 @@ export default function IncidentsPage() {
 
       <div className="rounded-xl border border-[#e8eaed] dark:border-zinc-800/80 bg-white dark:bg-zinc-900 shadow-sm transition-colors">
         {loading ? (
-          <div className="px-5 py-8 text-center text-sm text-[#697386] dark:text-zinc-500">{t("common.loading")}</div>
+          <div className="px-5 py-8 text-center text-sm text-[#697386] dark:text-zinc-500">
+            {t("common.loading")}
+          </div>
         ) : incidents.length === 0 ? (
           <EmptyState
             icon={AlertTriangle}
@@ -98,11 +118,21 @@ export default function IncidentsPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-[#e8eaed] dark:border-zinc-800/80 text-left">
-                    <th className="px-4 py-2 text-xs font-medium text-[#697386] dark:text-zinc-500">{t("incidents.monitor")}</th>
-                    <th className="px-4 py-2 text-xs font-medium text-[#697386] dark:text-zinc-500">{t("incidents.started")}</th>
-                    <th className="px-4 py-2 text-xs font-medium text-[#697386] dark:text-zinc-500">{t("incidents.colResolved")}</th>
-                    <th className="px-4 py-2 text-xs font-medium text-[#697386] dark:text-zinc-500">{t("incidents.duration")}</th>
-                    <th className="px-4 py-2 text-xs font-medium text-[#697386] dark:text-zinc-500">{t("incidents.status")}</th>
+                    <th className="px-4 py-2 text-xs font-medium text-[#697386] dark:text-zinc-500">
+                      {t("incidents.monitor")}
+                    </th>
+                    <th className="px-4 py-2 text-xs font-medium text-[#697386] dark:text-zinc-500">
+                      {t("incidents.started")}
+                    </th>
+                    <th className="px-4 py-2 text-xs font-medium text-[#697386] dark:text-zinc-500">
+                      {t("incidents.colResolved")}
+                    </th>
+                    <th className="px-4 py-2 text-xs font-medium text-[#697386] dark:text-zinc-500">
+                      {t("incidents.duration")}
+                    </th>
+                    <th className="px-4 py-2 text-xs font-medium text-[#697386] dark:text-zinc-500">
+                      {t("incidents.status")}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -131,13 +161,22 @@ export default function IncidentsPage() {
                             >
                               {m.name}
                             </Link>
-                            <StatusBadge status={m.status as "healthy" | "missed" | "down" | "paused"} label={
-                              m.status === "healthy" ? t("dashboard.healthy") :
-                              m.status === "missed" ? t("dashboard.missed") :
-                              m.status === "down" ? t("dashboard.down") :
-                              m.status === "paused" ? t("dashboard.paused") :
-                              m.status === "pending" ? t("dashboard.pending") : m.status
-                            } />
+                            <StatusBadge
+                              status={m.status as "healthy" | "missed" | "down" | "paused"}
+                              label={
+                                m.status === "healthy"
+                                  ? t("dashboard.healthy")
+                                  : m.status === "missed"
+                                    ? t("dashboard.missed")
+                                    : m.status === "down"
+                                      ? t("dashboard.down")
+                                      : m.status === "paused"
+                                        ? t("dashboard.paused")
+                                        : m.status === "pending"
+                                          ? t("dashboard.pending")
+                                          : m.status
+                              }
+                            />
                           </div>
                         </td>
                         <td className="px-4 py-3 text-sm text-[#697386] dark:text-zinc-400">

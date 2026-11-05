@@ -21,9 +21,7 @@ const envSchema = z.object({
   TELEGRAM_BOT_TOKEN: z.string().optional(),
   NEXT_PUBLIC_API_URL: z.url().optional(),
   CORS_ORIGINS: z.string().optional(),
-  NODE_ENV: z
-    .enum(["development", "production", "test"])
-    .default("development"),
+  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   AUTO_MIGRATE: z
     .enum(["true", "false"])
     .default(process.env.NODE_ENV === "production" ? "false" : "true"),
@@ -32,9 +30,7 @@ const envSchema = z.object({
 // Docker Compose passes unset optional variables as empty strings
 // (e.g. ADMIN_EMAIL=), which optional validators like z.email() reject.
 function readEnv(): Record<string, string | undefined> {
-  return Object.fromEntries(
-    Object.entries(process.env).filter(([, value]) => value !== ""),
-  )
+  return Object.fromEntries(Object.entries(process.env).filter(([, value]) => value !== ""))
 }
 
 export const env = (() => {

@@ -1,10 +1,5 @@
-import {
-  sqliteTable,
-  text,
-  integer,
-  index,
-} from "drizzle-orm/sqlite-core"
 import { relations } from "drizzle-orm"
+import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
 export const monitors = sqliteTable("monitors", {
   id: text("id").primaryKey(),
@@ -18,51 +13,51 @@ export const monitors = sqliteTable("monitors", {
     .default("healthy"),
   expectedIntervalSeconds: integer("expected_interval_seconds").notNull(),
   gracePeriodSeconds: integer("grace_period_seconds").notNull().default(300),
-  paused: integer("paused", { mode: "boolean" })
-    .notNull()
-    .default(false),
+  paused: integer("paused", { mode: "boolean" }).notNull().default(false),
   maxDurationMs: integer("max_duration_ms"),
   displayOrder: integer("display_order").notNull().default(0),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 })
 
-export const heartbeats = sqliteTable("heartbeats", {
-  id: text("id").primaryKey(),
-  monitorId: text("monitor_id")
-    .notNull()
-    .references(() => monitors.id, { onDelete: "cascade" }),
-  receivedAt: integer("received_at", { mode: "timestamp" }).notNull(),
-  sourceIp: text("source_ip"),
-  userAgent: text("user_agent"),
-  durationMs: integer("duration_ms"),
-  exitCode: integer("exit_code"),
-  body: text("body"),
-}, (t) => [
-  index("heartbeats_monitor_received_idx").on(t.monitorId, t.receivedAt),
-])
+export const heartbeats = sqliteTable(
+  "heartbeats",
+  {
+    id: text("id").primaryKey(),
+    monitorId: text("monitor_id")
+      .notNull()
+      .references(() => monitors.id, { onDelete: "cascade" }),
+    receivedAt: integer("received_at", { mode: "timestamp" }).notNull(),
+    sourceIp: text("source_ip"),
+    userAgent: text("user_agent"),
+    durationMs: integer("duration_ms"),
+    exitCode: integer("exit_code"),
+    body: text("body"),
+  },
+  (t) => [index("heartbeats_monitor_received_idx").on(t.monitorId, t.receivedAt)],
+)
 
-export const incidents = sqliteTable("incidents", {
-  id: text("id").primaryKey(),
-  monitorId: text("monitor_id")
-    .notNull()
-    .references(() => monitors.id, { onDelete: "cascade" }),
-  status: text("status", { enum: ["open", "resolved"] })
-    .notNull()
-    .default("open"),
-  startedAt: integer("started_at", { mode: "timestamp" }).notNull(),
-  resolvedAt: integer("resolved_at", { mode: "timestamp" }),
-}, (t) => [
-  index("incidents_monitor_status_idx").on(t.monitorId, t.status),
-])
+export const incidents = sqliteTable(
+  "incidents",
+  {
+    id: text("id").primaryKey(),
+    monitorId: text("monitor_id")
+      .notNull()
+      .references(() => monitors.id, { onDelete: "cascade" }),
+    status: text("status", { enum: ["open", "resolved"] })
+      .notNull()
+      .default("open"),
+    startedAt: integer("started_at", { mode: "timestamp" }).notNull(),
+    resolvedAt: integer("resolved_at", { mode: "timestamp" }),
+  },
+  (t) => [index("incidents_monitor_status_idx").on(t.monitorId, t.status)],
+)
 
 export const notificationChannels = sqliteTable("notification_channels", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   type: text("type", { enum: ["discord", "telegram", "email", "slack"] }).notNull(),
-  enabled: integer("enabled", { mode: "boolean" })
-    .notNull()
-    .default(true),
+  enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
   config: text("config", { mode: "json" }).notNull(),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 })

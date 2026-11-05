@@ -28,7 +28,7 @@ export function Card({ children, className = "", glass = false, status, hover = 
   const hoverClass = hover
     ? "hover:shadow-md dark:hover:shadow-lg hover:border-[#dde0e4] dark:hover:border-zinc-700/80"
     : ""
-  const gradientClass = status ? statusGradients[status] ?? "" : ""
+  const gradientClass = status ? (statusGradients[status] ?? "") : ""
   const borderClass = status ? (statusBorders[status] ?? "") : ""
 
   return (
@@ -64,7 +64,9 @@ export function CardTitle({
   className?: string
 }) {
   return (
-    <h3 className={`text-xs uppercase tracking-wider text-[#697386] dark:text-zinc-500 font-medium ${className}`}>
+    <h3
+      className={`text-xs uppercase tracking-wider text-[#697386] dark:text-zinc-500 font-medium ${className}`}
+    >
       {children}
     </h3>
   )

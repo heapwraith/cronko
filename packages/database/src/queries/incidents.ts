@@ -1,4 +1,4 @@
-import { eq, desc, and } from "drizzle-orm"
+import { and, desc, eq } from "drizzle-orm"
 import { db } from "../index"
 import { incidents } from "../schema"
 
@@ -10,9 +10,7 @@ export async function findIncidents(options: {
   return db
     .select()
     .from(incidents)
-    .where(
-      options.status ? eq(incidents.status, options.status) : undefined,
-    )
+    .where(options.status ? eq(incidents.status, options.status) : undefined)
     .orderBy(desc(incidents.startedAt))
     .limit(Math.min(options.limit, 200))
     .offset(options.offset)
@@ -37,20 +35,11 @@ export async function findOpenIncident(monitorId: string) {
   return db
     .select()
     .from(incidents)
-    .where(
-      and(
-        eq(incidents.monitorId, monitorId),
-        eq(incidents.status, "open"),
-      ),
-    )
+    .where(and(eq(incidents.monitorId, monitorId), eq(incidents.status, "open")))
     .get()
 }
 
-export async function createIncident(input: {
-  id: string
-  monitorId: string
-  startedAt: Date
-}) {
+export async function createIncident(input: { id: string; monitorId: string; startedAt: Date }) {
   await db.insert(incidents).values({
     id: input.id,
     monitorId: input.monitorId,
@@ -60,8 +49,5 @@ export async function createIncident(input: {
 }
 
 export async function resolveIncident(id: string, resolvedAt: Date) {
-  await db
-    .update(incidents)
-    .set({ status: "resolved", resolvedAt })
-    .where(eq(incidents.id, id))
+  await db.update(incidents).set({ status: "resolved", resolvedAt }).where(eq(incidents.id, id))
 }

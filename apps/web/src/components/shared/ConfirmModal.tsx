@@ -46,19 +46,12 @@ export function ConfirmModal({
       ? "bg-red-600 hover:bg-red-500 focus:ring-red-500/50"
       : "bg-amber-600 hover:bg-amber-500 focus:ring-amber-500/50"
 
-  const iconColor =
-    variant === "danger" ? "text-red-400" : "text-amber-400"
-  const iconBg =
-    variant === "danger"
-      ? "bg-red-500/10"
-      : "bg-amber-500/10"
+  const iconColor = variant === "danger" ? "text-red-400" : "text-amber-400"
+  const iconBg = variant === "danger" ? "bg-red-500/10" : "bg-amber-500/10"
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onCancel}
-      />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
       <div className="relative w-full max-w-md rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 shadow-2xl animate-in zoom-in-95 fade-in">
         <div className="flex items-start gap-4 p-6">
           <div className={`rounded-full p-2 ${iconBg}`}>

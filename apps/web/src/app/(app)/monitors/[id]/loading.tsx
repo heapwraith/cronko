@@ -9,10 +9,7 @@ export default function MonitorDetailLoading() {
         </div>
         <div className="flex gap-2">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-7 w-16 animate-pulse rounded-lg bg-zinc-800/60"
-            />
+            <div key={i} className="h-7 w-16 animate-pulse rounded-lg bg-zinc-800/60" />
           ))}
         </div>
       </div>
@@ -60,10 +57,7 @@ export default function MonitorDetailLoading() {
         <div className="p-4">
           <div className="flex flex-wrap gap-0.5">
             {Array.from({ length: 90 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-3 w-3 rounded-sm animate-pulse bg-zinc-800/60"
-              />
+              <div key={i} className="h-3 w-3 rounded-sm animate-pulse bg-zinc-800/60" />
             ))}
           </div>
         </div>

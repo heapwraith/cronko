@@ -1,17 +1,17 @@
-import { Hono } from "hono"
-import { setCookie, deleteCookie, getCookie } from "hono/cookie"
-import { z } from "zod"
-import { zValidator } from "@hono/zod-validator"
 import { findUserByEmail } from "@cronko/database/queries/users"
+import { zValidator } from "@hono/zod-validator"
+import { Hono } from "hono"
+import { deleteCookie, getCookie, setCookie } from "hono/cookie"
+import { z } from "zod"
+import { env } from "../env"
+import { authenticate } from "../middleware/authenticate"
+import { logAuditEvent } from "../services/audit"
 import {
-  verifyPassword,
   generateAccessToken,
   generateRefreshToken,
+  verifyPassword,
   verifyRefreshToken,
 } from "../services/auth"
-import { authenticate } from "../middleware/authenticate"
-import { env } from "../env"
-import { logAuditEvent } from "../services/audit"
 
 export const authRoute = new Hono()
 
@@ -53,10 +53,7 @@ authRoute.post("/login", zValidator("json", loginSchema), async (c) => {
   const ip = c.req.header("x-forwarded-for") ?? c.req.header("x-real-ip") ?? "127.0.0.1"
 
   if (!checkLoginRateLimit(ip, email)) {
-    return c.json(
-      { error: "Too many login attempts. Try again later.", code: "RATE_LIMITED" },
-      429,
-    )
+    return c.json({ error: "Too many login attempts. Try again later.", code: "RATE_LIMITED" }, 429)
   }
 
   const user = await findUserByEmail(email)
@@ -123,10 +120,7 @@ authRoute.post("/refresh", async (c) => {
   const refreshToken = getCookie(c, "cronko_refresh")
 
   if (!refreshToken) {
-    return c.json(
-      { error: "No refresh token", code: "UNAUTHORIZED" },
-      401,
-    )
+    return c.json({ error: "No refresh token", code: "UNAUTHORIZED" }, 401)
   }
 
   try {
@@ -136,9 +130,9 @@ authRoute.post("/refresh", async (c) => {
     setCookie(c, "cronko_token", accessToken, {
       httpOnly: true,
       secure: isProd(),
-    sameSite: "Lax",
-    path: "/",
-    maxAge: 15 * 60,
+      sameSite: "Lax",
+      path: "/",
+      maxAge: 15 * 60,
     })
 
     const now = Math.floor(Date.now() / 1000)
@@ -155,13 +149,10 @@ authRoute.post("/refresh", async (c) => {
     deleteCookie(c, "cronko_refresh", {
       httpOnly: true,
       secure: isProd(),
-    sameSite: "Lax",
-    path: "/",
-  })
-  return c.json(
-    { error: "Refresh token expired or invalid", code: "UNAUTHORIZED" },
-      401,
-    )
+      sameSite: "Lax",
+      path: "/",
+    })
+    return c.json({ error: "Refresh token expired or invalid", code: "UNAUTHORIZED" }, 401)
   }
 })
 

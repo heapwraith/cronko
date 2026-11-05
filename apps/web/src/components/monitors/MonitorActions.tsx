@@ -1,21 +1,15 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { Pause, Pencil, Play, Trash2 } from "lucide-react"
 import Link from "next/link"
-import { Pause, Play, Trash2, Pencil } from "lucide-react"
-import { api } from "@/lib/api"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
 import { ConfirmModal } from "@/components/shared/ConfirmModal"
 import { useToast } from "@/components/shared/Toast"
+import { api } from "@/lib/api"
 import { useT } from "@/lib/i18n"
 
-export function MonitorActions({
-  monitorId,
-  status,
-}: {
-  monitorId: string
-  status: string
-}) {
+export function MonitorActions({ monitorId, status }: { monitorId: string; status: string }) {
   const { t } = useT()
   const router = useRouter()
   const { toast } = useToast()

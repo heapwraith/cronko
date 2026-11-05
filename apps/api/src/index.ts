@@ -1,14 +1,14 @@
 import { existsSync } from "node:fs"
 import { resolve } from "node:path"
-import { migrate } from "drizzle-orm/better-sqlite3/migrator"
-import { serve } from "@hono/node-server"
-import { env } from "./env"
 import { db, sqliteClient } from "@cronko/database"
-import { findUserByEmail, createUser } from "@cronko/database/queries/users"
-import { hashPassword } from "./services/auth"
-import { startScheduler, stopScheduler, schedulerMetrics } from "./services/scheduler"
+import { createUser, findUserByEmail } from "@cronko/database/queries/users"
+import { serve } from "@hono/node-server"
+import { migrate } from "drizzle-orm/better-sqlite3/migrator"
 import { app } from "./app"
+import { env } from "./env"
 import { logger } from "./lib/logger"
+import { hashPassword } from "./services/auth"
+import { schedulerMetrics, startScheduler, stopScheduler } from "./services/scheduler"
 
 // Migrations ship next to the code: ./packages/database/src/migrations in the
 // Docker image (cwd=/app) and ../../packages/... when running from apps/api.
@@ -51,14 +51,10 @@ async function bootstrap() {
   await seedAdmin()
 
   // Health endpoints
-  app.get("/health", (c) =>
-    c.json({ ok: true, uptime: process.uptime() }),
-  )
+  app.get("/health", (c) => c.json({ ok: true, uptime: process.uptime() }))
 
   // Liveness probe
-  app.get("/health/live", (c) =>
-    c.json({ status: "ok" }),
-  )
+  app.get("/health/live", (c) => c.json({ status: "ok" }))
 
   // Readiness probe — database connectivity
   app.get("/health/ready", async (c) => {
@@ -67,10 +63,7 @@ async function bootstrap() {
       return c.json({ status: "ok", checks: { database: "up" } })
     } catch (err) {
       logger.error({ err }, "readiness check failed")
-      return c.json(
-        { status: "error", checks: { database: "down" } },
-        503,
-      )
+      return c.json({ status: "error", checks: { database: "down" } }, 503)
     }
   })
 
@@ -115,8 +108,12 @@ async function bootstrap() {
     }, 30_000).unref()
   }
 
-  process.on("SIGTERM", () => { shutdown("SIGTERM").catch(() => {}) })
-  process.on("SIGINT", () => { shutdown("SIGINT").catch(() => {}) })
+  process.on("SIGTERM", () => {
+    shutdown("SIGTERM").catch(() => {})
+  })
+  process.on("SIGINT", () => {
+    shutdown("SIGINT").catch(() => {})
+  })
 }
 
 bootstrap().catch((err) => {

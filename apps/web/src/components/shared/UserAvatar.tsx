@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useT } from "@/lib/i18n"
+import { useEffect, useState } from "react"
 import { api } from "@/lib/api"
+import { useT } from "@/lib/i18n"
 
 async function fetchEmail(): Promise<string | null> {
   try {

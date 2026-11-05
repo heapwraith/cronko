@@ -1,14 +1,14 @@
-import { db } from "@cronko/database";
-import { auditLogs } from "@cronko/database/schema";
-import { logger } from "../lib/logger";
+import { db } from "@cronko/database"
+import { auditLogs } from "@cronko/database/schema"
+import { logger } from "../lib/logger"
 
 interface AuditEvent {
-  userId?: string;
-  action: string;
-  resourceType?: string;
-  resourceId?: string;
-  metadata?: Record<string, unknown>;
-  ipAddress?: string;
+  userId?: string
+  action: string
+  resourceType?: string
+  resourceId?: string
+  metadata?: Record<string, unknown>
+  ipAddress?: string
 }
 
 export async function logAuditEvent(event: AuditEvent): Promise<void> {
@@ -22,8 +22,8 @@ export async function logAuditEvent(event: AuditEvent): Promise<void> {
       metadata: event.metadata ? JSON.stringify(event.metadata) : null,
       ipAddress: event.ipAddress ?? null,
       createdAt: new Date().toISOString(),
-    });
+    })
   } catch (err) {
-    logger.error({ err, event }, "audit log insert failed");
+    logger.error({ err, event }, "audit log insert failed")
   }
 }

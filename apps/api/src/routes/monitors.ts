@@ -1,23 +1,23 @@
+import { db } from "@cronko/database"
+import { findHeartbeatsByMonitor, findLatestHeartbeats } from "@cronko/database/queries/heartbeats"
+import { findIncidentsByMonitor, findOpenIncident } from "@cronko/database/queries/incidents"
+import {
+  createMonitor,
+  deleteMonitor,
+  findAllMonitors,
+  findMonitorById,
+  findMonitorBySlug,
+  pauseMonitor,
+  resumeMonitor,
+  updateMonitor,
+} from "@cronko/database/queries/monitors"
+import { monitors as monitorsTable } from "@cronko/database/schema"
+import { DEFAULT_GRACE_PERIOD_SECONDS } from "@cronko/shared/constants"
+import { zValidator } from "@hono/zod-validator"
 import type { InferSelectModel } from "drizzle-orm"
 import { eq } from "drizzle-orm"
 import { Hono } from "hono"
 import { z } from "zod"
-import { db } from "@cronko/database"
-import { zValidator } from "@hono/zod-validator"
-import { monitors as monitorsTable } from "@cronko/database/schema"
-import {
-  findAllMonitors,
-  findMonitorById,
-  findMonitorBySlug,
-  createMonitor,
-  updateMonitor,
-  deleteMonitor,
-  pauseMonitor,
-  resumeMonitor,
-} from "@cronko/database/queries/monitors"
-import { findHeartbeatsByMonitor, findLatestHeartbeats } from "@cronko/database/queries/heartbeats"
-import { findOpenIncident, findIncidentsByMonitor } from "@cronko/database/queries/incidents"
-import { DEFAULT_GRACE_PERIOD_SECONDS } from "@cronko/shared/constants"
 import { logAuditEvent } from "../services/audit"
 
 type MonitorRow = InferSelectModel<typeof monitorsTable>
@@ -31,12 +31,7 @@ const pathParamSchema = z.object({
 const createMonitorSchema = z.object({
   name: z.string().min(1).max(100),
   expectedIntervalSeconds: z.number().int().min(10).max(31_536_000),
-  gracePeriodSeconds: z
-    .number()
-    .int()
-    .min(0)
-    .max(86_400)
-    .default(DEFAULT_GRACE_PERIOD_SECONDS),
+  gracePeriodSeconds: z.number().int().min(0).max(86_400).default(DEFAULT_GRACE_PERIOD_SECONDS),
   maxDurationMs: z.number().int().min(0).max(86_400_000).optional(),
 })
 
@@ -87,16 +82,16 @@ monitorsRoute.post("/", zValidator("json", createMonitorSchema), async (c) => {
     )
   }
 
-    const now = new Date()
-    const monitor = await createMonitor({
+  const now = new Date()
+  const monitor = await createMonitor({
     id: crypto.randomUUID(),
     name: body.name,
     slug,
     token: crypto.randomUUID(),
     expectedIntervalSeconds: body.expectedIntervalSeconds,
-      gracePeriodSeconds: body.gracePeriodSeconds,
-      ...(body.maxDurationMs !== undefined && { maxDurationMs: body.maxDurationMs }),
-      now,
+    gracePeriodSeconds: body.gracePeriodSeconds,
+    ...(body.maxDurationMs !== undefined && { maxDurationMs: body.maxDurationMs }),
+    now,
   })
 
   logAuditEvent({
@@ -130,33 +125,29 @@ monitorsRoute.get("/:id", async (c) => {
   })
 })
 
-monitorsRoute.patch(
-  "/:id",
-  zValidator("json", updateMonitorSchema),
-  async (c) => {
-    const { id } = pathParamSchema.parse({ id: c.req.param("id") })
-    const body = c.req.valid("json")
-    const now = new Date()
+monitorsRoute.patch("/:id", zValidator("json", updateMonitorSchema), async (c) => {
+  const { id } = pathParamSchema.parse({ id: c.req.param("id") })
+  const body = c.req.valid("json")
+  const now = new Date()
 
-    const updated = await updateMonitor(id, {
-      ...(body.name !== undefined && { name: body.name }),
-      ...(body.expectedIntervalSeconds !== undefined && {
-        expectedIntervalSeconds: body.expectedIntervalSeconds,
-      }),
-      ...(body.gracePeriodSeconds !== undefined && {
-        gracePeriodSeconds: body.gracePeriodSeconds,
-      }),
-      ...(body.maxDurationMs !== undefined && { maxDurationMs: body.maxDurationMs }),
-      now,
-    })
+  const updated = await updateMonitor(id, {
+    ...(body.name !== undefined && { name: body.name }),
+    ...(body.expectedIntervalSeconds !== undefined && {
+      expectedIntervalSeconds: body.expectedIntervalSeconds,
+    }),
+    ...(body.gracePeriodSeconds !== undefined && {
+      gracePeriodSeconds: body.gracePeriodSeconds,
+    }),
+    ...(body.maxDurationMs !== undefined && { maxDurationMs: body.maxDurationMs }),
+    now,
+  })
 
-    if (!updated) {
-      return c.json({ error: "Not found", code: "NOT_FOUND" }, 404)
-    }
+  if (!updated) {
+    return c.json({ error: "Not found", code: "NOT_FOUND" }, 404)
+  }
 
-    return c.json({ data: updated })
-  },
-)
+  return c.json({ data: updated })
+})
 
 monitorsRoute.delete("/:id", async (c) => {
   const { id } = pathParamSchema.parse({ id: c.req.param("id") })
@@ -192,27 +183,28 @@ monitorsRoute.post("/:id/resume", async (c) => {
   return c.json({ data: monitor })
 })
 
-monitorsRoute.post("/reorder", zValidator("json", z.object({ ids: z.array(z.string()) })), async (c) => {
-  const { ids } = c.req.valid("json")
-  const now = new Date()
-  for (let i = 0; i < ids.length; i++) {
+monitorsRoute.post(
+  "/reorder",
+  zValidator("json", z.object({ ids: z.array(z.string()) })),
+  async (c) => {
+    const { ids } = c.req.valid("json")
+    const now = new Date()
+    for (let i = 0; i < ids.length; i++) {
       const currentId = ids[i]
       if (!currentId) continue
-      await db.update(monitorsTable).set({ displayOrder: i, updatedAt: now }).where(eq(monitorsTable.id, currentId))
-  }
-  return c.json({ data: { ok: true } })
-})
+      await db
+        .update(monitorsTable)
+        .set({ displayOrder: i, updatedAt: now })
+        .where(eq(monitorsTable.id, currentId))
+    }
+    return c.json({ data: { ok: true } })
+  },
+)
 
 monitorsRoute.get("/:id/incidents", async (c) => {
   const id = c.req.param("id") ?? ""
-  const limit = Math.min(
-    Math.max(1, parseInt(c.req.query("limit") ?? "50", 10) || 50),
-    200,
-  )
-  const offset = Math.max(
-    0,
-    parseInt(c.req.query("offset") ?? "0", 10) || 0,
-  )
+  const limit = Math.min(Math.max(1, parseInt(c.req.query("limit") ?? "50", 10) || 50), 200)
+  const offset = Math.max(0, parseInt(c.req.query("offset") ?? "0", 10) || 0)
 
   const result = await findIncidentsByMonitor(id, { limit, offset })
   return c.json({ data: result })
@@ -220,10 +212,7 @@ monitorsRoute.get("/:id/incidents", async (c) => {
 
 monitorsRoute.get("/:id/heartbeats", async (c) => {
   const id = c.req.param("id") ?? ""
-  const limit = Math.min(
-    Math.max(1, parseInt(c.req.query("limit") ?? "100", 10) || 100),
-    500,
-  )
+  const limit = Math.min(Math.max(1, parseInt(c.req.query("limit") ?? "100", 10) || 100), 500)
   const before = c.req.query("before")
 
   const heartbeats = await findHeartbeatsByMonitor(id, {
@@ -241,7 +230,9 @@ monitorsRoute.get("/:id/heartbeats", async (c) => {
         hb.exitCode ?? "",
         hb.sourceIp ?? "",
         (hb.body ?? "").replace(/"/g, '""'),
-      ].map((v) => `"${v}"`).join(",")
+      ]
+        .map((v) => `"${v}"`)
+        .join(",")
       csvLines.push(row)
     }
     return c.text(csvLines.join("\n"), 200, { "Content-Type": "text/csv; charset=utf-8" })

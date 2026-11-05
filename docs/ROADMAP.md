@@ -6,14 +6,14 @@ Cada item vira um plano de implementação próprio (superpowers:writing-plans) 
 
 ## P0 — Confiabilidade (pré-requisito: um alerta perdido é fatal)
 
-| # | Item | Por quê | Onde |
-|---|---|---|---|
-| 0.1 | Lock/leader election do scheduler (Redis ou DB) | Com 2+ réplicas, alertas duplicam | `apps/api/src/services/scheduler.ts` |
-| 0.2 | Testes do scheduler, notifier, csrf, rotas monitors/incidents/stats/settings | Só o caminho de ping/auth tem testes | `apps/api/src/**` |
-| 0.3 | Validar migrations e schema em Postgres | Schema é `sqliteTable`; Postgres nunca foi provado | `packages/database` |
-| 0.4 | Revisar CSRF | Dois commits quase idênticos; proteção depende de SameSite/CORS | `apps/api/src/middleware/csrf.ts` |
-| 0.5 | Retry/backoff e registro de falha de notificação | Falha de envio não pode sumir em silêncio | `apps/api/src/services/notifier.ts` |
-| 0.6 | Build Docker alpine com better-sqlite3 13 + CI de e2e (Playwright) | Não validado após o upgrade | `apps/*/Dockerfile`, `.github/workflows` |
+| #   | Item                                                                         | Por quê                                                         | Onde                                     |
+| --- | ---------------------------------------------------------------------------- | --------------------------------------------------------------- | ---------------------------------------- |
+| 0.1 | Lock/leader election do scheduler (Redis ou DB)                              | Com 2+ réplicas, alertas duplicam                               | `apps/api/src/services/scheduler.ts`     |
+| 0.2 | Testes do scheduler, notifier, csrf, rotas monitors/incidents/stats/settings | Só o caminho de ping/auth tem testes                            | `apps/api/src/**`                        |
+| 0.3 | Validar migrations e schema em Postgres                                      | Schema é `sqliteTable`; Postgres nunca foi provado              | `packages/database`                      |
+| 0.4 | Revisar CSRF                                                                 | Dois commits quase idênticos; proteção depende de SameSite/CORS | `apps/api/src/middleware/csrf.ts`        |
+| 0.5 | Retry/backoff e registro de falha de notificação                             | Falha de envio não pode sumir em silêncio                       | `apps/api/src/services/notifier.ts`      |
+| 0.6 | Build Docker alpine com better-sqlite3 13 + CI de e2e (Playwright)           | Não validado após o upgrade                                     | `apps/*/Dockerfile`, `.github/workflows` |
 
 ## P1 — Paridade com Healthchecks (sem isso não há motivo para trocar)
 

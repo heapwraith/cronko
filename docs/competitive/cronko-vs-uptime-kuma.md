@@ -5,44 +5,44 @@
 
 ## 1. Conclusão principal
 
-O Uptime Kuma **não é o concorrente direto do Cronko**. Ele é um monitor de *disponibilidade ativa* (ele consulta seus serviços); o Cronko é um monitor *passivo de jobs agendados* (o job avisa que rodou). No nicho do Cronko, os concorrentes diretos são **Healthchecks.io** (open source, self-hosted) e **Cronitor** (SaaS). Fontes de terceiros apontam o uso combinado: Kuma para serviços, Healthchecks para jobs.
+O Uptime Kuma **não é o concorrente direto do Cronko**. Ele é um monitor de _disponibilidade ativa_ (ele consulta seus serviços); o Cronko é um monitor _passivo de jobs agendados_ (o job avisa que rodou). No nicho do Cronko, os concorrentes diretos são **Healthchecks.io** (open source, self-hosted) e **Cronitor** (SaaS). Fontes de terceiros apontam o uso combinado: Kuma para serviços, Healthchecks para jobs.
 
 Consequência estratégica: "ser melhor que o Kuma" só faz sentido **dentro do propósito do Cronko**. A régua real é o Healthchecks.io, que já tem o que o Cronko ainda não tem (cron expressions, sinal de falha, log de eventos, 20+ integrações).
 
 ## 2. Posicionamento
 
-| | Cronko | Uptime Kuma | Healthchecks.io | Cronitor |
-|---|---|---|---|---|
-| Categoria | Dead-man's-switch self-hosted | Monitor de uptime self-hosted | Monitor de cron jobs (SaaS + open source) [V] | Cron + uptime + status pages (SaaS) [V] |
-| Direção do check | Passivo (job → Cronko) [I] | Majoritariamente ativo (+ monitor "push") [C] | Passivo [V] | Passivo + ativo [V] |
-| Self-hosted | Sim [I] | Sim [V] | Sim (open source) [V] | Não [V] |
-| Banco | SQLite / Postgres [I] | SQLite; MariaDB desde a v2 [V] | — | — |
+|                  | Cronko                        | Uptime Kuma                                   | Healthchecks.io                               | Cronitor                                |
+| ---------------- | ----------------------------- | --------------------------------------------- | --------------------------------------------- | --------------------------------------- |
+| Categoria        | Dead-man's-switch self-hosted | Monitor de uptime self-hosted                 | Monitor de cron jobs (SaaS + open source) [V] | Cron + uptime + status pages (SaaS) [V] |
+| Direção do check | Passivo (job → Cronko) [I]    | Majoritariamente ativo (+ monitor "push") [C] | Passivo [V]                                   | Passivo + ativo [V]                     |
+| Self-hosted      | Sim [I]                       | Sim [V]                                       | Sim (open source) [V]                         | Não [V]                                 |
+| Banco            | SQLite / Postgres [I]         | SQLite; MariaDB desde a v2 [V]                | —                                             | —                                       |
 
 ## 3. Matriz de funcionalidades (Forte / Adequado / Fraco / Ausente)
 
 Cronko é avaliado pelo código [I]. Healthchecks/Cronitor pela tabela oficial do Healthchecks [V]. Kuma [C], salvo indicação.
 
-| Capacidade | Cronko | Healthchecks.io | Cronitor | Uptime Kuma |
-|---|---|---|---|---|
-| Ping URL por job | Forte | Forte | Forte | Adequado (monitor "push") |
-| Agenda por intervalo + grace | Adequado | Forte | Forte | Adequado |
-| **Agenda por expressão cron + timezone** | **Ausente** | Forte [V] | Forte [V] | Ausente |
-| systemd OnCalendar | Ausente | Forte [V] | Ausente [V] | Ausente |
-| Evento "started" (duração do job) | Forte (pulse start/finish) | Forte [V] | Forte [V] | Ausente |
-| **Evento "failed" explícito / exit code** | **Ausente** | Forte [V] | Forte [V] | Ausente |
-| Duração máxima (`max_duration_ms`) | Forte | Adequado | Adequado | Ausente |
-| Corpo da requisição guardado | Adequado (coluna `body`) | Forte (até 100 KB) [V] | Fraco (só com CLI) [V] | Ausente |
-| Log de eventos por check | Adequado (500 heartbeats) | Adequado (100 free / 1000 pago) [V] | Ausente [V] | Adequado |
-| Ping por e-mail | Ausente | Forte [V] | Forte [V] | Ausente |
-| Incidentes | Forte | Adequado | Adequado | Adequado |
-| Canais de notificação | Fraco (4: Discord, Telegram, e-mail, Slack) | Forte (dezenas) | Forte | Forte (dezenas; novos na v2) [V] |
-| Status pages públicas | Ausente (só badge SVG) | Adequado (badges) [V] | Forte (hospedadas) [V] | Forte |
-| Checks ativos HTTP/TCP/etc. | Ausente (fora de escopo) | Ausente | Forte [V] | Forte |
-| Multi-usuário / projetos / times | Ausente (1 admin) | Forte [V] | Forte | Fraco |
-| API + docs | Forte (OpenAPI/Scalar) | Forte [V] | Forte | Fraco |
-| Audit log | Forte | — | — | Fraco |
-| PWA / i18n | Adequado (PWA, en/pt-BR) | Fraco | Fraco | Forte (muitos idiomas) |
-| Hardening (CSRF, rate limit, headers) | Forte | Forte | n/a | Adequado |
+| Capacidade                                | Cronko                                      | Healthchecks.io                     | Cronitor               | Uptime Kuma                      |
+| ----------------------------------------- | ------------------------------------------- | ----------------------------------- | ---------------------- | -------------------------------- |
+| Ping URL por job                          | Forte                                       | Forte                               | Forte                  | Adequado (monitor "push")        |
+| Agenda por intervalo + grace              | Adequado                                    | Forte                               | Forte                  | Adequado                         |
+| **Agenda por expressão cron + timezone**  | **Ausente**                                 | Forte [V]                           | Forte [V]              | Ausente                          |
+| systemd OnCalendar                        | Ausente                                     | Forte [V]                           | Ausente [V]            | Ausente                          |
+| Evento "started" (duração do job)         | Forte (pulse start/finish)                  | Forte [V]                           | Forte [V]              | Ausente                          |
+| **Evento "failed" explícito / exit code** | **Ausente**                                 | Forte [V]                           | Forte [V]              | Ausente                          |
+| Duração máxima (`max_duration_ms`)        | Forte                                       | Adequado                            | Adequado               | Ausente                          |
+| Corpo da requisição guardado              | Adequado (coluna `body`)                    | Forte (até 100 KB) [V]              | Fraco (só com CLI) [V] | Ausente                          |
+| Log de eventos por check                  | Adequado (500 heartbeats)                   | Adequado (100 free / 1000 pago) [V] | Ausente [V]            | Adequado                         |
+| Ping por e-mail                           | Ausente                                     | Forte [V]                           | Forte [V]              | Ausente                          |
+| Incidentes                                | Forte                                       | Adequado                            | Adequado               | Adequado                         |
+| Canais de notificação                     | Fraco (4: Discord, Telegram, e-mail, Slack) | Forte (dezenas)                     | Forte                  | Forte (dezenas; novos na v2) [V] |
+| Status pages públicas                     | Ausente (só badge SVG)                      | Adequado (badges) [V]               | Forte (hospedadas) [V] | Forte                            |
+| Checks ativos HTTP/TCP/etc.               | Ausente (fora de escopo)                    | Ausente                             | Forte [V]              | Forte                            |
+| Multi-usuário / projetos / times          | Ausente (1 admin)                           | Forte [V]                           | Forte                  | Fraco                            |
+| API + docs                                | Forte (OpenAPI/Scalar)                      | Forte [V]                           | Forte                  | Fraco                            |
+| Audit log                                 | Forte                                       | —                                   | —                      | Fraco                            |
+| PWA / i18n                                | Adequado (PWA, en/pt-BR)                    | Fraco                               | Fraco                  | Forte (muitos idiomas)           |
+| Hardening (CSRF, rate limit, headers)     | Forte                                       | Forte                               | n/a                    | Adequado                         |
 
 ## 4. Pontos fortes e fracos
 
@@ -54,7 +54,7 @@ Cronko é avaliado pelo código [I]. Healthchecks/Cronitor pela tabela oficial d
 
 **Uptime Kuma** — Fortes: UI polida, enorme variedade de checks ativos, status pages, muitas notificações, comunidade grande. Fracos para o nosso caso: não entende "job"; sem cron expression, sem started/failed.
 
-## 5. Oportunidades (onde o Cronko pode ser *melhor*)
+## 5. Oportunidades (onde o Cronko pode ser _melhor_)
 
 1. **Fechar a paridade com Healthchecks** (cron expression + timezone, `/fail`, log de eventos). Sem isso o Cronko não é argumento para quem já conhece Healthchecks.
 2. **Diferenciar acima do Healthchecks**: duração com p50/p95 e detecção de anomalia, alerta de execução sobreposta, captura de saída/log do job, wrapper CLI (`cronko run -- cmd`), snippets prontos (cron, systemd, k8s CronJob, GitHub Actions).

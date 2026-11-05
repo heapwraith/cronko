@@ -1,10 +1,10 @@
 #!/usr/bin/env node
+import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync } from "node:fs"
 // Cronko SQLite backup / restore.
 //   node scripts/db.mjs backup  [outfile]      (default: backups/cronko-<utc>.db)
 //   node scripts/db.mjs restore <backupfile>   (stop the API first)
 // Reads DATABASE_URL (file:...) from the environment or .env.
 import { createRequire } from "node:module"
-import { existsSync, mkdirSync, readFileSync, copyFileSync, rmSync } from "node:fs"
 import { dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 

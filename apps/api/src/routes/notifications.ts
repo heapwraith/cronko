@@ -1,15 +1,15 @@
-import { Hono } from "hono"
-import { z } from "zod"
-import { zValidator } from "@hono/zod-validator"
 import {
+  createNotificationChannel,
+  deleteNotificationChannel,
   findAllNotificationChannels,
   findNotificationChannelById,
-  createNotificationChannel,
   updateNotificationChannel,
-  deleteNotificationChannel,
 } from "@cronko/database/queries/notifications"
-import { sendNotification } from "../services/notifier"
+import { zValidator } from "@hono/zod-validator"
+import { Hono } from "hono"
+import { z } from "zod"
 import { logAuditEvent } from "../services/audit"
+import { sendNotification } from "../services/notifier"
 
 export const notificationsRoute = new Hono()
 
@@ -53,51 +53,43 @@ notificationsRoute.get("/", async (c) => {
   return c.json({ data: channels })
 })
 
-notificationsRoute.post(
-  "/",
-  zValidator("json", createNotificationSchema),
-  async (c) => {
-    const body = c.req.valid("json")
-    const channel = await createNotificationChannel({
-      id: crypto.randomUUID(),
-      name: body.name,
-      type: body.type,
-      enabled: true,
-      config: body.config,
-    })
+notificationsRoute.post("/", zValidator("json", createNotificationSchema), async (c) => {
+  const body = c.req.valid("json")
+  const channel = await createNotificationChannel({
+    id: crypto.randomUUID(),
+    name: body.name,
+    type: body.type,
+    enabled: true,
+    config: body.config,
+  })
 
-    logAuditEvent({
-      userId: (c.get("jwtPayload") as { sub: string })?.sub,
-      action: "notification.created",
-      resourceType: "notification",
-      resourceId: channel.id,
-      metadata: { name: body.name, type: body.type },
-    }).catch(() => {})
+  logAuditEvent({
+    userId: (c.get("jwtPayload") as { sub: string })?.sub,
+    action: "notification.created",
+    resourceType: "notification",
+    resourceId: channel.id,
+    metadata: { name: body.name, type: body.type },
+  }).catch(() => {})
 
-    return c.json({ data: channel }, 201)
-  },
-)
+  return c.json({ data: channel }, 201)
+})
 
-notificationsRoute.patch(
-  "/:id",
-  zValidator("json", updateNotificationSchema),
-  async (c) => {
-    const id = c.req.param("id") ?? ""
-    const body = c.req.valid("json")
+notificationsRoute.patch("/:id", zValidator("json", updateNotificationSchema), async (c) => {
+  const id = c.req.param("id") ?? ""
+  const body = c.req.valid("json")
 
-    const updated = await updateNotificationChannel(id, {
-      ...(body.name !== undefined && { name: body.name }),
-      ...(body.enabled !== undefined && { enabled: body.enabled }),
-      ...(body.config !== undefined && { config: body.config }),
-    })
+  const updated = await updateNotificationChannel(id, {
+    ...(body.name !== undefined && { name: body.name }),
+    ...(body.enabled !== undefined && { enabled: body.enabled }),
+    ...(body.config !== undefined && { config: body.config }),
+  })
 
-    if (!updated) {
-      return c.json({ error: "Not found", code: "NOT_FOUND" }, 404)
-    }
+  if (!updated) {
+    return c.json({ error: "Not found", code: "NOT_FOUND" }, 404)
+  }
 
-    return c.json({ data: updated })
-  },
-)
+  return c.json({ data: updated })
+})
 
 notificationsRoute.delete("/:id", async (c) => {
   const id = c.req.param("id") ?? ""

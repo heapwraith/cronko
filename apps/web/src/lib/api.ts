@@ -115,7 +115,11 @@ async function get<T>(path: string): Promise<T> {
   const res = await authFetch(path)
   if (!res.ok) {
     let body: unknown
-    try { body = await res.json() } catch { body = null }
+    try {
+      body = await res.json()
+    } catch {
+      body = null
+    }
     throw new ApiError(`API ${res.status}`, res.status, body)
   }
   const json = (await res.json()) as { data: T }
@@ -130,7 +134,11 @@ async function post<T>(path: string, body?: unknown): Promise<T> {
   })
   if (!res.ok) {
     let errBody: unknown
-    try { errBody = await res.json() } catch { errBody = null }
+    try {
+      errBody = await res.json()
+    } catch {
+      errBody = null
+    }
     throw new ApiError(`API ${res.status}`, res.status, errBody)
   }
   const json = (await res.json()) as { data: T }
@@ -145,7 +153,11 @@ async function patch<T>(path: string, body: unknown): Promise<T> {
   })
   if (!res.ok) {
     let errBody: unknown
-    try { errBody = await res.json() } catch { errBody = null }
+    try {
+      errBody = await res.json()
+    } catch {
+      errBody = null
+    }
     throw new ApiError(`API ${res.status}`, res.status, errBody)
   }
   const json = (await res.json()) as { data: T }
@@ -158,7 +170,11 @@ async function del<T>(path: string): Promise<T> {
   })
   if (!res.ok) {
     let errBody: unknown
-    try { errBody = await res.json() } catch { errBody = null }
+    try {
+      errBody = await res.json()
+    } catch {
+      errBody = null
+    }
     throw new ApiError(`API ${res.status}`, res.status, errBody)
   }
   const json = (await res.json()) as { data: T }
@@ -169,10 +185,8 @@ export const api = {
   auth: {
     login: (body: { email: string; password: string }) =>
       post<{ token: string; email: string; expiresAt: string }>("/auth/login", body),
-    logout: () =>
-      post<{ ok: boolean }>("/auth/logout"),
-    me: () =>
-      get<{ id: string; email: string }>("/auth/me"),
+    logout: () => post<{ ok: boolean }>("/auth/logout"),
+    me: () => get<{ id: string; email: string }>("/auth/me"),
   },
   stats: {
     get: () =>
@@ -235,11 +249,7 @@ export const api = {
           resolvedAt: string | null
         } | null
       }>(`/api/monitors/${id}`),
-    create: (body: {
-      name: string
-      expectedIntervalSeconds: number
-      gracePeriodSeconds: number
-    }) =>
+    create: (body: { name: string; expectedIntervalSeconds: number; gracePeriodSeconds: number }) =>
       post<{
         id: string
         name: string
@@ -256,10 +266,8 @@ export const api = {
       },
     ) => patch<{ id: string; name: string }>(`/api/monitors/${id}`, body),
     delete: (id: string) => del<{ ok: boolean }>(`/api/monitors/${id}`),
-    pause: (id: string) =>
-      post<{ id: string; status: string }>(`/api/monitors/${id}/pause`),
-    resume: (id: string) =>
-      post<{ id: string; status: string }>(`/api/monitors/${id}/resume`),
+    pause: (id: string) => post<{ id: string; status: string }>(`/api/monitors/${id}/pause`),
+    resume: (id: string) => post<{ id: string; status: string }>(`/api/monitors/${id}/resume`),
     heartbeats: (id: string, query?: { limit?: number; before?: string }) => {
       const params = new URLSearchParams()
       if (query?.limit) params.set("limit", String(query.limit))
@@ -325,10 +333,8 @@ export const api = {
       >("/api/notifications"),
     create: (body: { name: string; type: string; config: unknown }) =>
       post<{ id: string; name: string }>("/api/notifications", body),
-    delete: (id: string) =>
-      del<{ ok: boolean }>(`/api/notifications/${id}`),
-    test: (id: string) =>
-      post<{ ok: boolean }>(`/api/notifications/${id}/test`),
+    delete: (id: string) => del<{ ok: boolean }>(`/api/notifications/${id}`),
+    test: (id: string) => post<{ ok: boolean }>(`/api/notifications/${id}/test`),
     update: (
       id: string,
       body: {

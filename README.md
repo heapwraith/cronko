@@ -95,50 +95,58 @@ API runs on `:3001`, web on `:3000`.
 
 ## Environment variables
 
-| Variable | Required | Description |
-|---|---|---|
-| `DATABASE_URL` | Yes | `file:./data/cronko.db` (SQLite) or `postgresql://...` |
-| `API_PORT` | No | API server port (default: 3001) |
-| `API_HOST` | No | API bind address (default: 0.0.0.0) |
-| `NEXT_PUBLIC_API_URL` | No | URL the frontend uses to reach the API |
-| `JWT_SECRET` | Yes | Key for signing JWT tokens (min 32 chars) |
-| `ADMIN_EMAIL` | No | Auto-created admin user email on first boot |
-| `ADMIN_PASSWORD` | No | Auto-created admin user password (min 8 chars) |
-| `SMTP_HOST` | No | SMTP server for email notifications |
-| `SMTP_PORT` | No | SMTP port (default: 587) |
-| `SMTP_USER` | No | SMTP username |
-| `SMTP_PASS` | No | SMTP password |
-| `SMTP_FROM` | No | From address for notification emails |
-| `TELEGRAM_BOT_TOKEN` | No | Bot token for Telegram notifications |
-| `CORS_ORIGINS` | No | Additional CORS origins, comma-separated |
-| `REDIS_URL` | No | Redis URL for distributed rate limiting |
-| `NODE_ENV` | No | `development`, `production`, or `test` (default: `development`) |
+| Variable              | Required | Description                                                     |
+| --------------------- | -------- | --------------------------------------------------------------- |
+| `DATABASE_URL`        | Yes      | `file:./data/cronko.db` (SQLite) or `postgresql://...`          |
+| `API_PORT`            | No       | API server port (default: 3001)                                 |
+| `API_HOST`            | No       | API bind address (default: 0.0.0.0)                             |
+| `NEXT_PUBLIC_API_URL` | No       | URL the frontend uses to reach the API                          |
+| `JWT_SECRET`          | Yes      | Key for signing JWT tokens (min 32 chars)                       |
+| `ADMIN_EMAIL`         | No       | Auto-created admin user email on first boot                     |
+| `ADMIN_PASSWORD`      | No       | Auto-created admin user password (min 8 chars)                  |
+| `SMTP_HOST`           | No       | SMTP server for email notifications                             |
+| `SMTP_PORT`           | No       | SMTP port (default: 587)                                        |
+| `SMTP_USER`           | No       | SMTP username                                                   |
+| `SMTP_PASS`           | No       | SMTP password                                                   |
+| `SMTP_FROM`           | No       | From address for notification emails                            |
+| `TELEGRAM_BOT_TOKEN`  | No       | Bot token for Telegram notifications                            |
+| `CORS_ORIGINS`        | No       | Additional CORS origins, comma-separated                        |
+| `REDIS_URL`           | No       | Redis URL for distributed rate limiting                         |
+| `NODE_ENV`            | No       | `development`, `production`, or `test` (default: `development`) |
 
 ## Notification integrations
 
 ### Discord
+
 Create a webhook in your Discord server settings. Add a channel in Cronko with
 type `discord` and paste the webhook URL.
+
 ```json
 { "webhookUrl": "https://discord.com/api/webhooks/..." }
 ```
 
 ### Telegram
+
 Create a bot via `@BotFather`, get the token, find your chat ID. Add a channel
 with type `telegram`.
+
 ```json
 { "botToken": "123456:ABC-DEF...", "chatId": "-1001234567890" }
 ```
 
 ### Email
+
 Set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, and `SMTP_FROM` in
 `.env`. Add a channel with type `email` and the recipient address.
+
 ```json
 { "to": "alerts@example.com" }
 ```
 
 ### Slack
+
 Create a Slack webhook. Add a channel with type `slack` and paste the webhook URL.
+
 ```json
 { "webhookUrl": "https://hooks.slack.com/services/..." }
 ```
@@ -146,8 +154,10 @@ Create a Slack webhook. Add a channel with type `slack` and paste the webhook UR
 ## Advanced features
 
 ### Pulse (start/finish)
+
 For long-running jobs, use `/start` before starting and `/finish` when done.
 Duration is calculated automatically.
+
 ```bash
 curl -X POST https://cronko.example.com/ping/TOKEN/start
 ./my-long-job.sh
@@ -155,20 +165,25 @@ curl -X POST "https://cronko.example.com/ping/TOKEN/finish?d=$SECONDS&exit=$?"
 ```
 
 ### Public status badge
+
 Display your monitor's status anywhere with a public SVG badge.
+
 ```markdown
 ![Cronko](https://cronko.example.com/badge/TOKEN)
 ```
 
 ### Max duration
+
 Set a max duration limit when creating a monitor. If a ping reports a duration
 above this limit, an incident is automatically generated.
 
 ### Heartbeat cleanup
+
 Heartbeats older than 90 days are automatically removed (configurable in
 Settings).
 
 ### CSV export
+
 Export any monitor's heartbeats as CSV:
 `/api/monitors/:id/heartbeats?format=csv`
 
