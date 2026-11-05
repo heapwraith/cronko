@@ -20,20 +20,30 @@
       "@esbuild-kit/core-utils": "*",
       "@esbuild-kit/esm-loader": "*",
       "prebuild-install": "*"
+    },
+    "overrides": {
+      "vite": ">=8.1.6",
+      "minimatch@>=7 <11": "^11.0.1",
+      "@esbuild-kit/core-utils>esbuild": "^0.25.0"
     }
   },
   "devDependencies": {
-    "@commitlint/cli": "^21.0.2",
-    "@commitlint/config-conventional": "^21.0.2",
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
     "@eslint/js": "^10.0.1",
-    "@vitest/coverage-v8": "^4.1.9",
-    "eslint": "^10.5.0",
+    "@vitest/coverage-v8": "^5.1.0",
+    "eslint": "^10.14.0",
     "eslint-config-prettier": "^10.1.8",
-    "lefthook": "^2.1.9",
-    "prettier": "^3.8.4",
-    "prettier-plugin-tailwindcss": "^0.8.0",
-    "turbo": "^2",
-    "typescript-eslint": "^8.61.1",
-    "vitest": "^4.1.9"
+    "lefthook": "^2.2.2",
+    "prettier": "^3.9.10",
+    "prettier-plugin-tailwindcss": "^0.8.1",
+    "turbo": "^2.11.10",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.72.1",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
+  },
+  "engines": {
+    "node": ">=24"
   }
 }
