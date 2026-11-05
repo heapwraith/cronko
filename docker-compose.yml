@@ -1,54 +1,24 @@
 services:
-  api:
-    build:
-      context: .
-      dockerfile: apps/api/Dockerfile
-    environment:
-      - DATABASE_URL=file:/app/data/cronko.db
-      - API_PORT=3001
-      - API_HOST=0.0.0.0
-      - JWT_SECRET=${JWT_SECRET:?set JWT_SECRET in .env (openssl rand -base64 32)}
-      - ADMIN_EMAIL=${ADMIN_EMAIL:-}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
-      - SMTP_HOST=${SMTP_HOST:-}
-      - SMTP_PORT=${SMTP_PORT:-}
-      - SMTP_USER=${SMTP_USER:-}
-      - SMTP_PASS=${SMTP_PASS:-}
-      - SMTP_FROM=${SMTP_FROM:-}
-      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
-      - AUTO_MIGRATE=${AUTO_MIGRATE:-true}
+  cronko:
+    build: .
+    image: cronko:local
     ports:
-      - "3001:3001"
+      - "3000:3000"
+    environment:
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env (openssl rand -base64 32)}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      # Behind a reverse proxy (Caddy, nginx, Traefik) set these:
+      # TRUST_PROXY: "true"
+      # TRUSTED_ORIGINS: https://cronko.example.com
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
     volumes:
       - cronko_data:/app/data
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/health/live || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  web:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: http://localhost:3001
-    environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:3001
-      - PORT=3000
-      - HOSTNAME=0.0.0.0
-    ports:
-      - "3000:3000"
-    depends_on:
-      api:
-        condition: service_healthy
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000 || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
 volumes:
   cronko_data:

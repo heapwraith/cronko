@@ -15,7 +15,16 @@
       "groupName": "dev dependencies"
     },
     {
-      "matchPackageNames": ["turbo", "typescript", "next", "react", "react-dom", "hono"],
+      "matchPackageNames": [
+        "typescript",
+        "vite",
+        "react",
+        "react-dom",
+        "react-router",
+        "hono",
+        "drizzle-orm",
+        "better-sqlite3"
+      ],
       "groupName": "core stack",
       "automerge": false
     }

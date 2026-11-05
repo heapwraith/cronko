@@ -10,87 +10,81 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
-  typecheck:
-    name: TypeScript type-check
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
-
-      - run: pnpm typecheck
-
-  lint:
-    name: ESLint
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
-
-      - run: pnpm lint
-
-  test:
-    name: Tests (Vitest)
+  check:
+    name: Lint & typecheck
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: pnpm/action-setup@v4
-
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version-file: .nvmrc
           cache: pnpm
-
       - run: pnpm install --frozen-lockfile
+      - run: pnpm exec biome ci --reporter=github .
+      - run: pnpm typecheck
 
-      - run: pnpm test -- --reporter=junit --outputFile.junit=test-results.xml
-
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test -- --reporter=default --reporter=junit --outputFile.junit=test-results.xml
       - uses: dorny/test-reporter@v2
-        if: always()
+        if: ${{ !cancelled() }}
         with:
           name: Test Results
           path: "**/test-results.xml"
           reporter: java-junit
 
-  build:
-    name: Build
+  docker:
+    name: Docker image smoke test
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    needs: [typecheck, lint, test]
-
+    timeout-minutes: 15
+    needs: [check, test]
     steps:
       - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build image
+        uses: docker/build-push-action@v6
         with:
-          node-version: 24
-          cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
-
-      - run: pnpm build
+          context: .
+          load: true
+          tags: cronko:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Boot and probe
+        run: |
+          docker run -d --name cronko -p 3000:3000 \
+            -e JWT_SECRET=ci-secret-ci-secret-ci-secret-ci-secret \
+            -e ADMIN_EMAIL=admin@example.com -e ADMIN_PASSWORD=ci-password-123 \
+            cronko:ci
+          for i in $(seq 1 30); do
+            curl -fsS http://localhost:3000/health/ready && break || sleep 1
+          done
+          echo
+          curl -fsS http://localhost:3000/ | grep -q '<div id="root">'
+          curl -fsS http://localhost:3000/dashboard | grep -q '<div id="root">'
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:3000/auth/login \
+            -H 'content-type: application/json' -H 'sec-fetch-site: same-origin' \
+            -d '{"email":"admin@example.com","password":"ci-password-123"}')
+          test "$code" = "200"
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:3000/auth/login \
+            -H 'content-type: application/json' -H 'sec-fetch-site: cross-site' \
+            -d '{"email":"admin@example.com","password":"ci-password-123"}')
+          test "$code" = "403"
+      - name: Container logs
+        if: failure()
+        run: docker logs cronko
