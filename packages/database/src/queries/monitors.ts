@@ -58,7 +58,9 @@ export async function createMonitor(input: {
     updatedAt: input.now,
   })
 
-  return findMonitorById(input.id)
+  const created = await findMonitorById(input.id)
+  if (!created) throw new Error(`monitor ${input.id} missing after insert`)
+  return created
 }
 
 export async function updateMonitor(

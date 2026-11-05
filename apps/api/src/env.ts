@@ -30,13 +30,21 @@ const envSchema = z.object({
     .default(process.env.NODE_ENV === "production" ? "false" : "true"),
 })
 
+// Docker Compose passes unset optional variables as empty strings
+// (e.g. ADMIN_EMAIL=), which optional validators like z.email() reject.
+function readEnv(): Record<string, string | undefined> {
+  return Object.fromEntries(
+    Object.entries(process.env).filter(([, value]) => value !== ""),
+  )
+}
+
 export const env = (() => {
   try {
-    return envSchema.parse(process.env)
+    return envSchema.parse(readEnv())
   } catch {
     // Test/CI fallback — inject defaults so downstream modules can read process.env
     process.env.DATABASE_URL ??= "file:./test.db"
     process.env.JWT_SECRET ??= "test-secret-key-minimum-32-characters-long"
-    return envSchema.parse(process.env)
+    return envSchema.parse(readEnv())
   }
 })()

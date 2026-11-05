@@ -39,6 +39,11 @@ COPY --from=builder /app/packages/database/node_modules ./packages/database/node
 COPY --from=builder /app/packages/shared/node_modules ./packages/shared/node_modules
 COPY --from=builder /app/packages/database/src/migrations ./packages/database/src/migrations
 
+RUN mkdir -p /app/data && chown cronko:nodejs /app/data
+
+ENV DATABASE_URL=file:/app/data/cronko.db
+VOLUME /app/data
+
 USER cronko
 
 EXPOSE 3001

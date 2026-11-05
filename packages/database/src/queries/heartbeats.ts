@@ -1,4 +1,4 @@
-import { eq, desc, lt, gte, lte, inArray, sql } from "drizzle-orm"
+import { and, eq, desc, lt, gte, lte, inArray, sql } from "drizzle-orm"
 import { db } from "../index"
 import { heartbeats } from "../schema"
 
@@ -7,20 +7,16 @@ export async function findHeartbeatsByMonitor(
   options: { limit: number; before?: string },
 ) {
   const where = options.before
-    ? lt(heartbeats.receivedAt, new Date(options.before))
-    : undefined
+    ? and(
+        eq(heartbeats.monitorId, monitorId),
+        lt(heartbeats.receivedAt, new Date(options.before)),
+      )
+    : eq(heartbeats.monitorId, monitorId)
 
   return db
     .select()
     .from(heartbeats)
-    .where(
-      where
-        ? () => [
-            eq(heartbeats.monitorId, monitorId),
-            where,
-          ]
-        : eq(heartbeats.monitorId, monitorId),
-    )
+    .where(where)
     .orderBy(desc(heartbeats.receivedAt))
     .limit(Math.min(options.limit, 500))
     .all()

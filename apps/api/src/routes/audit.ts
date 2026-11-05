@@ -17,7 +17,7 @@ auditRoute.get("/", async (c) => {
   const rows = await db
     .select()
     .from(auditLogs)
-    .where(conditions ? () => [conditions] : undefined)
+    .where(conditions)
     .orderBy(desc(auditLogs.createdAt))
     .limit(limit);
 

@@ -4,10 +4,10 @@ services:
       context: .
       dockerfile: apps/api/Dockerfile
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-cronko}:${POSTGRES_PASSWORD:?err}@db:5432/${POSTGRES_DB:-cronko}
+      - DATABASE_URL=file:/app/data/cronko.db
       - API_PORT=3001
       - API_HOST=0.0.0.0
-      - JWT_SECRET=${JWT_SECRET}
+      - JWT_SECRET=${JWT_SECRET:?set JWT_SECRET in .env (openssl rand -base64 32)}
       - ADMIN_EMAIL=${ADMIN_EMAIL:-}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
       - SMTP_HOST=${SMTP_HOST:-}
@@ -16,32 +16,17 @@ services:
       - SMTP_PASS=${SMTP_PASS:-}
       - SMTP_FROM=${SMTP_FROM:-}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
-      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
       - AUTO_MIGRATE=${AUTO_MIGRATE:-true}
     ports:
       - "3001:3001"
-    depends_on:
-      db:
-        condition: service_healthy
+    volumes:
+      - cronko_data:/app/data
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:3001/health/live || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
   web:
     build:
@@ -65,21 +50,5 @@ services:
       timeout: 10s
       retries: 3
 
-  db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-cronko}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?err}
-      POSTGRES_DB: ${POSTGRES_DB:-cronko}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U cronko"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
 volumes:
-  postgres_data:
-  redis_data:
+  cronko_data:

@@ -39,7 +39,9 @@ export async function createNotificationChannel(input: {
     createdAt: new Date(),
   })
 
-  return findNotificationChannelById(input.id)
+  const created = await findNotificationChannelById(input.id)
+  if (!created) throw new Error(`notification channel ${input.id} missing after insert`)
+  return created
 }
 
 export async function updateNotificationChannel(

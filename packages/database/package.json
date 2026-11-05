@@ -27,8 +27,7 @@
   "dependencies": {
     "@cronko/shared": "workspace:*",
     "better-sqlite3": "^13.0.3",
-    "drizzle-orm": "^0.45.4",
-    "postgres": "^4.1.0"
+    "drizzle-orm": "^0.45.4"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^9.6.0",

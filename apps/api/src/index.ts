@@ -1,8 +1,9 @@
+import { existsSync } from "node:fs"
+import { resolve } from "node:path"
 import { migrate } from "drizzle-orm/better-sqlite3/migrator"
-import { sql } from "drizzle-orm"
 import { serve } from "@hono/node-server"
 import { env } from "./env"
-import { db } from "@cronko/database"
+import { db, sqliteClient } from "@cronko/database"
 import { findUserByEmail, createUser } from "@cronko/database/queries/users"
 import { hashPassword } from "./services/auth"
 import { startScheduler, stopScheduler, schedulerMetrics } from "./services/scheduler"
@@ -10,17 +11,26 @@ import { app } from "./app"
 import { logger } from "./lib/logger"
 import { getRedis } from "./lib/redis"
 
+// Migrations ship next to the code: ./packages/database/src/migrations in the
+// Docker image (cwd=/app) and ../../packages/... when running from apps/api.
+function resolveMigrationsDir(): string {
+  const candidates = [
+    process.env.MIGRATIONS_DIR,
+    "packages/database/src/migrations",
+    "../../packages/database/src/migrations",
+  ].filter((p): p is string => Boolean(p))
+  const found = candidates.map((p) => resolve(p)).find((p) => existsSync(p))
+  if (!found) {
+    throw new Error(`migrations folder not found (tried: ${candidates.join(", ")})`)
+  }
+  return found
+}
+
 async function applyMigrations() {
   if (env.AUTO_MIGRATE !== "true") return
 
-  if (env.DATABASE_URL.startsWith("file:")) {
-    migrate(db, { migrationsFolder: "../../packages/database/src/migrations" })
-    logger.info("SQLite migrations applied")
-  } else {
-    const { migrate: migratePg } = await import("drizzle-orm/postgres-js/migrator")
-    await migratePg(db, { migrationsFolder: "../../packages/database/src/migrations" })
-    logger.info("PostgreSQL migrations applied")
-  }
+  migrate(db, { migrationsFolder: resolveMigrationsDir() })
+  logger.info("SQLite migrations applied")
 }
 
 async function seedAdmin() {
@@ -54,7 +64,7 @@ async function bootstrap() {
   // Readiness probe — database connectivity
   app.get("/health/ready", async (c) => {
     try {
-      await db.select({ val: sql`1` }).get()
+      sqliteClient.prepare("SELECT 1").get()
       return c.json({ status: "ok", checks: { database: "up" } })
     } catch (err) {
       logger.error({ err }, "readiness check failed")
