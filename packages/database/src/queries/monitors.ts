@@ -1,4 +1,4 @@
-import { eq, asc } from "drizzle-orm"
+import { and, eq, asc } from "drizzle-orm"
 import { db } from "../index"
 import { monitors } from "../schema"
 
@@ -123,4 +123,25 @@ export async function updateMonitorStatus(
     .where(eq(monitors.id, id))
 
   return findMonitorById(id)
+}
+
+type MonitorStatus = "healthy" | "missed" | "down" | "paused" | "pending"
+
+/**
+ * Compare-and-set status change. Returns true only for the caller that
+ * actually performed the transition, so side effects (incidents, alerts) run
+ * exactly once even if the scheduler and a ping (or two replicas) race.
+ */
+export async function transitionMonitorStatus(
+  id: string,
+  from: MonitorStatus,
+  to: MonitorStatus,
+): Promise<boolean> {
+  const result = db
+    .update(monitors)
+    .set({ status: to, updatedAt: new Date() })
+    .where(and(eq(monitors.id, id), eq(monitors.status, from)))
+    .run()
+
+  return result.changes === 1
 }

@@ -38,7 +38,9 @@ export const heartbeats = sqliteTable("heartbeats", {
   durationMs: integer("duration_ms"),
   exitCode: integer("exit_code"),
   body: text("body"),
-})
+}, (t) => [
+  index("heartbeats_monitor_received_idx").on(t.monitorId, t.receivedAt),
+])
 
 export const incidents = sqliteTable("incidents", {
   id: text("id").primaryKey(),
@@ -50,7 +52,9 @@ export const incidents = sqliteTable("incidents", {
     .default("open"),
   startedAt: integer("started_at", { mode: "timestamp" }).notNull(),
   resolvedAt: integer("resolved_at", { mode: "timestamp" }),
-})
+}, (t) => [
+  index("incidents_monitor_status_idx").on(t.monitorId, t.status),
+])
 
 export const notificationChannels = sqliteTable("notification_channels", {
   id: text("id").primaryKey(),
@@ -62,16 +66,6 @@ export const notificationChannels = sqliteTable("notification_channels", {
   config: text("config", { mode: "json" }).notNull(),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 })
-
-export const heartbeatsIndex = index("heartbeats_monitor_received_idx").on(
-  heartbeats.monitorId,
-  heartbeats.receivedAt,
-)
-
-export const incidentsIndex = index("incidents_monitor_status_idx").on(
-  incidents.monitorId,
-  incidents.status,
-)
 
 export const monitorsRelations = relations(monitors, ({ many }) => ({
   heartbeats: many(heartbeats),

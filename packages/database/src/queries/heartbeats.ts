@@ -48,11 +48,12 @@ export async function createHeartbeat(input: {
   durationMs?: number
   exitCode?: number
   body?: string
+  receivedAt?: Date
 }) {
   await db.insert(heartbeats).values({
     id: input.id,
     monitorId: input.monitorId,
-    receivedAt: new Date(),
+    receivedAt: input.receivedAt ?? new Date(),
     sourceIp: input.sourceIp ?? null,
     userAgent: input.userAgent ?? null,
     durationMs: input.durationMs ?? null,
@@ -93,4 +94,19 @@ export async function findLatestHeartbeats(
   }
 
   return map
+}
+
+/** Most recent heartbeat time per monitor, in a single query. */
+export async function findLatestHeartbeatTimes(): Promise<Map<string, Date>> {
+  const rows = db
+    .select({
+      monitorId: heartbeats.monitorId,
+      last: sql<number>`max(${heartbeats.receivedAt})`,
+    })
+    .from(heartbeats)
+    .groupBy(heartbeats.monitorId)
+    .all()
+
+  // receivedAt is stored as unix seconds (drizzle "timestamp" mode).
+  return new Map(rows.map((r) => [r.monitorId, new Date(r.last * 1000)]))
 }

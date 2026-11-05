@@ -1,14 +1,10 @@
-import { findMonitorByToken, updateMonitorStatus } from "@cronko/database/queries/monitors"
+import { findMonitorByToken } from "@cronko/database/queries/monitors"
+import { markSlow, recoverOnPing } from "./monitor-state"
 import {
   createHeartbeat,
   findLatestHeartbeat,
   updateHeartbeatDuration,
 } from "@cronko/database/queries/heartbeats"
-import {
-  createIncident,
-  findOpenIncident,
-  resolveIncident,
-} from "@cronko/database/queries/incidents"
 
 export async function processHeartbeat(
   token: string,
@@ -60,27 +56,15 @@ export async function processHeartbeat(
     })
   }
 
-  if (options.durationMs !== undefined && options.durationMs !== null && (monitor as { maxDurationMs?: number }).maxDurationMs) {
-    const maxDuration = (monitor as { maxDurationMs: number }).maxDurationMs
-    if (options.durationMs > maxDuration && monitor.status !== "down") {
-      await createIncident({
-        id: crypto.randomUUID(),
-        monitorId: monitor.id,
-        startedAt: new Date(),
-      })
-      if (monitor.status !== "missed") {
-        await updateMonitorStatus(monitor.id, "missed")
-      }
-    }
-  }
+  const exceededMax =
+    options.durationMs != null &&
+    monitor.maxDurationMs != null &&
+    options.durationMs > monitor.maxDurationMs
 
-  if (monitor.status === "missed" || monitor.status === "down" || monitor.status === "pending") {
-    await updateMonitorStatus(monitor.id, "healthy")
-
-    const openIncident = await findOpenIncident(monitor.id)
-    if (openIncident) {
-      await resolveIncident(openIncident.id, new Date())
-    }
+  if (exceededMax) {
+    await markSlow(monitor)
+  } else {
+    await recoverOnPing(monitor)
   }
 
   return {

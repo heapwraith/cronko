@@ -9,12 +9,13 @@ import type {
 } from "@cronko/shared"
 import type { notificationChannels } from "@cronko/database/schema"
 
-type NotificationEvent = "missed" | "down" | "recovered"
+export type NotificationEvent = "missed" | "down" | "recovered" | "slow"
 
 const messages: Record<NotificationEvent, (name: string) => string> = {
   missed: (name) => `⚠️ ${name} não executou no tempo esperado`,
   down: (name) => `🔴 ${name} está down`,
   recovered: (name) => `✅ ${name} voltou a executar normalmente`,
+  slow: (name) => `🐢 ${name} excedeu a duração máxima configurada`,
 }
 
 type ChannelRow = typeof notificationChannels.$inferSelect
