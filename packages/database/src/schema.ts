@@ -62,6 +62,35 @@ export const notificationChannels = sqliteTable("notification_channels", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 })
 
+/**
+ * Outbox of alerts. A row is written when a transition happens and a worker
+ * delivers it with retries, so a flaky webhook or a restart never loses an alert.
+ */
+export const notificationDeliveries = sqliteTable(
+  "notification_deliveries",
+  {
+    id: text("id").primaryKey(),
+    channelId: text("channel_id")
+      .notNull()
+      .references(() => notificationChannels.id, { onDelete: "cascade" }),
+    monitorName: text("monitor_name").notNull(),
+    event: text("event", { enum: ["missed", "down", "recovered", "slow"] }).notNull(),
+    message: text("message").notNull(),
+    status: text("status", { enum: ["pending", "sent", "failed"] })
+      .notNull()
+      .default("pending"),
+    attempts: integer("attempts").notNull().default(0),
+    nextAttemptAt: integer("next_attempt_at", { mode: "timestamp" }).notNull(),
+    lastError: text("last_error"),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => [
+    index("notification_deliveries_due_idx").on(t.status, t.nextAttemptAt),
+    index("notification_deliveries_created_idx").on(t.createdAt),
+  ],
+)
+
 export const monitorsRelations = relations(monitors, ({ many }) => ({
   heartbeats: many(heartbeats),
   incidents: many(incidents),

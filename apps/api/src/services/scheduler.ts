@@ -6,6 +6,7 @@ import { findAllMonitors } from "@cronko/database/queries/monitors"
 import { logger } from "../lib/logger"
 import { currentSettings } from "../routes/settings"
 import { evaluateMonitor, markOverdue } from "./monitor-state"
+import { cleanupDeliveries, processDueDeliveries } from "./notifier"
 
 let intervalId: ReturnType<typeof setInterval> | null = null
 let isRunning = false
@@ -27,6 +28,7 @@ async function cleanupOldHeartbeats() {
     const retentionDays = currentSettings.heartbeatHistoryDays
     const cutoff = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000)
     await deleteHeartbeatsOlderThan(cutoff)
+    await cleanupDeliveries(retentionDays)
     logger.info({ retentionDays }, "heartbeat cleanup completed")
   } catch (err) {
     logger.error({ err }, "heartbeat cleanup failed")
@@ -64,6 +66,8 @@ export async function runTick(now = Date.now()) {
 
   try {
     await cleanupOldHeartbeats()
+    // Retry alerts whose backoff has elapsed (also covers a restart mid-retry).
+    await processDueDeliveries(new Date(now))
 
     const [allMonitors, lastPings] = await Promise.all([
       findAllMonitors(),

@@ -12,6 +12,9 @@ vi.mock("../../services/notifier", () => ({
   sendNotification: async (monitor: { name: string }, event: string) => {
     sent.push({ name: monitor.name, event })
   },
+  // The outbox worker has its own tests (notifier.test.ts); stub it here.
+  processDueDeliveries: async () => 0,
+  cleanupDeliveries: async () => {},
 }))
 
 const MIN = 60_000

@@ -3,13 +3,14 @@ import {
   deleteNotificationChannel,
   findAllNotificationChannels,
   findNotificationChannelById,
+  findRecentDeliveries,
   updateNotificationChannel,
 } from "@cronko/database/queries/notifications"
 import { zValidator } from "@hono/zod-validator"
 import { Hono } from "hono"
 import { z } from "zod"
 import { logAuditEvent } from "../services/audit"
-import { sendNotification } from "../services/notifier"
+import { sendTestNotification } from "../services/notifier"
 
 export const notificationsRoute = new Hono()
 
@@ -46,6 +47,11 @@ const updateNotificationSchema = z.object({
       z.object({ to: z.email() }),
     ])
     .optional(),
+})
+
+notificationsRoute.get("/deliveries", async (c) => {
+  const limit = Math.min(Math.max(1, Number.parseInt(c.req.query("limit") ?? "50", 10) || 50), 200)
+  return c.json({ data: await findRecentDeliveries(limit) })
 })
 
 notificationsRoute.get("/", async (c) => {
@@ -111,7 +117,6 @@ notificationsRoute.post("/:id/test", async (c) => {
     return c.json({ error: "Not found", code: "NOT_FOUND" }, 404)
   }
 
-  await sendNotification({ name: "Test Notification" }, "recovered", [channel])
-
-  return c.json({ data: { ok: true } })
+  const result = await sendTestNotification(channel)
+  return c.json({ data: result }, result.ok ? 200 : 502)
 })

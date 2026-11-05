@@ -20,7 +20,9 @@ export async function setupTestDb() {
   return {
     db,
     reset() {
-      sqliteClient.exec("DELETE FROM incidents; DELETE FROM heartbeats; DELETE FROM monitors;")
+      sqliteClient.exec(
+        "DELETE FROM notification_deliveries; DELETE FROM notification_channels; DELETE FROM incidents; DELETE FROM heartbeats; DELETE FROM monitors;",
+      )
     },
   }
 }
