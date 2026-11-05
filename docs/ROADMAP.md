@@ -1,46 +1,67 @@
-# Roadmap do Cronko
+# Cronko roadmap
 
-Posicionamento: **monitor de cron jobs/backups/ETLs, self-hosted**. Não competimos com o Uptime Kuma em checks ativos (HTTP/TCP); a régua real é o Healthchecks.io. Detalhes e fontes em [competitive/cronko-vs-uptime-kuma.md](competitive/cronko-vs-uptime-kuma.md).
+Cronko is a **self-hosted monitor for cron jobs, backups and ETLs**. It does not
+run active checks (HTTP/TCP); that is Uptime Kuma's ground. The real benchmark is
+**Healthchecks.io** (also open source, mature, free tier of 20 checks), so parity
+with it is the entry ticket and the differentiators below are the reason to switch.
 
-Cada item vira um plano de implementação próprio (superpowers:writing-plans) antes de ser construído.
+## Where Cronko stands (2026-11)
 
-## P0 — Confiabilidade (pré-requisito: um alerta perdido é fatal)
+| Capability                                         | Cronko            | Healthchecks.io | Uptime Kuma              |
+| -------------------------------------------------- | ----------------- | --------------- | ------------------------ |
+| Ping URL, grace period, incidents, recovery alerts | yes               | yes             | partial ("push" monitor) |
+| Start / finish events, duration, exit code         | yes               | yes             | no                       |
+| Max-duration alert                                 | yes               | partial         | no                       |
+| Cron expression + timezone schedule                | **no**            | yes             | no                       |
+| Explicit `/fail` signal                            | **no**            | yes             | no                       |
+| Per-check event log with output                    | basic             | yes             | partial                  |
+| Notification channels                              | 4                 | many            | many                     |
+| Public status pages                                | badge only        | badges          | yes                      |
+| Active HTTP/TCP checks                             | no (out of scope) | no              | yes                      |
+| Single container, one SQLite file                  | yes               | no              | yes                      |
 
-| #   | Item                                                                         | Por quê                                                         | Onde                                     |
-| --- | ---------------------------------------------------------------------------- | --------------------------------------------------------------- | ---------------------------------------- |
-| 0.1 | Lock/leader election do scheduler (Redis ou DB)                              | Com 2+ réplicas, alertas duplicam                               | `apps/api/src/services/scheduler.ts`     |
-| 0.2 | Testes do scheduler, notifier, csrf, rotas monitors/incidents/stats/settings | Só o caminho de ping/auth tem testes                            | `apps/api/src/**`                        |
-| 0.3 | Validar migrations e schema em Postgres                                      | Schema é `sqliteTable`; Postgres nunca foi provado              | `packages/database`                      |
-| 0.4 | Revisar CSRF                                                                 | Dois commits quase idênticos; proteção depende de SameSite/CORS | `apps/api/src/middleware/csrf.ts`        |
-| 0.5 | Retry/backoff e registro de falha de notificação                             | Falha de envio não pode sumir em silêncio                       | `apps/api/src/services/notifier.ts`      |
-| 0.6 | Build Docker alpine com better-sqlite3 13 + CI de e2e (Playwright)           | Não validado após o upgrade                                     | `apps/*/Dockerfile`, `.github/workflows` |
+Healthchecks/Cronitor columns come from Healthchecks' own comparison page; the
+Uptime Kuma column is general knowledge and was not re-verified. Re-check before
+making product claims.
 
-## P1 — Paridade com Healthchecks (sem isso não há motivo para trocar)
+## Done
 
-1. **Agenda por expressão cron + timezone** (e calcular a próxima execução esperada).
-2. **Sinal de falha** `/ping/:token/fail` (+ exit code) e estado "failed" distinto de "missed".
-3. **Log de eventos por check** com corpo/saída (limite configurável).
-4. **Canais:** webhook genérico, ntfy, Pushover, PagerDuty, Microsoft Teams.
-5. **Ping por e-mail** e silenciamento por check.
+- Single process: Vite SPA served by the API, same origin, one container.
+- SQLite-only (the old Postgres path never worked); WAL, indexes, migrations in Docker.
+- Atomic monitor state machine: no duplicate alerts, recovery alerts now sent.
+- Fetch-metadata CSRF, strict CSP, trustworthy client IP, no CORS.
+- Tests against a real migrated SQLite; Biome; CI with a Docker smoke test.
 
-## P2 — Diferenciais acima do Healthchecks
+## P0 - reliability (a lost alert is fatal)
 
-1. Estatísticas de duração (p50/p95), detecção de run lento/anômalo e de runs sobrepostos.
-2. **CLI wrapper** `cronko run -- <cmd>` (start, fail, exit code, saída) e snippets prontos (cron, systemd, k8s CronJob, GitHub Actions, Docker).
-3. **Status pages públicas** por grupo/tag, com SLA e histórico de incidentes.
-4. Grupos/tags, janelas de manutenção, resumo diário/semanal.
+1. Notification delivery: retry with backoff, per-attempt log, visible failures in the UI.
+2. "Monitor the monitor": optional outbound heartbeat so you learn if Cronko itself stops.
+3. Tests for the notifier, remaining routes (monitors, incidents, settings, stats) and an e2e smoke (Playwright).
+4. Verify the Docker image on amd64 and arm64 (CI builds it; not yet run on a real host).
+5. Accessibility pass on the legacy UI (labels, button types, keyboard handlers); the lint rules are warnings today.
 
-## P3 — Alcance e maturidade
+## P1 - parity with Healthchecks
 
-- Multiusuário/equipes, API tokens com escopo.
-- Importadores (Healthchecks, Kuma), export/backup via UI.
-- Métricas Prometheus; versionamento e changelog (hoje tudo `0.0.0`).
-- Documentação de coexistência: "Kuma para serviços, Cronko para jobs".
+1. Cron expression + timezone schedules, with next-expected-run.
+2. `/ping/:token/fail` and a distinct `failed` state.
+3. Per-check event log with captured output (size-limited).
+4. More channels: generic webhook, ntfy, Pushover, PagerDuty, Teams.
+5. Ping by e-mail; mute per check.
 
-## Não faremos (anti-objetivos)
+## P2 - differentiators
 
-- Checks ativos HTTP/TCP/DNS/ping como foco — diluem o diferencial e viram um Kuma pior. Se vierem, só como complemento leve (fora do roadmap atual).
+1. `cronko run -- <cmd>` wrapper (start, fail, exit code, output) and ready-made
+   snippets for crontab, systemd, Kubernetes CronJob and GitHub Actions.
+2. Run analytics: p50/p95 duration, slow/anomalous run detection, overlapping runs.
+3. Public status page per group with SLA and incident history.
+4. Tags/groups, maintenance windows, daily/weekly digest.
 
-## Ordem sugerida
+## P3 - reach
 
-P0.1–0.4 → P1.1–1.2 → P0.5–0.6 → P1.3–1.5 → P2 → P3.
+- Teams and roles, scoped API tokens, importers (Healthchecks, Kuma).
+- Prometheus metrics; semantic versioning and a changelog (everything is `0.0.0`).
+
+## Non-goals
+
+Active HTTP/TCP/DNS checks as a focus. Document coexistence instead:
+Uptime Kuma for services, Cronko for jobs.
