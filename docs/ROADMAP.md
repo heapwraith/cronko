@@ -40,7 +40,7 @@ making product claims.
 
 1. Notification delivery: retry with backoff, per-attempt log, visible failures in the UI.
 2. ~~"Monitor the monitor": optional outbound heartbeat.~~ Done (`SELF_HEARTBEAT_URL`).
-3. Tests for the notifier and the routes are done; an e2e smoke (Playwright) is still missing.
+3. Tests for the notifier and the routes are done, and so is the e2e smoke (`pnpm e2e`, Playwright: login → monitor → failing ping → run page), which also runs in CI.
 4. Verify the Docker image on amd64 and arm64 (CI builds it; not yet run on a real host).
 5. Accessibility pass on the legacy UI (labels, button types, keyboard handlers); the lint rules are warnings today.
 
