@@ -97,6 +97,15 @@ export default function HowToUsePage() {
         <CodeBlock>{`curl -fsS -X POST "${ping}/fail?exit=2"`}</CodeBlock>
       </Section>
 
+      <Section title={t("howto.wrapper.title")}>
+        <P>{t("howto.wrapper.p1")}</P>
+        <Sub>{t("howto.wrapper.install")}</Sub>
+        <CodeBlock>{`sudo curl -fsSL ${baseUrl}/cronko-run -o /usr/local/bin/cronko-run
+sudo chmod +x /usr/local/bin/cronko-run`}</CodeBlock>
+        <Sub>{t("howto.wrapper.usage")}</Sub>
+        <CodeBlock>{`0 3 * * * cronko-run ${ping} -- /usr/local/bin/meu-job.sh`}</CodeBlock>
+      </Section>
+
       <Section title={t("howto.crontab.title")}>
         <P>{t("howto.crontab.p1")}</P>
         <CodeBlock>{`*/30 * * * * /usr/local/bin/meu-job.sh && curl -fsS ${ping} || curl -fsS ${ping}/fail`}</CodeBlock>

@@ -18,6 +18,20 @@ arrives within _interval + grace_, the monitor becomes **missed**; if it stays
 silent for another interval it becomes **down**. A ping brings it back to
 **healthy**, closes the incident and sends a recovery alert.
 
+The easiest way is the `cronko-run` wrapper, served by your Cronko instance. It
+runs the job, times it, sends the exit code and the last 10 KB of output, and
+exits with the job's own code. It needs only `sh` and `curl`:
+
+```bash
+sudo curl -fsSL https://cronko.example.com/cronko-run -o /usr/local/bin/cronko-run
+sudo chmod +x /usr/local/bin/cronko-run
+
+# crontab
+0 2 * * * cronko-run https://cronko.example.com/ping/TOKEN -- /usr/local/bin/backup.sh
+```
+
+Or call the ping URL yourself:
+
 ```bash
 # crontab: ping only if the backup succeeded
 0 2 * * * /usr/local/bin/backup.sh && curl -fsS https://cronko.example.com/ping/TOKEN

@@ -469,6 +469,11 @@ export const translations = {
     "howto.ping.withDuration": "Com duração (ms)",
     "howto.ping.withExit": "Com exit code",
     "howto.ping.withLog": "Com log (últimas 50 linhas)",
+    "howto.wrapper.title": "cronko-run: o jeito mais fácil",
+    "howto.wrapper.p1":
+      "Um script que roda o job, mede o tempo, captura a saída e avisa o Cronko sozinho. Exit diferente de zero vira falha, e a saída aparece na página da execução. Só precisa de sh e curl.",
+    "howto.wrapper.install": "Instalar",
+    "howto.wrapper.usage": "Usar no crontab",
     "howto.crontab.title": "Integração com Crontab",
     "howto.crontab.p1":
       "Exemplo prático de integração com crontab. Sucesso chama o ping normal; erro chama /fail.",
@@ -983,6 +988,11 @@ export const translations = {
     "howto.ping.withDuration": "With duration (ms)",
     "howto.ping.withExit": "With exit code",
     "howto.ping.withLog": "With log (last 50 lines)",
+    "howto.wrapper.title": "cronko-run: the easiest way",
+    "howto.wrapper.p1":
+      "A script that runs your job, times it, captures its output and reports to Cronko on its own. A non-zero exit becomes a failure and the output shows on the run page. Needs only sh and curl.",
+    "howto.wrapper.install": "Install",
+    "howto.wrapper.usage": "Use it in crontab",
     "howto.crontab.title": "Crontab Integration",
     "howto.crontab.p1":
       "Practical crontab integration example. Success calls the normal ping; an error calls /fail.",
