@@ -55,9 +55,18 @@ Cronko is not an observability platform and does not run active checks
 ## Quick start
 
 ```bash
-git clone https://github.com/wesllen-lima/cronko && cd cronko
+git clone https://github.com/heapwraith/cronko && cd cronko
 cp .env.example .env     # set JWT_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD
 docker compose up -d     # http://localhost:3000
+```
+
+Or run the published image (amd64 and arm64) without cloning:
+
+```bash
+docker run -d --name cronko -p 3000:3000 -v cronko_data:/app/data \
+  -e JWT_SECRET="$(openssl rand -hex 32)" \
+  -e ADMIN_EMAIL=you@example.com -e ADMIN_PASSWORD='change-me-now' \
+  ghcr.io/heapwraith/cronko:0.1
 ```
 
 Data lives in the `cronko_data` volume (`/app/data/cronko.db`). Behind a reverse
