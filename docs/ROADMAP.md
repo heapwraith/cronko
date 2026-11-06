@@ -65,7 +65,8 @@ making product claims.
 
 ## P3 - reach
 
-- Teams and roles, scoped API tokens, importers (Healthchecks, Kuma).
+- Teams and roles, importers (Healthchecks, Kuma).
+- ~~Scoped API tokens.~~ Done: `read`/`write` tokens, hashed, optional expiry, managed in Settings.
 - Prometheus metrics.
 - ~~Semantic versioning and a changelog.~~ Done from 0.1.0 (`CHANGELOG.md`).
 

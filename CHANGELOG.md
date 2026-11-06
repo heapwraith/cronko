@@ -7,6 +7,10 @@ include breaking changes; they are called out below.
 
 ## [Unreleased]
 
+### Added
+
+- Scoped API tokens (Settings → API tokens): named, shown once, stored as a SHA-256 hash with a visible prefix, optional expiry and a last-used time. Send as `Authorization: Bearer crk_...` next to the session. `read` allows `GET` only; `write` also manages monitors. A token cannot manage tokens or settings; revoked or expired tokens get `401`, out-of-scope requests `403`. Creating and revoking are in the audit log (`api_token.created`, `api_token.revoked`). Endpoints: `GET/POST /api/settings/tokens`, `DELETE /api/settings/tokens/:id`. Migration `0017`.
+
 ## [0.3.0] - 2026-11-06
 
 Closes the last gaps against Healthchecks: a periodic digest and ping by e-mail.
