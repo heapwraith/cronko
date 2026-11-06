@@ -8,6 +8,9 @@ export interface DurationPoint {
   label: string
 }
 
+const HATCH =
+  "repeating-linear-gradient(45deg, transparent 0 3px, color-mix(in oklch, var(--ground) 55%, transparent) 3px 5px)"
+
 function percentile(sorted: number[], p: number): number {
   return sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * p))] ?? 0
 }
@@ -35,8 +38,12 @@ export function DurationBars({ points }: { points: DurationPoint[] }) {
           <div
             key={p.id}
             title={`${p.label} · ${formatRunDuration(p.durationMs)}`}
-            style={{ height: `${Math.max(4, (p.durationMs / max) * 100)}%` }}
-            className={`min-w-1 flex-1 rounded-t-[2px] ${p.failed ? "bg-failed" : "bg-healthy/70"}`}
+            style={{
+              height: `${Math.max(4, (p.durationMs / max) * 100)}%`,
+              // Failed runs are hatched, so they differ by pattern and not by colour alone.
+              ...(p.failed && { backgroundImage: HATCH }),
+            }}
+            className={`min-w-1 max-w-6 flex-1 rounded-t-[2px] ${p.failed ? "bg-failed" : "bg-healthy/70"}`}
           />
         ))}
       </div>

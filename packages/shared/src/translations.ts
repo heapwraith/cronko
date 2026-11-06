@@ -468,7 +468,7 @@ export const translations = {
     "howto.badge.markdown": "Embed no README (Markdown)",
     "howto.notifications.title": "Notificações",
     "howto.notifications.p1":
-      "Configure canais de notificação em Configurações → Notificações. Alertas são enviados quando um monitor muda para missed, down ou recovered.",
+      "Configure canais de notificação na aba Notificações. Alertas são enviados quando um monitor muda para missed, down ou recovered.",
     "howto.notifications.discord": "Webhook do Discord — receba alertas em qualquer canal.",
     "howto.notifications.telegram": "Bot do Telegram — envie alertas para um chat.",
     "howto.notifications.email": "Email SMTP — alertas por email.",
@@ -962,7 +962,7 @@ export const translations = {
     "howto.badge.markdown": "Embed in README (Markdown)",
     "howto.notifications.title": "Notifications",
     "howto.notifications.p1":
-      "Configure notification channels in Settings → Notifications. Alerts are sent when a monitor changes to missed, down, or recovered.",
+      "Configure notification channels in the Notifications tab. Alerts are sent when a monitor changes to missed, down, or recovered.",
     "howto.notifications.discord": "Discord Webhook — receive alerts in any channel.",
     "howto.notifications.telegram": "Telegram Bot — send alerts to a chat.",
     "howto.notifications.email": "SMTP Email — email alerts.",

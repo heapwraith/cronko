@@ -119,7 +119,7 @@ export function TopBar({ instanceName, email }: { instanceName?: string; email?:
               <NavLink
                 to={to}
                 className={({ isActive }) =>
-                  `relative flex items-center whitespace-nowrap px-3 py-2.5 text-sm font-medium transition-colors after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 ${
+                  `relative flex items-center whitespace-nowrap px-3 py-2.5 focus-visible:outline-offset-[-2px] text-sm font-medium transition-colors after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 ${
                     isActive
                       ? "text-ink after:bg-signal"
                       : "text-dim after:bg-transparent hover:text-ink"

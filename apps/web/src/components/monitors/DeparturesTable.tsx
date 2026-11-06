@@ -102,6 +102,16 @@ export function DeparturesTable({
                   >
                     {row.name}
                   </Link>
+                  {/* Phones drop the NEXT/DURATION/EXIT columns; keep the data as a second line. */}
+                  <span className="mt-0.5 block font-mono text-xs font-normal text-dim tnum md:hidden">
+                    {[
+                      next(row),
+                      hb?.durationMs != null ? formatRunDuration(hb.durationMs) : null,
+                      exit != null ? `${t("board.exit")} ${exit}` : null,
+                    ]
+                      .filter((v) => v && v !== "—")
+                      .join(" · ")}
+                  </span>
                 </th>
                 <td className={`${td} hidden font-mono text-dim tnum lg:table-cell`}>
                   {formatInterval(row.expectedIntervalSeconds)}

@@ -179,7 +179,7 @@ export default function SettingsPage() {
 
   return (
     <form
-      className="max-w-5xl space-y-6"
+      className="space-y-6"
       onSubmit={(e) => {
         e.preventDefault()
         void persist(settings, t("settings.failedSave"))

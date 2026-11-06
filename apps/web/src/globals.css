@@ -228,18 +228,6 @@ main {
   gap: 0.25rem;
 }
 
-/* Focus rings */
-:focus-visible {
-  outline: none;
-}
-a:focus-visible,
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  @apply ring-2 ring-emerald-500/50 ring-offset-2 ring-offset-zinc-950 dark:ring-offset-zinc-950;
-}
-
 /* Skip to content */
 .skip-link {
   @apply absolute -top-10 left-4 z-[70] bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all focus:top-4;

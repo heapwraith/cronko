@@ -8,7 +8,7 @@ import { useToast } from "@/components/shared/Toast"
 import { api } from "@/lib/api"
 import { useT } from "@/lib/i18n"
 
-export function DeleteMonitorButton({ monitorId }: { monitorId: string }) {
+export function DeleteMonitorButton({ monitorId, name }: { monitorId: string; name: string }) {
   const { t } = useT()
   const _navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -61,7 +61,7 @@ export function DeleteMonitorButton({ monitorId }: { monitorId: string }) {
       <ConfirmModal
         open={confirmOpen}
         title={t("monitors.deleteConfirmTitle")}
-        message={t("monitors.deleteConfirmMessage", { name: "" })}
+        message={t("monitors.deleteConfirmMessage", { name })}
         confirmLabel={t("monitors.delete")}
         variant="danger"
         loading={loading}

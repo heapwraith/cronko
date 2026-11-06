@@ -66,7 +66,7 @@ export default function MonitorsPage() {
         <DeparturesTable
           rows={rows}
           caption={t("board.caption")}
-          actions={(m) => <DeleteMonitorButton monitorId={m.id} />}
+          actions={(m) => <DeleteMonitorButton monitorId={m.id} name={m.name} />}
         />
       )}
     </div>

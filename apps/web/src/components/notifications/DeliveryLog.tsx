@@ -1,5 +1,6 @@
 import { formatRelativeTime } from "@cronko/shared/utils"
 import { useQuery } from "@tanstack/react-query"
+import { Check, CircleDashed, X } from "lucide-react"
 import { useEffect, useId, useState } from "react"
 import { SkeletonTable } from "@/components/shared/Skeleton"
 import { useToast } from "@/components/shared/Toast"
@@ -8,10 +9,16 @@ import { useT } from "@/lib/i18n"
 
 type Delivery = Awaited<ReturnType<typeof api.notifications.deliveries>>[number]
 
-const CHIP: Record<Delivery["status"], string> = {
-  sent: "bg-[var(--chip-healthy-bg)] text-[var(--chip-healthy-fg)]",
-  pending: "bg-[var(--chip-pending-bg)] text-[var(--chip-pending-fg)]",
-  failed: "bg-[var(--chip-failed-bg)] text-[var(--chip-failed-fg)]",
+const CHIP: Record<
+  Delivery["status"],
+  { cls: string; Glyph: React.ComponentType<{ className?: string }> }
+> = {
+  sent: { cls: "bg-[var(--chip-healthy-bg)] text-[var(--chip-healthy-fg)]", Glyph: Check },
+  pending: {
+    cls: "bg-[var(--chip-pending-bg)] text-[var(--chip-pending-fg)]",
+    Glyph: CircleDashed,
+  },
+  failed: { cls: "bg-[var(--chip-failed-bg)] text-[var(--chip-failed-fg)]", Glyph: X },
 }
 
 const th = "px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-dim"
@@ -130,8 +137,12 @@ export function DeliveryLog() {
                   </td>
                   <td className={td}>
                     <span
-                      className={`inline-block rounded-[4px] px-2 py-0.5 text-xs font-semibold uppercase tracking-wide ${CHIP[d.status]}`}
+                      className={`inline-flex items-center gap-1 rounded-[4px] px-2 py-0.5 text-xs font-semibold uppercase tracking-wide ${CHIP[d.status].cls}`}
                     >
+                      {(() => {
+                        const { Glyph } = CHIP[d.status]
+                        return <Glyph className="h-3 w-3" aria-hidden="true" />
+                      })()}
                       {t(`notifications.status.${d.status}`)}
                     </span>
                   </td>

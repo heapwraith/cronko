@@ -1,7 +1,7 @@
 import type { MonitorStatus } from "@cronko/shared/types"
 import { formatDuration, formatRelativeTime } from "@cronko/shared/utils"
 import { useQuery } from "@tanstack/react-query"
-import { AlertTriangle } from "lucide-react"
+import { AlertTriangle, Check, OctagonX } from "lucide-react"
 import { useEffect } from "react"
 import { Link, useSearchParams } from "react-router"
 import { Button } from "@/components/shared/Button"
@@ -73,7 +73,7 @@ export default function IncidentsPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="text-2xl font-bold tracking-tight">{t("incidents.title")}</h1>
         <p
-          className={`font-mono text-sm tnum ${openIncidents.length ? "font-semibold text-down" : "text-dim"}`}
+          className={`text-sm ${openIncidents.length ? "font-semibold text-down" : "text-dim"}`}
           aria-live="polite"
         >
           {t("incidents.openCount", { count: openIncidents.length })}
@@ -165,12 +165,17 @@ export default function IncidentsPage() {
                       </td>
                       <td className={td}>
                         <span
-                          className={`inline-block rounded-[4px] px-2 py-0.5 text-xs font-semibold uppercase tracking-wide ${
+                          className={`inline-flex items-center gap-1 rounded-[4px] px-2 py-0.5 text-xs font-semibold uppercase tracking-wide ${
                             isOpen
                               ? "bg-[var(--chip-down-bg)] text-[var(--chip-down-fg)]"
                               : "bg-[var(--chip-healthy-bg)] text-[var(--chip-healthy-fg)]"
                           }`}
                         >
+                          {isOpen ? (
+                            <OctagonX className="h-3 w-3" aria-hidden="true" />
+                          ) : (
+                            <Check className="h-3 w-3" aria-hidden="true" />
+                          )}
                           {isOpen ? t("incidents.statusOpen") : t("incidents.statusResolved")}
                         </span>
                       </td>

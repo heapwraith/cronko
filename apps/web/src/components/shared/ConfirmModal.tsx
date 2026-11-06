@@ -1,5 +1,6 @@
 import { TriangleAlert } from "lucide-react"
 import { useEffect, useRef } from "react"
+import { useT } from "@/lib/i18n"
 import { Button } from "./Button"
 
 interface ConfirmModalProps {
@@ -22,13 +23,14 @@ export function ConfirmModal({
   open,
   title,
   message,
-  confirmLabel = "Confirm",
-  cancelLabel = "Cancel",
+  confirmLabel,
+  cancelLabel,
   variant = "danger",
   loading = false,
   onConfirm,
   onCancel,
 }: ConfirmModalProps) {
+  const { t } = useT()
   const ref = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
@@ -61,7 +63,7 @@ export function ConfirmModal({
       </div>
       <div className="flex justify-end gap-2 border-t border-line bg-raised px-5 py-3">
         <Button variant="secondary" size="sm" onClick={onCancel} disabled={loading}>
-          {cancelLabel}
+          {cancelLabel ?? t("common.cancel")}
         </Button>
         <Button
           variant={variant === "danger" ? "danger" : "primary"}
@@ -69,7 +71,7 @@ export function ConfirmModal({
           onClick={onConfirm}
           disabled={loading}
         >
-          {confirmLabel}
+          {confirmLabel ?? t("common.confirm")}
         </Button>
       </div>
     </dialog>

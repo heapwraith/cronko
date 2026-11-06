@@ -7,7 +7,15 @@ import { useToast } from "@/components/shared/Toast"
 import { api } from "@/lib/api"
 import { useT } from "@/lib/i18n"
 
-export function MonitorActions({ monitorId, status }: { monitorId: string; status: string }) {
+export function MonitorActions({
+  monitorId,
+  name,
+  status,
+}: {
+  monitorId: string
+  name: string
+  status: string
+}) {
   const { t } = useT()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -85,7 +93,7 @@ export function MonitorActions({ monitorId, status }: { monitorId: string; statu
       <ConfirmModal
         open={confirmOpen}
         title={t("monitors.deleteConfirmTitle")}
-        message={t("monitors.deleteConfirmMessage", { name: "" })}
+        message={t("monitors.deleteConfirmMessage", { name })}
         confirmLabel={t("monitors.delete")}
         variant="danger"
         loading={deleteLoading}

@@ -1,6 +1,7 @@
 import type { MonitorStatus } from "@cronko/shared/types"
 import { formatDuration, formatRelativeTime } from "@cronko/shared/utils"
 import { useQuery } from "@tanstack/react-query"
+import { OctagonX } from "lucide-react"
 import type { ReactNode } from "react"
 import { useParams } from "react-router"
 import { DurationBars } from "@/components/monitors/DurationBars"
@@ -107,15 +108,16 @@ function MonitorDetailView({ monitor, incidents }: { monitor: Monitor; incidents
           <Button href={csvUrl} variant="ghost" size="sm" target="_blank" rel="noreferrer">
             {t("detail.exportCsv")}
           </Button>
-          <MonitorActions monitorId={monitor.id} status={monitor.status} />
+          <MonitorActions monitorId={monitor.id} name={monitor.name} status={monitor.status} />
         </div>
       </div>
 
       {incident && (
         <div
           role="status"
-          className="flex items-start gap-3 rounded-[6px] border border-line-strong bg-[color-mix(in_oklch,var(--st-down)_9%,var(--panel))] p-4"
+          className="flex items-start gap-3 rounded-[6px] border border-line-strong bg-[color-mix(in_srgb,var(--st-down)_14%,var(--panel))] p-4"
         >
+          <OctagonX className="mt-0.5 h-5 w-5 shrink-0 text-down" aria-hidden="true" />
           <div>
             <p className="text-sm font-semibold">{t("monitor.incidentInProgress")}</p>
             <p className="text-sm text-dim">

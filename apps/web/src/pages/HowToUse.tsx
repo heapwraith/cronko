@@ -11,11 +11,7 @@ function CodeBlock({ children }: { children: string }) {
       <div className="absolute right-2 top-2">
         <CopyButton text={children} />
       </div>
-      <pre
-        // biome-ignore lint/a11y/noNoninteractiveTabindex: scrollable region needs keyboard focus
-        tabIndex={0}
-        className="overflow-x-auto p-4 pr-24 font-mono text-sm leading-relaxed text-ink focus-visible:outline-2"
-      >
+      <pre className="whitespace-pre-wrap break-all p-4 pr-24 font-mono text-sm leading-relaxed text-ink">
         <code>{children}</code>
       </pre>
     </div>
