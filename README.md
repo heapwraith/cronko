@@ -228,6 +228,33 @@ curl -X POST "$CRONKO/api/import/kuma?dryRun=true" -H "Authorization: Bearer $TO
   -H "Content-Type: application/json" --data @kuma-backup.json
 ```
 
+### Exporting and importing configuration
+
+`GET /api/export` returns your setup as JSON (`format: "cronko-export"`): monitors
+(settings, tags, paused state), tags, notification channels, status pages and
+maintenance windows. It has no heartbeat history and no ping tokens, so an
+imported monitor gets a new ping URL.
+
+- Channel secrets (webhook URLs, bot tokens, routing and user keys) are
+  `"[REDACTED]"` by default, so the file is safe to keep in version control or share.
+- `?includeSecrets=true` includes them in clear text and needs a browser session
+  or login: an API token, even with `write` scope, gets `403`. Treat that file like a password.
+- Every export is in the audit log (`config.exported`, `config.exported_with_secrets`).
+
+`POST /api/import/cronko` takes that JSON as the body, with `?dryRun=true` like the
+other importers, and answers `{ data: { dryRun, created, skipped, channels, statusPages, maintenanceWindows } }`
+(each section has `created` and `skipped`). Existing monitor names, status page slugs,
+maintenance window names and channels with the same type and name are skipped, so
+re-running is safe. A channel whose secrets were redacted is skipped with a
+reason (add it by hand, or export with secrets). Maintenance windows aimed at one
+monitor travel by its slug. Import needs a session too: API tokens cannot import.
+
+```sh
+curl -b "cronko_token=$SESSION" "$CRONKO/api/export" -o cronko.json
+curl -b "cronko_token=$SESSION" -X POST "$CRONKO/api/import/cronko?dryRun=true" \
+  -H "Content-Type: application/json" --data @cronko.json
+```
+
 ### API tokens
 
 For scripts and CI, create a token in Settings → API tokens (name, scope, optional

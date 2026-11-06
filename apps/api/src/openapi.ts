@@ -379,6 +379,53 @@ const spec = {
         },
       },
     },
+    "/api/export": {
+      get: {
+        summary:
+          "Export configuration as JSON (monitors, tags, channels, status pages, maintenance windows)",
+        description:
+          "No heartbeat history and no ping tokens. Channel secrets (webhook URLs, bot tokens, keys) are replaced by [REDACTED] unless includeSecrets=true, which needs a session: API tokens get 403. Every export is audit-logged. The body can be sent as is to POST /api/import/cronko.",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "includeSecrets",
+            in: "query",
+            schema: { type: "boolean" },
+            description: "Include channel secrets in clear text (session only)",
+          },
+        ],
+        responses: {
+          "200": {
+            description:
+              "{ format: 'cronko-export', version, monitors, tags, channels, statusPages, maintenanceWindows }",
+          },
+          "403": { description: "includeSecrets with an API token" },
+        },
+      },
+    },
+    "/api/import/cronko": {
+      post: {
+        summary: "Import a Cronko export (monitors, channels, status pages, maintenance windows)",
+        description:
+          "Body: the JSON from GET /api/export. Monitors get new ping tokens. Existing monitor names, status page slugs, maintenance window names and channels with the same type and name are skipped; channels whose secrets were redacted are skipped too. Session only (API tokens cannot import).",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        parameters: [
+          {
+            name: "dryRun",
+            in: "query",
+            schema: { type: "boolean" },
+            description: "Report what would happen without creating anything",
+          },
+        ],
+        responses: {
+          "200": {
+            description:
+              "{ dryRun, created[], skipped[], channels, statusPages, maintenanceWindows } each with created[] and skipped[]",
+          },
+          "400": { description: "Not a Cronko export" },
+        },
+      },
+    },
     "/api/import/healthchecks": {
       post: {
         summary: "Import monitors from Healthchecks (saved API response or live Management API)",
