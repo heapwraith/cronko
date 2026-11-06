@@ -106,6 +106,11 @@ const spec = {
       },
     },
     "/ping/{token}/start": {
+      get: {
+        summary: "Pulse start (GET) — begin a long-running job",
+        parameters: [{ name: "token", in: "path", required: true, schema: { type: "string" } }],
+        responses: { "200": { description: "ok" }, "404": { description: "Monitor not found" } },
+      },
       post: {
         summary: "Pulse start — begin a long-running job (GET is also accepted)",
         description:
@@ -179,6 +184,15 @@ const spec = {
       },
     },
     "/ping/{token}/fail": {
+      get: {
+        summary: "Report that the job ran and failed (GET)",
+        description: "Same as POST, without a request body.",
+        parameters: [
+          { name: "token", in: "path", required: true, schema: { type: "string" } },
+          { name: "exit", in: "query", required: false, schema: { type: "integer" } },
+        ],
+        responses: { "200": { description: "ok" }, "404": { description: "Monitor not found" } },
+      },
       post: {
         summary: "Report that the job ran and failed (alerts immediately)",
         description:
@@ -203,6 +217,20 @@ const spec = {
       },
     },
     "/ping/{token}/finish": {
+      get: {
+        summary: "Pulse finish (GET) — complete a long-running job",
+        description: "Same as POST, without a request body.",
+        parameters: [
+          { name: "token", in: "path", required: true, schema: { type: "string" } },
+          {
+            name: "d",
+            in: "query",
+            schema: { type: "integer", description: "Duration in ms (optional)" },
+          },
+          { name: "exit", in: "query", schema: { type: "integer", description: "Exit code" } },
+        ],
+        responses: { "200": { description: "ok" }, "404": { description: "Monitor not found" } },
+      },
       post: {
         summary: "Pulse finish — complete a long-running job with duration",
         description:

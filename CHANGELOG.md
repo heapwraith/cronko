@@ -15,6 +15,10 @@ include breaking changes; they are called out below.
 - Importers: `POST /api/import/healthchecks` (saved `GET /api/v3/checks/` response, or an API key to fetch it) and `POST /api/import/kuma` (Uptime Kuma backup JSON, push monitors only; other types are reported as skipped). Both take `?dryRun=true`, reuse the monitor validation, skip names that already exist and warn about fields with no equivalent. No migration.
 - Scoped API tokens (Settings → API tokens): named, shown once, stored as a SHA-256 hash with a visible prefix, optional expiry and a last-used time. Send as `Authorization: Bearer crk_...` next to the session. `read` allows `GET` only; `write` also manages monitors. A token cannot manage tokens or settings; revoked or expired tokens get `401`, out-of-scope requests `403`. Creating and revoking are in the audit log (`api_token.created`, `api_token.revoked`). Endpoints: `GET/POST /api/settings/tokens`, `DELETE /api/settings/tokens/:id`. Migration `0017`.
 
+### Internal
+
+- A test now fails when `openapi.ts` drifts from the routes the app registers (the missing `GET` variants of `/ping/{token}/start`, `/fail` and `/finish` are now documented). A new CI workflow builds the image for `linux/arm64` under QEMU and probes `/health/live` on pull requests that touch the Dockerfile, dependencies or `packages/database`.
+
 ## [0.3.0] - 2026-11-06
 
 Closes the last gaps against Healthchecks: a periodic digest and ping by e-mail.
