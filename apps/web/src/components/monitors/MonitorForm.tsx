@@ -37,7 +37,7 @@ const PRESETS = [
 ] as const
 
 const field =
-  "min-h-10 w-full rounded-[4px] border border-line-strong bg-panel px-3 text-sm text-ink placeholder:text-dim disabled:opacity-50"
+  "min-h-10 w-full rounded-[2px] border border-line-strong bg-panel px-3 text-sm text-ink placeholder:text-dim disabled:opacity-50"
 
 function allTimezones(): string[] {
   try {
@@ -154,7 +154,7 @@ export function MonitorForm({
 
       <fieldset className="space-y-4">
         <legend className={label}>{t("form.schedule")}</legend>
-        <div className="inline-flex rounded-[4px] border border-line-strong bg-panel p-0.5">
+        <div className="inline-flex rounded-[2px] border border-line-strong bg-panel p-0.5">
           {(["interval", "cron"] as const).map((m) => (
             <label
               key={m}
@@ -238,7 +238,7 @@ export function MonitorForm({
                     key={p.cron}
                     type="button"
                     onClick={() => setCron(p.cron)}
-                    className="rounded-[4px] border border-line-strong bg-panel px-2.5 py-1 text-xs font-medium text-dim hover:text-ink"
+                    className="rounded-[2px] border border-line-strong bg-panel px-2.5 py-1 text-xs font-medium text-dim hover:text-ink"
                   >
                     {t(p.key)}
                   </button>
@@ -320,7 +320,7 @@ export function MonitorForm({
       {error && (
         <p
           role="alert"
-          className="rounded-[4px] bg-[var(--chip-down-bg)] px-3 py-2 text-sm text-[var(--chip-down-fg)]"
+          className="rounded-[2px] bg-[var(--chip-down-bg)] px-3 py-2 text-sm text-[var(--chip-down-fg)]"
         >
           {error}
         </p>

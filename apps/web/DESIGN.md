@@ -101,7 +101,7 @@ components:
 
 # Design System: Cronko
 
-> Status: **direction seed** (new world, not yet implemented). Replaces the earlier
+> Status: **migration started** (tokens, masthead, ledger tables, state stamps, monitor list and detail are on this system; remaining screens inherit the tokens and still need their own pass). Replaces the earlier
 > "Quadro de Partidas" (graphite and amber departures board), which is retired. Re-run the
 > documenter in scan mode once the build lands.
 

@@ -25,10 +25,10 @@ export function RunHistory({ runs, caption }: { runs: Run[]; caption: string }) 
   const { t, locale } = useT()
 
   return (
-    <div className="overflow-x-auto rounded-[6px] border border-line bg-panel">
+    <div className="overflow-x-auto">
       <table className="w-full min-w-[22rem] border-collapse text-sm">
         <caption className="sr-only">{caption}</caption>
-        <thead className="border-b-2 border-line-strong">
+        <thead className="border-b border-line-strong bg-raised">
           <tr>
             <th scope="col" className={th}>
               {t("detail.when")}
@@ -83,7 +83,7 @@ export function RunHistory({ runs, caption }: { runs: Run[]; caption: string }) 
                       <summary className="cursor-pointer text-signal-text underline-offset-4 hover:underline">
                         {t("detail.showOutput")}
                       </summary>
-                      <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap break-words rounded-[4px] bg-ground p-3 font-mono text-xs">
+                      <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap break-words rounded-[2px] bg-ground p-3 font-mono text-xs">
                         {output}
                       </pre>
                     </details>

@@ -1,39 +1,41 @@
 /*
- * Design tokens — "Quadro de Partidas" (departures board).
- * Semantic roles first (ground, panel, line, ink, signal, state chips); the
- * Tailwind `zinc` and `emerald` scales are re-pointed so legacy markup that
- * still uses them inherits the board palette until it is rewritten.
+ * Design tokens — "The Logbook" (see apps/web/DESIGN.md).
+ * Semantic roles keep their old names (ground, panel, raised, line, ink, dim, signal)
+ * so components do not change: ground = paper, panel = raised paper, raised = sunk
+ * paper, signal = the single ink-blue accent. The Tailwind `zinc` and `emerald`
+ * scales are re-pointed to the paper/ink hues for any markup that still uses them.
  */
 
 @theme {
   --font-sans: "Atkinson Hyperlegible Next Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Newsreader Variable", Georgia, "Times New Roman", serif;
   --font-mono: "Geist Mono Variable", ui-monospace, "SFMono-Regular", monospace;
 
-  /* Neutrals: warm graphite, slightly tinted toward the board's amber. */
-  --color-zinc-50: oklch(0.985 0.004 90);
-  --color-zinc-100: oklch(0.965 0.007 90);
-  --color-zinc-200: oklch(0.92 0.009 90);
-  --color-zinc-300: oklch(0.86 0.011 90);
-  --color-zinc-400: oklch(0.72 0.013 90);
-  --color-zinc-500: oklch(0.58 0.013 90);
-  --color-zinc-600: oklch(0.45 0.012 90);
-  --color-zinc-700: oklch(0.34 0.012 90);
-  --color-zinc-800: oklch(0.27 0.012 90);
-  --color-zinc-900: oklch(0.225 0.011 90);
-  --color-zinc-950: oklch(0.19 0.01 90);
+  /* Neutrals: warm paper to warm ink. */
+  --color-zinc-50: oklch(0.985 0.006 85);
+  --color-zinc-100: oklch(0.965 0.01 85);
+  --color-zinc-200: oklch(0.92 0.014 82);
+  --color-zinc-300: oklch(0.86 0.016 80);
+  --color-zinc-400: oklch(0.72 0.018 75);
+  --color-zinc-500: oklch(0.58 0.02 68);
+  --color-zinc-600: oklch(0.45 0.02 62);
+  --color-zinc-700: oklch(0.34 0.018 60);
+  --color-zinc-800: oklch(0.27 0.015 60);
+  --color-zinc-900: oklch(0.23 0.013 60);
+  --color-zinc-950: oklch(0.2 0.012 60);
 
-  /* Legacy "brand" green becomes the board's signal amber. */
-  --color-emerald-50: oklch(0.98 0.03 92);
-  --color-emerald-100: oklch(0.95 0.07 92);
-  --color-emerald-200: oklch(0.91 0.12 92);
-  --color-emerald-300: oklch(0.87 0.15 92);
-  --color-emerald-400: oklch(0.83 0.165 92);
-  --color-emerald-500: oklch(0.56 0.13 78);
-  --color-emerald-600: oklch(0.5 0.12 75);
-  --color-emerald-700: oklch(0.43 0.1 72);
-  --color-emerald-800: oklch(0.36 0.08 70);
-  --color-emerald-900: oklch(0.3 0.06 70);
-  --color-emerald-950: oklch(0.24 0.045 70);
+  /* Legacy "brand" green becomes the ink-blue accent. */
+  --color-emerald-50: oklch(0.97 0.015 255);
+  --color-emerald-100: oklch(0.93 0.03 255);
+  --color-emerald-200: oklch(0.87 0.05 255);
+  --color-emerald-300: oklch(0.8 0.08 255);
+  --color-emerald-400: oklch(0.72 0.1 255);
+  --color-emerald-500: oklch(0.5 0.11 255);
+  --color-emerald-600: oklch(0.43 0.1 255);
+  --color-emerald-700: oklch(0.38 0.1 255);
+  --color-emerald-800: oklch(0.32 0.09 255);
+  --color-emerald-900: oklch(0.27 0.07 255);
+  --color-emerald-950: oklch(0.22 0.05 255);
 }
 
 /* Semantic colours, switched by the `.dark` class on <html>. */
@@ -59,74 +61,74 @@
 
 :root {
   color-scheme: light;
-  /* Light: warm paper, ink text. */
-  --ground: oklch(0.965 0.012 90);
-  --panel: oklch(0.99 0.006 90);
-  --raised: oklch(0.945 0.014 90);
-  --line: oklch(0.89 0.015 90);
-  --line-strong: oklch(0.78 0.02 90);
-  --ink: oklch(0.22 0.02 260);
-  --dim: oklch(0.45 0.02 260);
-  --signal: oklch(0.82 0.17 92);
-  --signal-fg: oklch(0.22 0.02 260);
-  --signal-text: oklch(0.46 0.1 75);
+  /* Light (default): warm paper, dark ink. */
+  --ground: oklch(0.975 0.012 85);
+  --panel: oklch(0.992 0.006 85);
+  --raised: oklch(0.945 0.014 85);
+  --line: oklch(0.88 0.016 80);
+  --line-strong: oklch(0.74 0.02 75);
+  --ink: oklch(0.22 0.02 60);
+  --dim: oklch(0.42 0.02 60);
+  --signal: oklch(0.38 0.1 255);
+  --signal-fg: oklch(0.992 0.006 85);
+  --signal-text: oklch(0.38 0.1 255);
 
-  /* Solid hues for glyphs and bars. */
-  --st-healthy: oklch(0.52 0.14 155);
-  --st-missed: oklch(0.58 0.16 55);
-  --st-down: oklch(0.52 0.2 27);
-  --st-failed: oklch(0.52 0.2 350);
-  --st-paused: oklch(0.5 0.03 255);
-  --st-pending: oklch(0.52 0.15 250);
+  /* State hues: glyphs, stamps, bars. Pending is deliberately colourless. */
+  --st-healthy: oklch(0.5 0.12 150);
+  --st-missed: oklch(0.56 0.13 70);
+  --st-down: oklch(0.5 0.18 27);
+  --st-failed: oklch(0.45 0.14 350);
+  --st-paused: oklch(0.5 0.02 255);
+  --st-pending: oklch(0.42 0.02 60);
 
-  /* Chips: solid fill + text, both checked for 4.5:1. */
-  --chip-healthy-bg: oklch(0.92 0.06 155);
-  --chip-healthy-fg: oklch(0.32 0.09 155);
-  --chip-missed-bg: oklch(0.93 0.07 60);
-  --chip-missed-fg: oklch(0.36 0.1 50);
-  --chip-down-bg: oklch(0.92 0.06 27);
+  /* Tints for fills behind state text (toasts); text colour checked for 4.5:1. */
+  --chip-healthy-bg: oklch(0.93 0.05 150);
+  --chip-healthy-fg: oklch(0.32 0.09 150);
+  --chip-missed-bg: oklch(0.93 0.07 75);
+  --chip-missed-fg: oklch(0.36 0.09 65);
+  --chip-down-bg: oklch(0.93 0.05 27);
   --chip-down-fg: oklch(0.36 0.12 27);
-  --chip-failed-bg: oklch(0.93 0.05 350);
-  --chip-failed-fg: oklch(0.36 0.12 350);
-  --chip-paused-bg: oklch(0.92 0.01 255);
+  --chip-failed-bg: oklch(0.93 0.04 350);
+  --chip-failed-fg: oklch(0.36 0.11 350);
+  --chip-paused-bg: oklch(0.93 0.008 255);
   --chip-paused-fg: oklch(0.38 0.03 255);
-  --chip-pending-bg: oklch(0.93 0.04 250);
-  --chip-pending-fg: oklch(0.36 0.1 250);
+  --chip-pending-bg: oklch(0.94 0.01 80);
+  --chip-pending-fg: oklch(0.38 0.02 60);
 }
 
 .dark {
   color-scheme: dark;
-  /* Dark: graphite board, warm board-white text. */
-  --ground: oklch(0.19 0.01 260);
-  --panel: oklch(0.225 0.011 258);
-  --raised: oklch(0.265 0.012 258);
-  --line: oklch(0.31 0.012 258);
-  --line-strong: oklch(0.42 0.014 258);
-  --ink: oklch(0.94 0.025 92);
-  --dim: oklch(0.72 0.022 92);
-  --signal: oklch(0.82 0.17 92);
-  --signal-fg: oklch(0.2 0.02 260);
-  --signal-text: oklch(0.84 0.16 92);
+  /* Lamplight: warm ink ground, paper text; never pure black. */
+  --ground: oklch(0.2 0.012 60);
+  --panel: oklch(0.25 0.013 60);
+  --raised: oklch(0.17 0.011 60);
+  --line: oklch(0.31 0.013 60);
+  --line-strong: oklch(0.44 0.015 60);
+  --ink: oklch(0.93 0.015 85);
+  --dim: oklch(0.74 0.02 80);
+  --signal: oklch(0.78 0.1 255);
+  --signal-fg: oklch(0.2 0.012 60);
+  --signal-text: oklch(0.78 0.1 255);
 
-  --st-healthy: oklch(0.78 0.15 155);
-  --st-missed: oklch(0.8 0.15 60);
-  --st-down: oklch(0.72 0.19 27);
-  --st-failed: oklch(0.74 0.18 350);
-  --st-paused: oklch(0.7 0.03 255);
-  --st-pending: oklch(0.76 0.12 250);
+  --st-healthy: oklch(0.76 0.13 150);
+  --st-missed: oklch(0.8 0.13 75);
+  --st-down: oklch(0.72 0.17 27);
+  --st-failed: oklch(0.74 0.15 350);
+  --st-paused: oklch(0.72 0.02 255);
+  --st-pending: oklch(0.74 0.02 80);
 
-  --chip-healthy-bg: oklch(0.36 0.08 155);
-  --chip-healthy-fg: oklch(0.94 0.05 155);
-  --chip-missed-bg: oklch(0.42 0.09 55);
-  --chip-missed-fg: oklch(0.95 0.05 70);
-  --chip-down-bg: oklch(0.42 0.13 27);
+  --chip-healthy-bg: oklch(0.34 0.06 150);
+  --chip-healthy-fg: oklch(0.94 0.04 150);
+  --chip-missed-bg: oklch(0.4 0.08 70);
+  --chip-missed-fg: oklch(0.95 0.05 80);
+  --chip-down-bg: oklch(0.4 0.12 27);
   --chip-down-fg: oklch(0.95 0.04 27);
-  --chip-failed-bg: oklch(0.4 0.12 350);
+  --chip-failed-bg: oklch(0.38 0.11 350);
   --chip-failed-fg: oklch(0.95 0.04 350);
   --chip-paused-bg: oklch(0.33 0.02 255);
-  --chip-paused-fg: oklch(0.85 0.02 255);
-  --chip-pending-bg: oklch(0.38 0.08 250);
-  --chip-pending-fg: oklch(0.94 0.04 250);
+  --chip-paused-fg: oklch(0.86 0.02 255);
+  --chip-pending-bg: oklch(0.33 0.015 70);
+  --chip-pending-fg: oklch(0.88 0.02 80);
 }
 
 @media (prefers-contrast: more) {

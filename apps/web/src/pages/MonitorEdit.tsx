@@ -36,7 +36,7 @@ export default function EditMonitorPage() {
           { label: t("monitors.edit") },
         ]}
       />
-      <h1 className="text-2xl font-bold tracking-tight">{t("monitors.edit")}</h1>
+      <h1 className="text-[1.75rem] leading-tight">{t("monitors.edit")}</h1>
 
       <MonitorForm
         initial={monitor}

@@ -22,14 +22,13 @@ type ButtonAsLink = ButtonBaseProps & {
 type ButtonProps = ButtonAsButton | ButtonAsLink
 
 const base =
-  "inline-flex items-center justify-center gap-1.5 rounded-[4px] font-semibold transition-[background-color,border-color,color] duration-150 disabled:pointer-events-none disabled:opacity-50"
+  "inline-flex items-center justify-center gap-1.5 rounded-[2px] font-semibold transition-[background-color,border-color,color] duration-150 disabled:pointer-events-none disabled:opacity-50"
 
 const variants: Record<Variant, string> = {
   primary: "bg-signal text-signal-fg hover:brightness-95 active:brightness-90",
   secondary: "border border-line-strong bg-panel text-ink hover:bg-raised",
   ghost: "text-dim hover:bg-raised hover:text-ink",
-  danger:
-    "bg-[var(--chip-down-bg)] text-[var(--chip-down-fg)] hover:brightness-110 border border-down/40",
+  danger: "border border-down bg-transparent text-down hover:bg-down hover:text-signal-fg",
 }
 
 const sizes: Record<"sm" | "md", string> = {

@@ -10,17 +10,17 @@ interface ThemeContextValue {
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 
 function getSystemTheme(): "dark" | "light" {
-  if (typeof window === "undefined") return "dark"
+  if (typeof window === "undefined") return "light"
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
 }
 function getStoredTheme(): Theme {
-  if (typeof window === "undefined") return "dark"
-  return (localStorage.getItem("cronko_theme") as Theme) ?? "dark"
+  if (typeof window === "undefined") return "light"
+  return (localStorage.getItem("cronko_theme") as Theme) ?? "light"
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("dark")
-  const [resolved, setResolved] = useState<"dark" | "light">("dark")
+  const [theme, setThemeState] = useState<Theme>("light")
+  const [resolved, setResolved] = useState<"dark" | "light">("light")
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {

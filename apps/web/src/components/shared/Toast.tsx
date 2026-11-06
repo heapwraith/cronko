@@ -64,7 +64,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <div
               key={item.id}
               role={item.type === "error" ? "alert" : "status"}
-              className={`pointer-events-auto flex max-w-sm items-center gap-3 rounded-[6px] border border-line-strong px-4 py-3 shadow-[0_8px_24px_-8px_rgb(0_0_0/0.5)] transition-[opacity,transform] duration-300 ${
+              className={`pointer-events-auto flex max-w-sm items-center gap-3 rounded-[4px] border border-line-strong px-4 py-3 shadow-[0_8px_24px_-8px_rgb(0_0_0/0.5)] transition-[opacity,transform] duration-300 ${
                 colors[item.type]
               } ${item.exiting ? "translate-x-4 opacity-0" : "translate-x-0 opacity-100"}`}
             >
@@ -74,7 +74,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 type="button"
                 aria-label={t("common.close")}
                 onClick={() => dismiss(item.id)}
-                className="shrink-0 rounded-[4px] p-1 hover:bg-black/10"
+                className="shrink-0 rounded-[2px] p-1 hover:bg-black/10"
               >
                 <X className="h-3.5 w-3.5" aria-hidden="true" />
               </button>

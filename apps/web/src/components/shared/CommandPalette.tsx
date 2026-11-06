@@ -87,7 +87,7 @@ export function CommandPalette() {
       ref={ref}
       onClose={() => setOpen(false)}
       aria-label={t("cmd.title")}
-      className="m-auto mt-[15vh] w-[min(32rem,calc(100vw-2rem))] rounded-[6px] border border-line-strong bg-panel p-0 text-ink shadow-[0_18px_48px_-12px_rgb(0_0_0/0.6)] backdrop:bg-black/60"
+      className="m-auto mt-[15vh] w-[min(32rem,calc(100vw-2rem))] rounded-[4px] border border-line-strong bg-panel p-0 text-ink shadow-[0_18px_48px_-12px_rgb(0_0_0/0.6)] backdrop:bg-black/60"
     >
       <div className="flex items-center gap-3 border-b border-line px-4">
         <Search className="h-4 w-4 shrink-0 text-dim" aria-hidden="true" />

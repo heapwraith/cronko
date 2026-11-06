@@ -1,12 +1,12 @@
 import type { ReactNode } from "react"
 
 export function Skeleton({ className = "" }: { className?: string }) {
-  return <div aria-hidden="true" className={`animate-pulse rounded-[4px] bg-raised ${className}`} />
+  return <div aria-hidden="true" className={`animate-pulse rounded-[2px] bg-raised ${className}`} />
 }
 
 export function SkeletonCard({ children }: { children?: ReactNode }) {
   return (
-    <div aria-hidden="true" className="rounded-[6px] border border-line bg-panel p-4">
+    <div aria-hidden="true" className="border-t border-line pt-4">
       {children ?? (
         <>
           <Skeleton className="mb-3 h-3 w-24" />
@@ -19,7 +19,7 @@ export function SkeletonCard({ children }: { children?: ReactNode }) {
 
 export function SkeletonTable({ rows = 5, cols = 4 }: { rows?: number; cols?: number }) {
   return (
-    <div role="status" aria-label="Loading" className="rounded-[6px] border border-line bg-panel">
+    <div role="status" aria-label="Loading">
       <div className="flex gap-4 border-b-2 border-line-strong px-3 py-3">
         {Array.from({ length: cols }, (_, c) => (
           <Skeleton key={`h${c}`} className="h-3 flex-1" />

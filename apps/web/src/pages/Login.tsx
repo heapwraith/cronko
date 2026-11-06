@@ -78,7 +78,7 @@ export default function LoginPage() {
   if (checking) return <div className="min-h-screen bg-ground" />
 
   const field =
-    "min-h-11 w-full rounded-[4px] border border-line-strong bg-panel px-3 text-[15px] text-ink placeholder:text-dim disabled:opacity-50"
+    "min-h-11 w-full rounded-[2px] border border-line-strong bg-panel px-3 text-[15px] text-ink placeholder:text-dim disabled:opacity-50"
 
   return (
     <div className="flex min-h-screen flex-col bg-ground">
@@ -144,7 +144,7 @@ export default function LoginPage() {
             <p
               id={errorId}
               role="alert"
-              className="rounded-[4px] bg-[var(--chip-down-bg)] px-3 py-2 text-sm text-[var(--chip-down-fg)]"
+              className="rounded-[2px] bg-[var(--chip-down-bg)] px-3 py-2 text-sm text-[var(--chip-down-fg)]"
             >
               {error}
             </p>

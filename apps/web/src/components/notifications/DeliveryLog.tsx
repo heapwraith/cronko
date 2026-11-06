@@ -1,28 +1,22 @@
 import { formatRelativeTime } from "@cronko/shared/utils"
 import { useQuery } from "@tanstack/react-query"
-import { Check, CircleDashed, X } from "lucide-react"
 import { useEffect, useId, useState } from "react"
 import { SkeletonTable } from "@/components/shared/Skeleton"
+import { Stamp, type StampTone } from "@/components/shared/Stamp"
 import { useToast } from "@/components/shared/Toast"
 import { api } from "@/lib/api"
 import { useT } from "@/lib/i18n"
 
 type Delivery = Awaited<ReturnType<typeof api.notifications.deliveries>>[number]
 
-const CHIP: Record<
-  Delivery["status"],
-  { cls: string; Glyph: React.ComponentType<{ className?: string }> }
-> = {
-  sent: { cls: "bg-[var(--chip-healthy-bg)] text-[var(--chip-healthy-fg)]", Glyph: Check },
-  pending: {
-    cls: "bg-[var(--chip-pending-bg)] text-[var(--chip-pending-fg)]",
-    Glyph: CircleDashed,
-  },
-  failed: { cls: "bg-[var(--chip-failed-bg)] text-[var(--chip-failed-fg)]", Glyph: X },
+const TONE: Record<Delivery["status"], StampTone> = {
+  sent: "healthy",
+  pending: "pending",
+  failed: "failed",
 }
 
 const th = "px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-dim"
-const td = "px-3 py-3 align-top"
+const td = "px-3 py-4 align-top"
 
 /**
  * Outbox history: a lost alert is the worst failure Cronko has, so failed and
@@ -76,14 +70,14 @@ export function DeliveryLog() {
       {isPending ? (
         <SkeletonTable rows={4} cols={5} />
       ) : shown.length === 0 ? (
-        <p className="rounded-[6px] border border-line bg-panel py-8 text-center text-sm text-dim">
+        <p className="border-y border-line py-8 text-center text-sm text-dim">
           {t("notifications.deliveriesEmpty")}
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-[6px] border border-line bg-panel">
+        <div className="overflow-x-auto">
           <table className="w-full min-w-[20rem] border-collapse text-sm">
             <caption className="sr-only">{t("notifications.deliveriesCaption")}</caption>
-            <thead className="border-b-2 border-line-strong">
+            <thead className="border-b border-line-strong bg-raised">
               <tr>
                 <th scope="col" className={th}>
                   {t("notifications.colWhen")}
@@ -136,15 +130,7 @@ export function DeliveryLog() {
                     {t(`notifications.event.${d.event}`)}
                   </td>
                   <td className={td}>
-                    <span
-                      className={`inline-flex items-center gap-1 rounded-[4px] px-2 py-0.5 text-xs font-semibold uppercase tracking-wide ${CHIP[d.status].cls}`}
-                    >
-                      {(() => {
-                        const { Glyph } = CHIP[d.status]
-                        return <Glyph className="h-3 w-3" aria-hidden="true" />
-                      })()}
-                      {t(`notifications.status.${d.status}`)}
-                    </span>
+                    <Stamp tone={TONE[d.status]} label={t(`notifications.status.${d.status}`)} />
                   </td>
                   <td className={`${td} hidden font-mono text-dim tnum md:table-cell`}>
                     {d.attempts}

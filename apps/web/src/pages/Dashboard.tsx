@@ -53,7 +53,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-ink">{t("dashboard.title")}</h1>
+          <h1 className="text-[1.75rem] leading-tight text-ink">{t("dashboard.title")}</h1>
           {!isPending && monitors.length > 0 && (
             <p className="mt-1 text-sm text-dim" aria-live="polite">
               <span className={attention > 0 ? "font-semibold text-ink" : ""}>{summary}</span>
@@ -97,7 +97,7 @@ export default function DashboardPage() {
                     type="button"
                     aria-pressed={active}
                     onClick={() => setFilter(f)}
-                    className={`rounded-[4px] border px-3 py-1.5 text-sm font-medium transition-colors ${
+                    className={`rounded-[2px] border px-3 py-1.5 text-sm font-medium transition-colors ${
                       active
                         ? "border-ink bg-ink text-ground"
                         : "border-line-strong bg-panel text-dim hover:text-ink"
@@ -123,7 +123,7 @@ export default function DashboardPage() {
               <h2 id="open-incidents" className="text-sm font-semibold text-ink">
                 {t("board.openIncidents")}
               </h2>
-              <ul className="divide-y divide-line rounded-[6px] border border-line bg-panel">
+              <ul className="divide-y divide-line border-y border-line">
                 {data?.incidents.map((i) => (
                   <li
                     key={i.id}
@@ -148,7 +148,7 @@ export default function DashboardPage() {
               <h2 id="undelivered" className="text-sm font-semibold text-ink">
                 {t("board.undelivered")}
               </h2>
-              <ul className="divide-y divide-line rounded-[6px] border border-line bg-panel">
+              <ul className="divide-y divide-line border-y border-line">
                 {undelivered.map((d) => (
                   <li
                     key={d.id}

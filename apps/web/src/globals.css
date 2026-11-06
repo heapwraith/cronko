@@ -36,6 +36,11 @@
   textarea {
     caret-color: var(--signal-text);
   }
+  h1 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    letter-spacing: -0.015em;
+  }
   .tnum {
     font-variant-numeric: tabular-nums;
   }

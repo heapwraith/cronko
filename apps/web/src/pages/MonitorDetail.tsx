@@ -39,8 +39,8 @@ export default function MonitorDetailPage() {
 
 function Panel({ title, children, id }: { title: string; children: ReactNode; id: string }) {
   return (
-    <section aria-labelledby={id} className="rounded-[6px] border border-line bg-panel p-4">
-      <h2 id={id} className="mb-3 text-sm font-semibold text-ink">
+    <section aria-labelledby={id} className="border-t border-line-strong pt-4">
+      <h2 id={id} className="mb-3 text-base font-semibold text-ink">
         {title}
       </h2>
       {children}
@@ -101,7 +101,7 @@ function MonitorDetailView({ monitor, incidents }: { monitor: Monitor; incidents
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-bold tracking-tight">{monitor.name}</h1>
+          <h1 className="text-[2.5rem] leading-[1.1]">{monitor.name}</h1>
           <StatusBadge status={status} />
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -115,7 +115,7 @@ function MonitorDetailView({ monitor, incidents }: { monitor: Monitor; incidents
       {incident && (
         <div
           role="status"
-          className="flex items-start gap-3 rounded-[6px] border border-line-strong bg-[color-mix(in_srgb,var(--st-down)_14%,var(--panel))] p-4"
+          className="flex items-start gap-3 rounded-[4px] border border-line-strong bg-[color-mix(in_srgb,var(--st-down)_14%,var(--panel))] p-4"
         >
           <OctagonX className="mt-0.5 h-5 w-5 shrink-0 text-down" aria-hidden="true" />
           <div>
@@ -159,7 +159,7 @@ function MonitorDetailView({ monitor, incidents }: { monitor: Monitor; incidents
                   {t("detail.output")}
                 </h3>
                 {lastOutput ? (
-                  <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-words rounded-[4px] bg-ground p-3 font-mono text-xs">
+                  <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-words rounded-[2px] bg-ground p-3 font-mono text-xs">
                     {lastOutput}
                   </pre>
                 ) : (
@@ -199,7 +199,7 @@ function MonitorDetailView({ monitor, incidents }: { monitor: Monitor; incidents
 
       <Panel id="ping-url" title={t("detail.pingUrl")}>
         <div className="flex flex-wrap items-center gap-3">
-          <code className="min-w-0 flex-1 select-all overflow-x-auto whitespace-nowrap rounded-[4px] bg-ground px-3 py-2 font-mono text-sm">
+          <code className="min-w-0 flex-1 select-all overflow-x-auto whitespace-nowrap rounded-[2px] bg-ground px-3 py-2 font-mono text-sm">
             {pingUrl}
           </code>
           <CopyButton text={pingUrl} />
@@ -215,8 +215,8 @@ function MonitorDetailView({ monitor, incidents }: { monitor: Monitor; incidents
         </Panel>
       )}
 
-      <section aria-labelledby="history" className="space-y-2">
-        <h2 id="history" className="text-sm font-semibold">
+      <section aria-labelledby="history" className="space-y-3 border-t border-line-strong pt-4">
+        <h2 id="history" className="text-base font-semibold">
           {t("detail.history")}
         </h2>
         {runs.length > 0 ? (
@@ -226,18 +226,18 @@ function MonitorDetailView({ monitor, incidents }: { monitor: Monitor; incidents
         )}
       </section>
 
-      <section aria-labelledby="incidents" className="space-y-2">
-        <h2 id="incidents" className="text-sm font-semibold">
+      <section aria-labelledby="incidents" className="space-y-3 border-t border-line-strong pt-4">
+        <h2 id="incidents" className="text-base font-semibold">
           {t("detail.incidents")}
         </h2>
         {incidents.length === 0 ? (
           <p className="text-sm text-dim">{t("detail.noIncidents")}</p>
         ) : (
-          <ul className="divide-y divide-line rounded-[6px] border border-line bg-panel">
+          <ul className="divide-y divide-line border-y border-line">
             {incidents.map((i) => (
               <li
                 key={i.id}
-                className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 text-sm"
+                className="flex flex-wrap items-center justify-between gap-2 py-3 text-sm"
               >
                 <span className="font-mono text-xs tnum">
                   {new Date(i.startedAt).toLocaleString(locale)}

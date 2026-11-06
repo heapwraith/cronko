@@ -22,7 +22,7 @@ const TINT: Partial<Record<string, string>> = {
 }
 
 const th = "px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-dim"
-const td = "px-3 py-3 align-middle"
+const td = "px-3 py-4 align-middle"
 
 /** The departures board: one row per monitor, worst first. */
 export function DeparturesTable({
@@ -50,10 +50,10 @@ export function DeparturesTable({
   }
 
   return (
-    <div className="overflow-x-auto rounded-[6px] border border-line bg-panel">
+    <div className="overflow-x-auto">
       <table className="w-full min-w-[20rem] border-collapse text-sm">
         <caption className="sr-only">{caption}</caption>
-        <thead className="border-b-2 border-line-strong">
+        <thead className="border-b border-line-strong bg-raised">
           <tr>
             <th scope="col" className={`${th} hidden md:table-cell`}>
               {t("board.next")}
@@ -98,7 +98,7 @@ export function DeparturesTable({
                 <th scope="row" className={`${td} text-left font-semibold`}>
                   <Link
                     to={`/monitors/${row.id}`}
-                    className="text-ink underline-offset-4 hover:underline focus-visible:underline"
+                    className="text-base text-ink underline-offset-4 hover:underline focus-visible:underline"
                   >
                     {row.name}
                   </Link>

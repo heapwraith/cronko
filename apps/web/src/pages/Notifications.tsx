@@ -22,7 +22,7 @@ import { ApiError, api } from "@/lib/api"
 import { useT } from "@/lib/i18n"
 
 const th = "px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-dim"
-const td = "px-3 py-3 align-middle"
+const td = "px-3 py-4 align-middle"
 
 type Draft = { type: string; name: string; values: Record<string, string> }
 const emptyDraft: Draft = { type: "discord", name: "", values: {} }
@@ -160,7 +160,7 @@ export default function NotificationsPage() {
     <div className="space-y-10">
       <section className="space-y-4">
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <h1 className="text-2xl font-bold tracking-tight">{t("notifications.title")}</h1>
+          <h1 className="text-[1.75rem] leading-tight">{t("notifications.title")}</h1>
           {!formOpen && (
             <Button onClick={openAdd}>
               <Plus className="h-4 w-4" aria-hidden="true" />
@@ -177,7 +177,7 @@ export default function NotificationsPage() {
             }}
             noValidate
             aria-label={editingId ? t("notifications.edit") : t("notifications.addChannel")}
-            className="space-y-4 rounded-[6px] border border-line-strong bg-panel p-4"
+            className="space-y-4 rounded-[4px] border border-line-strong bg-panel p-4"
           >
             {editingId === null && (
               <div className="max-w-xs">
@@ -191,7 +191,7 @@ export default function NotificationsPage() {
                     setDraft({ type: e.target.value, name: draft.name, values: {} })
                     setErrors({})
                   }}
-                  className="min-h-10 w-full rounded-[4px] border border-line-strong bg-panel px-3 text-sm text-ink focus-visible:outline-2"
+                  className="min-h-10 w-full rounded-[2px] border border-line-strong bg-panel px-3 text-sm text-ink focus-visible:outline-2"
                 >
                   {CHANNEL_TYPES.map((k) => (
                     <option key={k} value={k}>
@@ -239,10 +239,10 @@ export default function NotificationsPage() {
             />
           )
         ) : (
-          <div className="overflow-x-auto rounded-[6px] border border-line bg-panel">
+          <div className="overflow-x-auto">
             <table className="w-full min-w-[20rem] border-collapse text-sm">
               <caption className="sr-only">{t("notifications.channelsCaption")}</caption>
-              <thead className="border-b-2 border-line-strong">
+              <thead className="border-b border-line-strong bg-raised">
                 <tr>
                   <th scope="col" className={th}>
                     {t("notifications.name")}

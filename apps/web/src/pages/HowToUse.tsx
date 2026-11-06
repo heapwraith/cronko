@@ -7,7 +7,7 @@ import { useT } from "@/lib/i18n"
 
 function CodeBlock({ children }: { children: string }) {
   return (
-    <div className="relative rounded-[6px] border border-line bg-panel">
+    <div className="relative rounded-[4px] bg-raised">
       <div className="absolute right-2 top-2">
         <CopyButton text={children} />
       </div>
@@ -53,7 +53,7 @@ export default function HowToUsePage() {
   return (
     <div className="max-w-3xl space-y-10 pb-16">
       <header className="space-y-2">
-        <h1 className="text-2xl font-bold tracking-tight">{t("howto.title")}</h1>
+        <h1 className="text-[1.75rem] leading-tight">{t("howto.title")}</h1>
         <P>{t("howto.subtitle")}</P>
       </header>
 

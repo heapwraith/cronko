@@ -3,7 +3,7 @@ import { useT } from "@/lib/i18n"
 import { channelMeta } from "./channels"
 
 const input =
-  "min-h-10 w-full rounded-[4px] border bg-panel px-3 text-sm text-ink placeholder:text-dim focus-visible:outline-2"
+  "min-h-10 w-full rounded-[2px] border bg-panel px-3 text-sm text-ink placeholder:text-dim focus-visible:outline-2"
 
 type Props = {
   type: string

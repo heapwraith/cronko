@@ -1,3 +1,4 @@
+import "@fontsource-variable/newsreader"
 import "@fontsource-variable/atkinson-hyperlegible-next"
 import "@fontsource-variable/geist-mono"
 import { StrictMode } from "react"
