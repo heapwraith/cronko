@@ -1,6 +1,7 @@
+import { MIN_BASELINE_RUNS, slowFactor } from "@cronko/shared/run-stats"
 import { formatRelativeTime } from "@cronko/shared/utils"
 import { useQuery } from "@tanstack/react-query"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, Layers, Snail } from "lucide-react"
 import type { ReactNode } from "react"
 import { useParams } from "react-router"
 import { runOutput } from "@/components/monitors/RunHistory"
@@ -28,6 +29,39 @@ function Fact({ label, children }: { label: string; children: ReactNode }) {
     <div className="flex items-baseline justify-between gap-4 border-b border-line py-2.5 last:border-b-0">
       <dt className="text-sm text-dim">{label}</dt>
       <dd className="min-w-0 truncate text-right font-mono text-sm tnum">{children}</dd>
+    </div>
+  )
+}
+
+/** A finding about this run, stated in words; colour only reinforces it. */
+function Notice({
+  icon: Icon,
+  tone,
+  title,
+  detail,
+}: {
+  icon: React.ComponentType<{ className?: string }>
+  tone: "missed" | "paused"
+  title: string
+  detail: string
+}) {
+  return (
+    <div
+      role="status"
+      className={`flex items-start gap-3 rounded-lg border border-line p-4 ${
+        tone === "missed" ? "bg-[var(--chip-missed-bg)]" : "bg-[var(--chip-paused-bg)]"
+      }`}
+    >
+      <Icon
+        className={`mt-0.5 h-5 w-5 shrink-0 ${
+          tone === "missed" ? "text-[var(--chip-missed-fg)]" : "text-[var(--chip-paused-fg)]"
+        }`}
+        aria-hidden="true"
+      />
+      <div>
+        <p className="text-sm font-semibold text-ink">{title}</p>
+        <p className="text-sm text-dim">{detail}</p>
+      </div>
     </div>
   )
 }
@@ -87,7 +121,7 @@ export default function RunDetailPage() {
   if (error || !data) return <NotFound />
 
   const { monitor, ctx } = data
-  const { run, previous, previousGood, nextId } = ctx
+  const { run, previous, previousGood, nextId, typical, unusuallySlow } = ctx
   const failed = isFailed(run)
   const when = new Date(run.receivedAt)
   const base = `/monitors/${monitor.id}/runs`
@@ -145,6 +179,31 @@ export default function RunDetailPage() {
         </nav>
       </div>
 
+      {(unusuallySlow || run.overlapped) && (
+        <div className="space-y-3">
+          {unusuallySlow && typical && (
+            <Notice
+              icon={Snail}
+              tone="missed"
+              title={t("analytics.slowTitle")}
+              detail={t("analytics.slowDetail", {
+                factor: String(slowFactor(run.durationMs, typical) ?? "—"),
+                count: String(typical.count),
+                median: formatRunDuration(typical.p50),
+              })}
+            />
+          )}
+          {run.overlapped && (
+            <Notice
+              icon={Layers}
+              tone="paused"
+              title={t("analytics.overlapTitle")}
+              detail={t("analytics.overlapDetail")}
+            />
+          )}
+        </div>
+      )}
+
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <Output title={t("detail.output")} run={run} id="run-output" />
 
@@ -159,6 +218,18 @@ export default function RunDetailPage() {
               </span>
             </Fact>
             <Fact label={t("board.duration")}>{formatRunDuration(run.durationMs)}</Fact>
+            <Fact label={t("analytics.typical")}>
+              {typical && typical.count >= MIN_BASELINE_RUNS ? (
+                <span title={t("analytics.basedOn", { count: String(typical.count) })}>
+                  {t("analytics.typicalValue", {
+                    p50: formatRunDuration(typical.p50),
+                    p95: formatRunDuration(typical.p95),
+                  })}
+                </span>
+              ) : (
+                <span className="font-sans text-dim">{t("analytics.noBaseline")}</span>
+              )}
+            </Fact>
             <Fact label={t("detail.source")}>{run.sourceIp ?? "—"}</Fact>
             <Fact label={t("run.userAgent")}>
               <span title={run.userAgent ?? undefined}>{run.userAgent ?? "—"}</span>

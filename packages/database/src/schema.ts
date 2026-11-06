@@ -19,6 +19,8 @@ export const monitors = sqliteTable("monitors", {
   // When set, deadlines come from the next scheduled run, not from the last ping.
   scheduleCron: text("schedule_cron"),
   timezone: text("timezone"),
+  // Opt-in: also alert on runs much slower than usual and on overlapping runs.
+  alertOnAnomalies: integer("alert_on_anomalies", { mode: "boolean" }).notNull().default(false),
   // Alerts are silenced until this moment; state and incidents are still tracked.
   mutedUntil: integer("muted_until", { mode: "timestamp" }),
   displayOrder: integer("display_order").notNull().default(0),
@@ -39,6 +41,10 @@ export const heartbeats = sqliteTable(
     durationMs: integer("duration_ms"),
     exitCode: integer("exit_code"),
     body: text("body"),
+    // "start" / "finish" for the two halves of a /start + /finish run; null for a plain ping.
+    kind: text("kind", { enum: ["start", "finish"] }),
+    // This run started while the previous one had not reported its finish yet.
+    overlapped: integer("overlapped", { mode: "boolean" }).notNull().default(false),
   },
   (t) => [index("heartbeats_monitor_received_idx").on(t.monitorId, t.receivedAt)],
 )
@@ -63,7 +69,17 @@ export const notificationChannels = sqliteTable("notification_channels", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   type: text("type", {
-    enum: ["discord", "telegram", "email", "slack", "webhook", "ntfy", "pushover", "teams"],
+    enum: [
+      "discord",
+      "telegram",
+      "email",
+      "slack",
+      "webhook",
+      "ntfy",
+      "pushover",
+      "teams",
+      "pagerduty",
+    ],
   }).notNull(),
   enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
   config: text("config", { mode: "json" }).notNull(),
@@ -82,7 +98,9 @@ export const notificationDeliveries = sqliteTable(
       .notNull()
       .references(() => notificationChannels.id, { onDelete: "cascade" }),
     monitorName: text("monitor_name").notNull(),
-    event: text("event", { enum: ["missed", "down", "failed", "recovered", "slow"] }).notNull(),
+    event: text("event", {
+      enum: ["missed", "down", "failed", "recovered", "slow", "unusual", "overlap"],
+    }).notNull(),
     message: text("message").notNull(),
     status: text("status", { enum: ["pending", "sent", "failed"] })
       .notNull()

@@ -1,3 +1,4 @@
+import type { DurationStats } from "@cronko/shared/run-stats"
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -111,6 +112,7 @@ export interface MonitorInput {
   timezone?: string
   gracePeriodSeconds: number
   maxDurationMs?: number
+  alertOnAnomalies?: boolean
 }
 
 export const api = {
@@ -169,6 +171,7 @@ export const api = {
         scheduleCron: string | null
         timezone: string | null
         mutedUntil: string | null
+        alertOnAnomalies: boolean
         nextExpectedAt: string | null
         paused: boolean
         slug: string
@@ -184,7 +187,11 @@ export const api = {
           durationMs: number | null
           exitCode: number | null
           body?: string | null
+          kind: "start" | "finish" | null
+          overlapped: boolean
+          unusuallySlow: boolean
         }>
+        typical: DurationStats | null
         openIncident: {
           id: string
           monitorId: string
@@ -235,10 +242,17 @@ export const api = {
         durationMs: number | null
         exitCode: number | null
         body: string | null
+        kind: "start" | "finish" | null
+        overlapped: boolean
       }
-      return get<{ run: R; previous: R | null; previousGood: R | null; nextId: string | null }>(
-        `/api/monitors/${id}/runs/${runId}`,
-      )
+      return get<{
+        run: R
+        previous: R | null
+        previousGood: R | null
+        nextId: string | null
+        typical: DurationStats | null
+        unusuallySlow: boolean
+      }>(`/api/monitors/${id}/runs/${runId}`)
     },
     incidents: (id: string, query?: { limit?: number; offset?: number }) => {
       const params = new URLSearchParams()

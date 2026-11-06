@@ -17,6 +17,16 @@ test("login → create monitor → failing ping → open the run", async ({ page
   await expect(page).toHaveURL(/\/monitors\/[^/]+$/)
   await expect(page.getByRole("heading", { level: 1, name })).toBeVisible()
 
+  // Regression: opening Edit from the detail page must load this monitor's values
+  // (the two pages used to share a cache key with different data shapes).
+  await page.getByRole("link", { name: "Editar" }).click()
+  await expect(page.getByLabel("Nome")).toHaveValue(name)
+  await expect(
+    page.getByRole("switch", { name: /Avisar sobre execuções incomuns/ }),
+  ).toHaveAttribute("aria-checked", "false")
+  await page.goBack()
+  await expect(page.getByRole("heading", { level: 1, name })).toBeVisible()
+
   // Read the ping URL shown to the user and report a failed run with output.
   const pingUrl =
     (await page.locator("code", { hasText: "/ping/" }).first().textContent())?.trim() ?? ""

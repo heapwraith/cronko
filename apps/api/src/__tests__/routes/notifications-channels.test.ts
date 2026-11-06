@@ -74,4 +74,11 @@ describe("notification channel validation (HTTP, real SQLite)", () => {
       (await create({ name: "t", type: "teams", config: { webhookUrl: "nope" } })).status,
     ).toBe(400)
   })
+
+  it("validates the PagerDuty routing key", async () => {
+    const pd = (routingKey: string) =>
+      create({ name: "pd", type: "pagerduty", config: { routingKey } })
+    expect((await pd("a1".repeat(16))).status).toBe(201)
+    expect((await pd("too-short")).status).toBe(400)
+  })
 })

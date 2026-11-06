@@ -3,6 +3,7 @@ import type {
   DiscordConfig,
   EmailConfig,
   NtfyConfig,
+  PagerDutyConfig,
   PushoverConfig,
   TelegramConfig,
   WebhookConfig,
@@ -69,6 +70,45 @@ const PUSHOVER_PRIORITY: Record<string, number> = {
   recovered: -1,
 }
 
+/**
+ * PagerDuty Events API v2. Problems trigger an incident and recovery resolves it;
+ * both share a dedup key per monitor, so repeated alerts update one incident.
+ */
+const PAGERDUTY_SEVERITY: Record<string, string> = {
+  down: "critical",
+  failed: "error",
+  missed: "warning",
+  slow: "warning",
+}
+
+export function pagerDutyEvent(
+  routingKey: string,
+  event: string,
+  text: string,
+  monitorName?: string,
+) {
+  const link = text.match(/https?:\/\/\S+$/)?.[0]
+  const summary = (link ? text.slice(0, -link.length) : text).trim().slice(0, 1024)
+  const dedupKey = `cronko:${monitorName ?? "unknown"}`
+  if (event === "recovered") {
+    return { routing_key: routingKey, event_action: "resolve", dedup_key: dedupKey }
+  }
+  return {
+    routing_key: routingKey,
+    event_action: "trigger",
+    dedup_key: dedupKey,
+    payload: {
+      summary,
+      source: monitorName ?? "cronko",
+      severity: PAGERDUTY_SEVERITY[event] ?? "error",
+      component: monitorName,
+      class: event,
+    },
+    client: "Cronko",
+    ...(link && { client_url: link, links: [{ href: link, text: "Open in Cronko" }] }),
+  }
+}
+
 /** Microsoft Teams Workflows webhooks take an Adaptive Card wrapped in a message. */
 export function teamsCard(text: string, link?: string) {
   const [headline = text, ...rest] = text.split("\n").filter((l) => !l.startsWith("http"))
@@ -95,14 +135,26 @@ export function teamsCard(text: string, link?: string) {
 }
 
 /** ntfy priorities: 5 urgent, 4 high, 3 default. */
-const NTFY_PRIORITY: Record<string, string> = { down: "5", failed: "4", missed: "4", slow: "3" }
+const NTFY_PRIORITY: Record<string, string> = {
+  down: "5",
+  failed: "4",
+  missed: "4",
+  slow: "3",
+  unusual: "3",
+  overlap: "3",
+}
 const NTFY_TAGS: Record<string, string> = {
   down: "red_circle",
   failed: "x",
   missed: "warning",
   slow: "turtle",
   recovered: "white_check_mark",
+  unusual: "snail",
+  overlap: "warning",
 }
+
+/** Informative analytics events; they never open or close anything. */
+export const ANALYTICS_EVENTS = new Set(["unusual", "overlap"])
 
 /** HTTP headers are Latin-1 only; ntfy accepts RFC 2047 for anything else (emoji, CJK). */
 export function headerText(value: string): string {
@@ -156,6 +208,14 @@ export async function deliver(
         "pushover",
       )
     }
+    case "pagerduty":
+      // A PagerDuty incident pages someone and would never auto-resolve for these.
+      if (ANALYTICS_EVENTS.has(event)) return
+      return postJson(
+        "https://events.pagerduty.com/v2/enqueue",
+        pagerDutyEvent((channel.config as PagerDutyConfig).routingKey, event, text, monitorName),
+        "pagerduty",
+      )
     case "teams": {
       const link = text.match(/https?:\/\/\S+$/)?.[0]
       return postJson(

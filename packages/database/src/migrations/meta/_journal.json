@@ -78,6 +78,20 @@
       "when": 1782100000000,
       "tag": "0010_add_muted_until",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1782200000000,
+      "tag": "0011_add_heartbeat_kind",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1782300000000,
+      "tag": "0012_add_alert_on_anomalies",
+      "breakpoints": true
     }
   ]
 }

@@ -4,6 +4,7 @@ import {
   DeliveryError,
   deliver,
   headerText,
+  pagerDutyEvent,
   teamsCard,
 } from "../../services/channels"
 
@@ -115,5 +116,43 @@ describe("webhook and ntfy channels", () => {
       url: "https://cronko.example.com/monitors/m1",
     })
     expect(teamsCard("plain").attachments[0]?.content).not.toHaveProperty("actions")
+  })
+
+  it("pagerduty triggers with severity, dedup key and link, and resolves on recovery", async () => {
+    const fetch = stubFetch()
+    const key = "R".repeat(32)
+    await deliver(
+      channel("pagerduty", { routingKey: key }),
+      "down",
+      "🔴 backup está down\nhttps://cronko.example.com/monitors/m1",
+      "backup",
+    )
+    const [url, init] = fetch.mock.calls[0] ?? []
+    expect(url).toBe("https://events.pagerduty.com/v2/enqueue")
+    expect(JSON.parse(String(init?.body))).toMatchObject({
+      routing_key: key,
+      event_action: "trigger",
+      dedup_key: "cronko:backup",
+      payload: { summary: "🔴 backup está down", source: "backup", severity: "critical" },
+      links: [{ href: "https://cronko.example.com/monitors/m1", text: "Open in Cronko" }],
+    })
+
+    expect(pagerDutyEvent(key, "recovered", "✅ ok", "backup")).toEqual({
+      routing_key: key,
+      event_action: "resolve",
+      dedup_key: "cronko:backup",
+    })
+    expect(pagerDutyEvent(key, "failed", "x", "b")).toMatchObject({
+      payload: { severity: "error" },
+    })
+    expect(pagerDutyEvent(key, "failed", "x", "b")).not.toHaveProperty("links")
+  })
+
+  it("pagerduty ignores informative analytics events (nothing to page or resolve)", async () => {
+    const fetch = stubFetch()
+    const pd = channel("pagerduty", { routingKey: "R".repeat(32) })
+    await deliver(pd, "unusual", "🐌 etl demorou bem mais que o normal", "etl")
+    await deliver(pd, "overlap", "⚠️ etl começou antes", "etl")
+    expect(fetch).not.toHaveBeenCalled()
   })
 })

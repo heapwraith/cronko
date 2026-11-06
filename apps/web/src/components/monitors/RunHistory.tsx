@@ -1,4 +1,5 @@
 import { formatRelativeTime } from "@cronko/shared/utils"
+import { Layers, Snail } from "lucide-react"
 import { Link } from "react-router"
 import { formatRunDuration } from "@/lib/format"
 import { useT } from "@/lib/i18n"
@@ -10,6 +11,38 @@ export interface Run {
   durationMs: number | null
   exitCode: number | null
   body?: string | null
+  overlapped?: boolean
+  unusuallySlow?: boolean
+}
+
+const flag =
+  "ml-2 inline-flex items-center gap-1 rounded-full px-1.5 py-px align-middle font-sans text-[11px] font-medium"
+
+/** Small text marks for analytics findings; the word carries the meaning, not the colour. */
+export function RunFlags({ run }: { run: Pick<Run, "overlapped" | "unusuallySlow"> }) {
+  const { t } = useT()
+  return (
+    <>
+      {run.unusuallySlow && (
+        <span
+          className={`${flag} bg-[var(--chip-missed-bg)] text-[var(--chip-missed-fg)]`}
+          title={t("analytics.slowTitle")}
+        >
+          <Snail className="h-3 w-3" aria-hidden="true" />
+          {t("analytics.slowBadge")}
+        </span>
+      )}
+      {run.overlapped && (
+        <span
+          className={`${flag} bg-[var(--chip-paused-bg)] text-[var(--chip-paused-fg)]`}
+          title={t("analytics.overlapTitle")}
+        >
+          <Layers className="h-3 w-3" aria-hidden="true" />
+          {t("analytics.overlapBadge")}
+        </span>
+      )}
+    </>
+  )
 }
 
 /** Internal marker written by the finish pulse; it is not job output. */
@@ -82,6 +115,7 @@ export function RunHistory({
                 </td>
                 <td className={`${td} font-mono text-dim tnum`}>
                   {formatRunDuration(run.durationMs)}
+                  <RunFlags run={run} />
                 </td>
                 <td
                   className={`${td} font-mono tnum ${failed ? "font-semibold text-failed" : "text-dim"}`}

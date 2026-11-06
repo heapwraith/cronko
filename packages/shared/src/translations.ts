@@ -110,6 +110,23 @@ export const translations = {
     "mute.failed": "Não foi possível alterar o silêncio",
     "mute.hint":
       "O monitor continua mudando de estado e abrindo incidentes; só os avisos ficam em silêncio.",
+    "analytics.slow": "bem mais lenta que o normal",
+    "analytics.slowBadge": "Lenta",
+    "analytics.slowTitle": "Execução bem mais lenta que o normal",
+    "analytics.slowDetail": "{factor}× a mediana das {count} execuções anteriores ({median}).",
+    "analytics.overlapBadge": "Sobreposta",
+    "analytics.overlapTitle": "Começou antes da anterior terminar",
+    "analytics.overlapDetail":
+      "Quando esta execução começou, a anterior ainda não tinha avisado o fim. As duas podem ter rodado ao mesmo tempo.",
+    "analytics.typical": "Típico",
+    "analytics.typicalValue": "mediana {p50} · p95 {p95}",
+    "analytics.basedOn": "{count} execuções anteriores",
+    "analytics.noBaseline": "poucos dados",
+    "form.alertOnAnomalies": "Avisar sobre execuções incomuns",
+    "form.alertOnAnomaliesHint":
+      "Envia um aviso quando uma execução demora bem mais que o normal ou começa antes da anterior terminar. Não muda o estado nem abre incidente. O PagerDuty não recebe esses avisos.",
+    "notifications.event.unusual": "Incomum",
+    "notifications.event.overlap": "Sobreposta",
     "run.title": "Execução",
     "run.back": "Voltar ao monitor",
     "run.previous": "Anterior",
@@ -334,6 +351,8 @@ export const translations = {
     "notifications.userKey": "User key",
     "notifications.appToken": "Token da aplicação",
     "notifications.err.invalidKey": "Deve ter 30 letras ou números.",
+    "notifications.routingKey": "Integration key (Events API v2)",
+    "notifications.err.invalidRoutingKey": "Deve ter 32 letras ou números.",
     "notifications.url": "URL",
     "notifications.topic": "Tópico",
     "notifications.serverUrl": "Servidor",
@@ -516,6 +535,8 @@ export const translations = {
     "howto.notifications.ntfy": "ntfy — push no celular via ntfy.sh ou servidor próprio.",
     "howto.notifications.pushover":
       "Pushover — push no celular; falhas e quedas furam o horário de silêncio.",
+    "howto.notifications.pagerduty":
+      "PagerDuty — abre um incidente com severidade e resolve sozinho quando o job volta.",
     "howto.notifications.teams":
       'Microsoft Teams — webhook de um fluxo do Workflows ("Post to a channel when a webhook request is received").',
 
@@ -648,6 +669,23 @@ export const translations = {
     "mute.undone": "Alerts back on",
     "mute.failed": "Could not change mute",
     "mute.hint": "The monitor still changes state and opens incidents; only the alerts stay quiet.",
+    "analytics.slow": "much slower than usual",
+    "analytics.slowBadge": "Slow",
+    "analytics.slowTitle": "Run much slower than usual",
+    "analytics.slowDetail": "{factor}× the median of the {count} runs before it ({median}).",
+    "analytics.overlapBadge": "Overlapped",
+    "analytics.overlapTitle": "Started before the previous run finished",
+    "analytics.overlapDetail":
+      "When this run started, the previous one had not reported its finish yet. Both may have run at the same time.",
+    "analytics.typical": "Typical",
+    "analytics.typicalValue": "median {p50} · p95 {p95}",
+    "analytics.basedOn": "{count} earlier runs",
+    "analytics.noBaseline": "not enough data",
+    "form.alertOnAnomalies": "Alert on unusual runs",
+    "form.alertOnAnomaliesHint":
+      "Sends a heads-up when a run takes much longer than usual or starts before the previous one finished. It does not change the state or open an incident. PagerDuty does not receive these.",
+    "notifications.event.unusual": "Unusual",
+    "notifications.event.overlap": "Overlapped",
     "run.title": "Run",
     "run.back": "Back to monitor",
     "run.previous": "Previous",
@@ -871,6 +909,8 @@ export const translations = {
     "notifications.userKey": "User key",
     "notifications.appToken": "Application token",
     "notifications.err.invalidKey": "Must be 30 letters or digits.",
+    "notifications.routingKey": "Integration key (Events API v2)",
+    "notifications.err.invalidRoutingKey": "Must be 32 letters or digits.",
     "notifications.url": "URL",
     "notifications.topic": "Topic",
     "notifications.serverUrl": "Server",
@@ -1054,6 +1094,8 @@ export const translations = {
     "howto.notifications.ntfy": "ntfy — phone push via ntfy.sh or your own server.",
     "howto.notifications.pushover":
       "Pushover — phone push; failures and outages break through quiet hours.",
+    "howto.notifications.pagerduty":
+      "PagerDuty — opens an incident with a severity and resolves it when the job recovers.",
     "howto.notifications.teams":
       'Microsoft Teams — webhook from a Workflows flow ("Post to a channel when a webhook request is received").',
 
