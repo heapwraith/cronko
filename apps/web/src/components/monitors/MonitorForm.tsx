@@ -4,6 +4,7 @@ import { Button } from "@/components/shared/Button"
 import { Toggle } from "@/components/shared/Toggle"
 import type { MonitorInput } from "@/lib/api"
 import { useT } from "@/lib/i18n"
+import { useInboundEmailDomain } from "@/lib/useInboundEmail"
 import { TagInput } from "./TagInput"
 
 type Mode = "interval" | "cron"
@@ -21,6 +22,7 @@ export interface MonitorFormValues {
   timezone?: string | null
   alertOnAnomalies?: boolean
   tags?: string[]
+  emailFailureKeywords?: string[]
 }
 
 /** Largest unit that divides the value evenly, so 7200 s reads as "2 hours". */
@@ -75,7 +77,9 @@ export function MonitorForm({
     every: useId(),
     grace: useId(),
     max: useId(),
+    keywords: useId(),
   }
+  const inboundDomain = useInboundEmailDomain()
   const browserTz = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC", [])
   const zones = useMemo(allTimezones, [])
 
@@ -92,6 +96,7 @@ export function MonitorForm({
   )
   const [anomalies, setAnomalies] = useState(initial?.alertOnAnomalies ?? false)
   const [tags, setTags] = useState<string[]>(initial?.tags ?? [])
+  const [keywords, setKeywords] = useState((initial?.emailFailureKeywords ?? []).join(", "))
   const [touched, setTouched] = useState(false)
 
   const intervalSeconds = Math.round(Number(amount) * UNIT_SECONDS[unit])
@@ -128,6 +133,13 @@ export function MonitorForm({
       ...(maxMs !== undefined && { maxDurationMs: maxMs }),
       alertOnAnomalies: anomalies,
       tags,
+      // Only sent when ping by e-mail is on, so a hidden field never wipes saved keywords.
+      ...(inboundDomain && {
+        emailFailureKeywords: keywords
+          .split(",")
+          .map((k) => k.trim())
+          .filter(Boolean),
+      }),
       ...(mode === "cron"
         ? { scheduleCron: cron.trim(), timezone }
         : {
@@ -333,6 +345,25 @@ export function MonitorForm({
         checked={anomalies}
         onChange={setAnomalies}
       />
+
+      {inboundDomain && (
+        <div>
+          <label htmlFor={ids.keywords} className={label}>
+            {t("form.emailFailureKeywords")}
+          </label>
+          <input
+            id={ids.keywords}
+            value={keywords}
+            onChange={(e) => setKeywords(e.target.value)}
+            placeholder="error, failed, falha"
+            aria-describedby={`${ids.keywords}-hint`}
+            className={field}
+          />
+          <p id={`${ids.keywords}-hint`} className={hint}>
+            {t("form.emailFailureKeywordsHint")}
+          </p>
+        </div>
+      )}
 
       {error && (
         <p

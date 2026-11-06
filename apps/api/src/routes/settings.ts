@@ -12,6 +12,7 @@ import { isValidTimezone } from "@cronko/shared/schedule"
 import { zValidator } from "@hono/zod-validator"
 import { Hono } from "hono"
 import { z } from "zod"
+import { env } from "../env"
 import { logAuditEvent } from "../services/audit"
 import { loadDigestConfig, resetDigestClock, sendDigest } from "../services/digest"
 import { restartScheduler } from "../services/scheduler"
@@ -117,7 +118,9 @@ async function loadSettings(): Promise<CachedSettings> {
 
 settingsRoute.get("/", async (c) => {
   const data = await loadSettings()
-  return c.json({ data })
+  // Read-only, from the environment: lets the UI show each monitor's address.
+  const inboundEmailDomain = env.INBOUND_SMTP_PORT ? (env.INBOUND_EMAIL_DOMAIN ?? null) : null
+  return c.json({ data: { ...data, inboundEmailDomain } })
 })
 
 /** Send the digest for the period ending now, to check how it looks. */

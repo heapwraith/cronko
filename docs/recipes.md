@@ -166,6 +166,13 @@ them. Give this monitor a grace period of at least 30 minutes.
 `docker run` returns the container's exit code, so a failing container is
 reported as a failed run with its output.
 
+## NAS or backup software that only sends e-mail
+
+With ping by e-mail on (see the README), point the job's notification e-mail at
+the address shown on the monitor page, `<token>@ping.example.com`. To catch
+failures, either send failure notices to `<token>+fail@ping.example.com`, or set
+the monitor's failure words (e.g. `failed, error`) so the subject decides.
+
 ## Without the wrapper
 
 When `curl` is all you have, call the ping URL directly. `d` is the duration in

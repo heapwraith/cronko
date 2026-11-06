@@ -19,6 +19,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge"
 import { api } from "@/lib/api"
 import { formatInterval, formatRunDuration } from "@/lib/format"
 import { useT } from "@/lib/i18n"
+import { useInboundEmailDomain } from "@/lib/useInboundEmail"
 import NotFound from "@/pages/NotFound"
 import MonitorDetailSkeleton from "@/pages/skeletons/MonitorDetailSkeleton"
 
@@ -69,12 +70,14 @@ function MonitorDetailView({ monitor, incidents }: { monitor: Monitor; incidents
   const { t, locale } = useT()
   const status = monitor.status as MonitorStatus
   const maintenance = useMaintenance()(monitor)
+  const inboundDomain = useInboundEmailDomain()
   const runs = monitor.recentHeartbeats
   const last = runs[0]
   const lastOutput = last ? runOutput(last) : null
   const lastFailed = last?.exitCode != null && last.exitCode !== 0
 
   const pingUrl = `${window.location.origin}/ping/${monitor.token}`
+  const pingEmail = inboundDomain ? `${monitor.token}@${inboundDomain}` : null
   const csvUrl = `/api/monitors/${monitor.id}/heartbeats?limit=1000&format=csv`
 
   const points = [...runs]
@@ -232,6 +235,24 @@ function MonitorDetailView({ monitor, incidents }: { monitor: Monitor; incidents
         <p className="mt-2 font-mono text-xs text-dim">
           {pingUrl}/start · {pingUrl}/fail
         </p>
+        {pingEmail && (
+          <div className="mt-4 border-t border-line pt-4">
+            <p className="mb-2 text-sm font-medium">{t("detail.pingEmail")}</p>
+            <div className="flex flex-wrap items-center gap-3">
+              <code className="min-w-0 flex-1 select-all overflow-x-auto whitespace-nowrap rounded-md bg-ground px-3 py-2 font-mono text-sm">
+                {pingEmail}
+              </code>
+              <CopyButton text={pingEmail} />
+            </div>
+            <p className="mt-2 text-xs text-dim">
+              {t("detail.pingEmailHint", {
+                fail: `${monitor.token}+fail@${inboundDomain}`,
+              })}
+              {monitor.emailFailureKeywords.length > 0 &&
+                ` ${t("detail.pingEmailKeywords", { keywords: monitor.emailFailureKeywords.join(", ") })}`}
+            </p>
+          </div>
+        )}
       </Panel>
 
       {points.length > 0 && (

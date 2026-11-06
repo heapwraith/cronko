@@ -122,6 +122,13 @@ export const translations = {
     "analytics.typicalValue": "mediana {p50} · p95 {p95}",
     "analytics.basedOn": "{count} execuções anteriores",
     "analytics.noBaseline": "poucos dados",
+    "form.emailFailureKeywords": "Palavras de falha no assunto (e-mail)",
+    "form.emailFailureKeywordsHint":
+      "Separadas por vírgula. Um e-mail cujo assunto contenha alguma delas conta como falha; os demais contam como sucesso.",
+    "detail.pingEmail": "Ou por e-mail",
+    "detail.pingEmailHint":
+      "Cada e-mail recebido conta como um ping. Para avisar falha, envie para {fail}.",
+    "detail.pingEmailKeywords": "Assuntos com {keywords} também contam como falha.",
     "form.alertOnAnomalies": "Avisar sobre execuções incomuns",
     "form.alertOnAnomaliesHint":
       "Envia um aviso quando uma execução demora bem mais que o normal ou começa antes da anterior terminar. Não muda o estado nem abre incidente. O PagerDuty não recebe esses avisos.",
@@ -789,6 +796,13 @@ export const translations = {
     "analytics.typicalValue": "median {p50} · p95 {p95}",
     "analytics.basedOn": "{count} earlier runs",
     "analytics.noBaseline": "not enough data",
+    "form.emailFailureKeywords": "Failure words in the subject (e-mail)",
+    "form.emailFailureKeywordsHint":
+      "Comma-separated. A message whose subject contains any of them counts as a failure; any other counts as a success.",
+    "detail.pingEmail": "Or by e-mail",
+    "detail.pingEmailHint":
+      "Every message received counts as a ping. To report a failure, send to {fail}.",
+    "detail.pingEmailKeywords": "Subjects containing {keywords} also count as failures.",
     "form.alertOnAnomalies": "Alert on unusual runs",
     "form.alertOnAnomaliesHint":
       "Sends a heads-up when a run takes much longer than usual or starts before the previous one finished. It does not change the state or open an incident. PagerDuty does not receive these.",

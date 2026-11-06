@@ -15,11 +15,10 @@ interface RateLimitOptions {
 }
 
 /**
- * Fixed-window, in-memory rate limiter. Cronko runs as a single process on
- * SQLite, so a shared store (Redis) would add a moving part with no benefit.
+ * Fixed-window, in-memory counter. Cronko runs as a single process on SQLite,
+ * so a shared store (Redis) would add a moving part with no benefit.
  */
-export function createRateLimiter(options: RateLimitOptions): MiddlewareHandler {
-  const windowMs = options.windowMs ?? 60_000
+export function createWindowCounter(limit: number | (() => number), windowMs = 60_000) {
   const store = new Map<string, Entry>()
 
   setInterval(() => {
@@ -29,19 +28,30 @@ export function createRateLimiter(options: RateLimitOptions): MiddlewareHandler 
     }
   }, windowMs).unref()
 
-  return async (c: Context, next: Next) => {
-    const limit = typeof options.limit === "function" ? options.limit() : options.limit
-    const key = options.key ? options.key(c) : (c.req.param("token") ?? "")
-    const now = Date.now()
-
+  /** Count one hit for `key`; `allowed` is false once the window's limit is used up. */
+  return function hit(key: string, now = Date.now()) {
+    const max = typeof limit === "function" ? limit() : limit
     let entry = store.get(key)
     if (!entry || now >= entry.resetAt) {
       entry = { count: 0, resetAt: now + windowMs }
       store.set(key, entry)
     }
-
-    const allowed = entry.count < limit
+    const allowed = entry.count < max
     if (allowed) entry.count++
+    return { allowed, limit: max, count: entry.count, resetAt: entry.resetAt }
+  }
+}
+
+export function createRateLimiter(options: RateLimitOptions): MiddlewareHandler {
+  const hit = createWindowCounter(options.limit, options.windowMs)
+
+  return async (c: Context, next: Next) => {
+    const now = Date.now()
+    const { allowed, limit, count, resetAt } = hit(
+      options.key ? options.key(c) : (c.req.param("token") ?? ""),
+      now,
+    )
+    const entry = { count, resetAt }
 
     c.header("X-RateLimit-Limit", String(limit))
     c.header("X-RateLimit-Remaining", String(Math.max(0, limit - entry.count)))

@@ -10,6 +10,7 @@ import { app } from "./app"
 import { env } from "./env"
 import { logger } from "./lib/logger"
 import { hashPassword } from "./services/auth"
+import { inboundEmailOptions, startInboundEmail, stopInboundEmail } from "./services/inbound-email"
 import { schedulerMetrics, startScheduler, stopScheduler } from "./services/scheduler"
 import { startSelfHeartbeat, stopSelfHeartbeat } from "./services/self-heartbeat"
 import { registerWeb } from "./web"
@@ -91,6 +92,7 @@ async function bootstrap() {
   // 3. Start scheduler and HTTP server
   startScheduler()
   startSelfHeartbeat(env.SELF_HEARTBEAT_URL, env.SELF_HEARTBEAT_INTERVAL_SECONDS)
+  startInboundEmail(inboundEmailOptions(env))
 
   const server = serve({ fetch: app.fetch, port: env.API_PORT, hostname: env.API_HOST })
 
@@ -103,6 +105,7 @@ async function bootstrap() {
 
     stopScheduler()
     stopSelfHeartbeat()
+    void stopInboundEmail()
 
     // Close HTTP server — allow in-flight requests to finish
     server.close(() => {

@@ -115,6 +115,7 @@ export interface MonitorInput {
   maxDurationMs?: number
   alertOnAnomalies?: boolean
   tags?: string[]
+  emailFailureKeywords?: string[]
 }
 
 export interface MaintenanceInput {
@@ -224,6 +225,7 @@ export const api = {
         mutedUntil: string | null
         alertOnAnomalies: boolean
         tags: string[]
+        emailFailureKeywords: string[]
         nextExpectedAt: string | null
         paused: boolean
         slug: string
@@ -399,6 +401,8 @@ export const api = {
         heartbeatHistoryDays: number
         digestFrequency: DigestFrequency
         digestHour: number
+        /** Set when ping by e-mail is on (from the server environment). */
+        inboundEmailDomain: string | null
       }>("/api/settings"),
     update: (body: {
       instanceName?: string

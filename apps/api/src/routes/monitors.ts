@@ -20,6 +20,11 @@ import {
 import { monitors as monitorsTable } from "@cronko/database/schema"
 import { DEFAULT_GRACE_PERIOD_SECONDS } from "@cronko/shared/constants"
 import {
+  MAX_EMAIL_KEYWORD_LENGTH,
+  MAX_EMAIL_KEYWORDS,
+  normalizeEmailKeywords,
+} from "@cronko/shared/email-ping"
+import {
   BASELINE_RUNS,
   durationStats,
   isRunSample,
@@ -76,6 +81,10 @@ const createMonitorSchema = z
     gracePeriodSeconds: z.number().int().min(0).max(86_400).default(DEFAULT_GRACE_PERIOD_SECONDS),
     maxDurationMs: z.number().int().min(0).max(86_400_000).optional(),
     alertOnAnomalies: z.boolean().optional(),
+    emailFailureKeywords: z
+      .array(z.string().max(MAX_EMAIL_KEYWORD_LENGTH))
+      .max(MAX_EMAIL_KEYWORDS)
+      .optional(),
     tags: tagsSchema.optional(),
   })
   .superRefine((v, ctx) => {
@@ -99,6 +108,10 @@ const updateMonitorSchema = z
     gracePeriodSeconds: z.number().int().min(0).max(86_400).optional(),
     maxDurationMs: z.number().int().min(0).max(86_400_000).optional(),
     alertOnAnomalies: z.boolean().optional(),
+    emailFailureKeywords: z
+      .array(z.string().max(MAX_EMAIL_KEYWORD_LENGTH))
+      .max(MAX_EMAIL_KEYWORDS)
+      .optional(),
     tags: tagsSchema.optional(),
   })
   .superRefine(checkSchedule)
@@ -166,6 +179,9 @@ monitorsRoute.post("/", zValidator("json", createMonitorSchema), async (c) => {
     gracePeriodSeconds: body.gracePeriodSeconds,
     ...(body.maxDurationMs !== undefined && { maxDurationMs: body.maxDurationMs }),
     ...(body.alertOnAnomalies !== undefined && { alertOnAnomalies: body.alertOnAnomalies }),
+    ...(body.emailFailureKeywords !== undefined && {
+      emailFailureKeywords: normalizeEmailKeywords(body.emailFailureKeywords),
+    }),
     ...(body.tags !== undefined && { tags: body.tags }),
     ...(body.scheduleCron && {
       scheduleCron: body.scheduleCron,
@@ -252,6 +268,9 @@ monitorsRoute.patch("/:id", zValidator("json", updateMonitorSchema), async (c) =
     }),
     ...(body.maxDurationMs !== undefined && { maxDurationMs: body.maxDurationMs }),
     ...(body.alertOnAnomalies !== undefined && { alertOnAnomalies: body.alertOnAnomalies }),
+    ...(body.emailFailureKeywords !== undefined && {
+      emailFailureKeywords: normalizeEmailKeywords(body.emailFailureKeywords),
+    }),
     ...(body.tags !== undefined && { tags: body.tags }),
     now,
   })

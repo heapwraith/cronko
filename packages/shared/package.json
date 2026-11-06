@@ -15,7 +15,8 @@
     "./tags": "./src/tags.ts",
     "./status": "./src/status.ts",
     "./maintenance": "./src/maintenance.ts",
-    "./digest": "./src/digest.ts"
+    "./digest": "./src/digest.ts",
+    "./email-ping": "./src/email-ping.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
