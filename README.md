@@ -48,6 +48,17 @@ curl -fsS "https://cronko.example.com/ping/TOKEN/finish?exit=$?"  # or pass d=<m
 # or report a failure explicitly, with the job output as the body (up to 10 KB)
 ./job.sh 2>&1 | tail -c 5000 | curl -fsS --data-binary @- -H 'content-type: text/plain' \
   "https://cronko.example.com/ping/TOKEN/fail?exit=1"
+
+# Healthchecks-style: the exit status in the path (0 = success, 1-255 = failure)
+./job.sh; curl -fsS "https://cronko.example.com/ping/TOKEN/$?"
+
+# attach a progress note without touching the monitor's state (see GET /api/monitors/:id/logs)
+curl -fsS --data-raw "step 3 of 5" -H 'content-type: text/plain' https://cronko.example.com/ping/TOKEN/log
+
+# concurrent runs: give each run an id so its /finish (or /fail) closes the right /start
+RID=$(uuidgen)
+curl -fsS "https://cronko.example.com/ping/TOKEN/start?rid=$RID"
+./job.sh; S=$?; curl -fsS "https://cronko.example.com/ping/TOKEN/$S?rid=$RID"
 ```
 
 Cronko is not an observability platform and does not run active checks
