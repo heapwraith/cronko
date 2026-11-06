@@ -26,6 +26,13 @@ const variants: Record<
     label: "Down",
     tooltip: "Heartbeat missed — incident open",
   },
+  failed: {
+    dot: "bg-rose-500",
+    bg: "bg-rose-500/10",
+    text: "text-rose-600 dark:text-rose-400",
+    label: "Failed",
+    tooltip: "The job ran and reported a failure",
+  },
   paused: {
     dot: "bg-zinc-500",
     bg: "bg-zinc-200 dark:bg-zinc-700",

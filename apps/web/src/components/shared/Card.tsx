@@ -1,10 +1,11 @@
+import type { MonitorStatus } from "@cronko/shared/types"
 import type { ReactNode } from "react"
 
 interface CardProps {
   children: ReactNode
   className?: string
   glass?: boolean
-  status?: "healthy" | "missed" | "down" | "paused" | "pending"
+  status?: MonitorStatus
   hover?: boolean
 }
 
@@ -12,6 +13,7 @@ const statusGradients: Record<string, string> = {
   healthy: "bg-gradient-to-br from-emerald-500/5 to-transparent",
   missed: "bg-gradient-to-br from-amber-500/5 to-transparent",
   down: "bg-gradient-to-br from-red-500/5 to-transparent",
+  failed: "bg-gradient-to-br from-rose-500/5 to-transparent",
   paused: "bg-gradient-to-br from-zinc-500/5 to-transparent",
 }
 

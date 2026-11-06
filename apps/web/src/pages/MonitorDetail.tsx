@@ -12,6 +12,7 @@ import { Card, CardBody, CardHeader, CardTitle } from "@/components/shared/Card"
 import { CopyButton } from "@/components/shared/CopyButton"
 import { StatusBadge } from "@/components/shared/StatusBadge"
 import { api } from "@/lib/api"
+import { statusKey } from "@/lib/status"
 import NotFound from "@/pages/NotFound"
 import MonitorDetailSkeleton from "@/pages/skeletons/MonitorDetailSkeleton"
 
@@ -71,15 +72,7 @@ function MonitorDetailView({
 
   const statusLabel = monitor.paused
     ? t("pt-BR", "monitor.paused")
-    : monitor.status === "healthy"
-      ? t("pt-BR", "monitor.healthy")
-      : monitor.status === "missed"
-        ? t("pt-BR", "monitor.missed")
-        : monitor.status === "down"
-          ? t("pt-BR", "monitor.down")
-          : monitor.status === "pending"
-            ? t("pt-BR", "dashboard.pending")
-            : monitor.status
+    : t("pt-BR", statusKey(monitor.status))
 
   const createdAgo = formatDuration(Date.now() - new Date(monitor.createdAt).getTime())
   const statusDuration = formatDuration(Date.now() - new Date(monitor.updatedAt).getTime())
@@ -106,11 +99,13 @@ function MonitorDetailView({
             <p className="text-xs text-amber-600 dark:text-amber-400">
               {t("pt-BR", "monitor.incidentStarted")}{" "}
               {formatRelativeTime(new Date(monitor.openIncident.startedAt))} —{" "}
-              {monitor.status === "down"
-                ? t("pt-BR", "monitor.monitorIsDown")
-                : monitor.status === "missed"
-                  ? t("pt-BR", "monitor.monitorMissedPing")
-                  : t("pt-BR", "monitor.awaitingRecovery")}
+              {monitor.status === "failed"
+                ? t("pt-BR", "monitor.monitorFailed")
+                : monitor.status === "down"
+                  ? t("pt-BR", "monitor.monitorIsDown")
+                  : monitor.status === "missed"
+                    ? t("pt-BR", "monitor.monitorMissedPing")
+                    : t("pt-BR", "monitor.awaitingRecovery")}
             </p>
           </div>
         </div>

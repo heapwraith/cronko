@@ -14,12 +14,14 @@ statsRoute.get("/", async (c) => {
     let healthyCount = 0
     let downCount = 0
     let missedCount = 0
+    let failedCount = 0
     let pausedCount = 0
 
     for (const m of monitors) {
       if (m.status === "healthy") healthyCount++
       else if (m.status === "down") downCount++
       else if (m.status === "missed") missedCount++
+      else if (m.status === "failed") failedCount++
       else if (m.status === "paused") pausedCount++
     }
 
@@ -74,6 +76,7 @@ statsRoute.get("/", async (c) => {
         healthyCount,
         downCount,
         missedCount,
+        failedCount,
         pausedCount,
         totalHeartbeats,
         uptimePercent,

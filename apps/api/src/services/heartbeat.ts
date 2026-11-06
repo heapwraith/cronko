@@ -4,7 +4,7 @@ import {
   updateHeartbeatDuration,
 } from "@cronko/database/queries/heartbeats"
 import { findMonitorByToken } from "@cronko/database/queries/monitors"
-import { markSlow, recoverOnPing } from "./monitor-state"
+import { markFailed, markSlow, recoverOnPing } from "./monitor-state"
 
 export async function processHeartbeat(
   token: string,
@@ -15,6 +15,8 @@ export async function processHeartbeat(
     exitCode?: number
     body?: string
     pulseType?: "start" | "finish"
+    /** Explicit failure signal (/fail). A non-zero exit code also counts. */
+    failed?: boolean
   },
 ) {
   const monitor = await findMonitorByToken(token)
@@ -60,15 +62,22 @@ export async function processHeartbeat(
     })
   }
 
-  const exceededMax =
-    options.durationMs != null &&
-    monitor.maxDurationMs != null &&
-    options.durationMs > monitor.maxDurationMs
+  // A start pulse only says the job began: it must not recover or fail anything.
+  if (options.pulseType !== "start") {
+    const failed =
+      options.failed === true || (options.exitCode !== undefined && options.exitCode !== 0)
+    const exceededMax =
+      options.durationMs != null &&
+      monitor.maxDurationMs != null &&
+      options.durationMs > monitor.maxDurationMs
 
-  if (exceededMax) {
-    await markSlow(monitor)
-  } else {
-    await recoverOnPing(monitor)
+    if (failed) {
+      await markFailed(monitor, options.exitCode)
+    } else if (exceededMax) {
+      await markSlow(monitor)
+    } else {
+      await recoverOnPing(monitor)
+    }
   }
 
   return {

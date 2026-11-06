@@ -35,6 +35,7 @@ export const translations = {
     "dashboard.healthy": "Saudável",
     "dashboard.missed": "Atrasado",
     "dashboard.down": "Fora do ar",
+    "dashboard.failed": "Falhou",
     "dashboard.paused": "Pausado",
     "dashboard.pending": "Pendente",
 
@@ -123,6 +124,8 @@ export const translations = {
     "monitor.healthyFor": "{status} por {duration}",
     "monitor.healthy": "Saudável",
     "monitor.down": "Fora do ar",
+    "monitor.failed": "Falhou",
+    "monitor.monitorFailed": "O job rodou e reportou falha",
     "monitor.paused": "Pausado",
     "monitor.missed": "Atrasado",
     "monitor.ongoing": "em andamento",
@@ -387,6 +390,7 @@ export const translations = {
     "dashboard.healthy": "Healthy",
     "dashboard.missed": "Missed",
     "dashboard.down": "Down",
+    "dashboard.failed": "Failed",
     "dashboard.paused": "Paused",
     "dashboard.pending": "Pending",
 
@@ -475,6 +479,8 @@ export const translations = {
     "monitor.healthyFor": "{status} for {duration}",
     "monitor.healthy": "Healthy",
     "monitor.down": "Down",
+    "monitor.failed": "Failed",
+    "monitor.monitorFailed": "The job ran and reported a failure",
     "monitor.paused": "Paused",
     "monitor.missed": "Missed",
     "monitor.ongoing": "ongoing",

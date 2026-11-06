@@ -1,3 +1,4 @@
+import type { MonitorStatus } from "@cronko/shared/types"
 import { formatDuration, formatRelativeTime } from "@cronko/shared/utils"
 import { AlertTriangle } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -6,6 +7,7 @@ import { EmptyState } from "@/components/shared/EmptyState"
 import { StatusBadge } from "@/components/shared/StatusBadge"
 import { api } from "@/lib/api"
 import { useT } from "@/lib/i18n"
+import { statusKey } from "@/lib/status"
 
 export default function IncidentsPage() {
   const { t } = useT()
@@ -159,20 +161,8 @@ export default function IncidentsPage() {
                               {m.name}
                             </Link>
                             <StatusBadge
-                              status={m.status as "healthy" | "missed" | "down" | "paused"}
-                              label={
-                                m.status === "healthy"
-                                  ? t("dashboard.healthy")
-                                  : m.status === "missed"
-                                    ? t("dashboard.missed")
-                                    : m.status === "down"
-                                      ? t("dashboard.down")
-                                      : m.status === "paused"
-                                        ? t("dashboard.paused")
-                                        : m.status === "pending"
-                                          ? t("dashboard.pending")
-                                          : m.status
-                              }
+                              status={m.status as MonitorStatus}
+                              label={t(statusKey(m.status))}
                             />
                           </div>
                         </td>

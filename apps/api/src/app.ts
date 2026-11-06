@@ -75,6 +75,7 @@ app.get("/badge/:token", async (c) => {
   const colors: Record<string, string> = {
     healthy: "#10b981",
     missed: "#f59e0b",
+    failed: "#dc2626",
     down: "#ef4444",
     paused: "#6b7280",
     pending: "#3b82f6",
@@ -82,6 +83,7 @@ app.get("/badge/:token", async (c) => {
   const labels: Record<string, string> = {
     healthy: "healthy",
     missed: "missed",
+    failed: "failed",
     down: "down",
     paused: "paused",
     pending: "pending",

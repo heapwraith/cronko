@@ -1,3 +1,4 @@
+import type { MonitorStatus } from "@cronko/shared/types"
 import { formatRelativeTime } from "@cronko/shared/utils"
 import { useQuery } from "@tanstack/react-query"
 import { Activity, Plus, Search } from "lucide-react"
@@ -10,6 +11,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge"
 import { useToast } from "@/components/shared/Toast"
 import { api } from "@/lib/api"
 import { useT } from "@/lib/i18n"
+import { statusKey } from "@/lib/status"
 
 type MonitorRow = {
   id: string
@@ -132,18 +134,8 @@ export default function MonitorsPage() {
                     </td>
                     <td className="px-5 py-3.5">
                       <StatusBadge
-                        status={m.status as "healthy" | "missed" | "down" | "paused"}
-                        label={
-                          m.status === "healthy"
-                            ? t("dashboard.healthy")
-                            : m.status === "missed"
-                              ? t("dashboard.missed")
-                              : m.status === "down"
-                                ? t("dashboard.down")
-                                : m.status === "pending"
-                                  ? t("dashboard.pending")
-                                  : t("dashboard.paused")
-                        }
+                        status={m.status as MonitorStatus}
+                        label={t(statusKey(m.status))}
                       />
                     </td>
                     <td className="px-5 py-3.5 text-sm text-[#697386] dark:text-zinc-400">

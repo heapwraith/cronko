@@ -2,6 +2,7 @@ export const MONITOR_STATUS = {
   HEALTHY: "healthy",
   MISSED: "missed",
   DOWN: "down",
+  FAILED: "failed",
   PAUSED: "paused",
   PENDING: "pending",
 } as const

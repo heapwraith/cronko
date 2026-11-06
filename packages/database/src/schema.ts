@@ -7,7 +7,7 @@ export const monitors = sqliteTable("monitors", {
   slug: text("slug").notNull().unique(),
   token: text("token").notNull().unique(),
   status: text("status", {
-    enum: ["healthy", "missed", "down", "paused", "pending"],
+    enum: ["healthy", "missed", "down", "failed", "paused", "pending"],
   })
     .notNull()
     .default("healthy"),
@@ -74,7 +74,7 @@ export const notificationDeliveries = sqliteTable(
       .notNull()
       .references(() => notificationChannels.id, { onDelete: "cascade" }),
     monitorName: text("monitor_name").notNull(),
-    event: text("event", { enum: ["missed", "down", "recovered", "slow"] }).notNull(),
+    event: text("event", { enum: ["missed", "down", "failed", "recovered", "slow"] }).notNull(),
     message: text("message").notNull(),
     status: text("status", { enum: ["pending", "sent", "failed"] })
       .notNull()

@@ -92,6 +92,22 @@ const spec = {
         responses: { "200": { description: "ok" }, "404": { description: "Monitor not found" } },
       },
     },
+    "/ping/{token}/fail": {
+      post: {
+        summary: "Report that the job ran and failed (alerts immediately)",
+        description:
+          "Marks the monitor `failed`, opens an incident and alerts. `exit` (query) is the exit code, default 1. The request body (up to 10 KB) is stored as job output. A later successful ping recovers it. GET is also accepted.",
+        parameters: [
+          { name: "token", in: "path", required: true, schema: { type: "string" } },
+          { name: "exit", in: "query", required: false, schema: { type: "integer" } },
+        ],
+        responses: {
+          "200": { description: "ok" },
+          "404": { description: "Monitor not found" },
+          "413": { description: "Body too large" },
+        },
+      },
+    },
     "/ping/{token}/finish": {
       post: {
         summary: "Pulse finish — complete a long-running job with duration",

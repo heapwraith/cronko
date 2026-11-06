@@ -115,6 +115,7 @@ export const api = {
         healthyCount: number
         downCount: number
         missedCount: number
+        failedCount: number
         pausedCount: number
         totalHeartbeats: number
         uptimePercent: number

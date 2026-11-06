@@ -1,3 +1,4 @@
+import type { MonitorStatus } from "@cronko/shared/types"
 import { formatRelativeTime } from "@cronko/shared/utils"
 import { useQuery } from "@tanstack/react-query"
 import { Activity, AlertTriangle, BarChart3, Heart, TrendingUp } from "lucide-react"
@@ -11,11 +12,13 @@ import { SkeletonCard } from "@/components/shared/Skeleton"
 import { StatusBadge } from "@/components/shared/StatusBadge"
 import { api } from "@/lib/api"
 import { useT } from "@/lib/i18n"
+import { statusKey } from "@/lib/status"
 
 type DashboardStats = {
   healthyCount: number
   downCount: number
   missedCount: number
+  failedCount: number
   pausedCount: number
   totalHeartbeats: number
   uptimePercent: number
@@ -109,8 +112,9 @@ export default function DashboardPage() {
   const healthyCount = stats?.healthyCount ?? 0
   const downCount = stats?.downCount ?? 0
   const missedCount = stats?.missedCount ?? 0
+  const failedCount = stats?.failedCount ?? 0
   const pausedCount = stats?.pausedCount ?? 0
-  const totalMonitors = healthyCount + downCount + missedCount + pausedCount
+  const totalMonitors = healthyCount + downCount + missedCount + failedCount + pausedCount
 
   const hbSpark = stats?.heartbeatsByHour ?? []
 
@@ -152,7 +156,7 @@ export default function DashboardPage() {
         />
         <StatCard
           label={t("dashboard.downMonitors")}
-          value={downCount}
+          value={downCount + failedCount}
           icon={AlertTriangle}
           color="text-red-400"
           bgClass="bg-red-500/10"
@@ -200,6 +204,7 @@ export default function DashboardPage() {
                     },
                     { label: t("dashboard.missed"), value: missedCount, color: "rgb(245 158 11)" },
                     { label: t("dashboard.down"), value: downCount, color: "rgb(239 68 68)" },
+                    { label: t("dashboard.failed"), value: failedCount, color: "rgb(244 63 94)" },
                     { label: t("dashboard.paused"), value: pausedCount, color: "rgb(113 113 122)" },
                   ].filter((s) => s.value > 0)}
                   total={totalMonitors}
@@ -214,6 +219,7 @@ export default function DashboardPage() {
                 />
                 <Legend color="bg-amber-500" label={t("dashboard.missed")} count={missedCount} />
                 <Legend color="bg-red-500" label={t("dashboard.down")} count={downCount} />
+                <Legend color="bg-rose-500" label={t("dashboard.failed")} count={failedCount} />
                 <Legend color="bg-zinc-600" label={t("dashboard.paused")} count={pausedCount} />
               </div>
             </div>
@@ -259,7 +265,7 @@ export default function DashboardPage() {
               <tbody>
                 {monitors.map((m) => {
                   const latestHb = m.latestHeartbeat
-                  const isDown = m.status === "down"
+                  const isDown = m.status === "down" || m.status === "failed"
                   const isMissed = m.status === "missed"
                   const isPaused = m.status === "paused"
                   return (
@@ -285,18 +291,8 @@ export default function DashboardPage() {
                       </td>
                       <td className="px-4 py-3">
                         <StatusBadge
-                          status={m.status as "healthy" | "missed" | "down" | "paused"}
-                          label={
-                            m.status === "healthy"
-                              ? t("dashboard.healthy")
-                              : m.status === "missed"
-                                ? t("dashboard.missed")
-                                : m.status === "down"
-                                  ? t("dashboard.down")
-                                  : m.status === "pending"
-                                    ? t("dashboard.pending")
-                                    : t("dashboard.paused")
-                          }
+                          status={m.status as MonitorStatus}
+                          label={t(statusKey(m.status))}
                         />
                       </td>
                       <td className="px-4 py-3 text-sm text-[#697386] dark:text-zinc-400">

@@ -113,16 +113,13 @@ export async function resumeMonitor(id: string) {
   return findMonitorById(id)
 }
 
-export async function updateMonitorStatus(
-  id: string,
-  status: "healthy" | "missed" | "down" | "paused" | "pending",
-) {
+export async function updateMonitorStatus(id: string, status: MonitorStatus) {
   await db.update(monitors).set({ status, updatedAt: new Date() }).where(eq(monitors.id, id))
 
   return findMonitorById(id)
 }
 
-type MonitorStatus = "healthy" | "missed" | "down" | "paused" | "pending"
+type MonitorStatus = "healthy" | "missed" | "down" | "failed" | "paused" | "pending"
 
 /**
  * Compare-and-set status change. Returns true only for the caller that
