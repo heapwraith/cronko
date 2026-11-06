@@ -160,3 +160,33 @@ export const incidentsRelations = relations(incidents, ({ one }) => ({
     references: [monitors.id],
   }),
 }))
+
+/** A public, read-only status page showing the monitors that carry one tag. */
+export const statusPages = sqliteTable("status_pages", {
+  id: text("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  title: text("title").notNull(),
+  description: text("description"),
+  tag: text("tag").notNull(),
+  // Off until switched on: nothing becomes public by accident.
+  enabled: integer("enabled", { mode: "boolean" }).notNull().default(false),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+})
+
+/**
+ * Recurring maintenance: alerts for the targeted monitors are held back while a
+ * window runs. `schedule` is a cron start in `timezone`; see @cronko/shared/maintenance.
+ */
+export const maintenanceWindows = sqliteTable("maintenance_windows", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  schedule: text("schedule").notNull(),
+  timezone: text("timezone").notNull().default("UTC"),
+  durationMinutes: integer("duration_minutes").notNull(),
+  target: text("target", { enum: ["all", "tag", "monitor"] }).notNull(),
+  targetValue: text("target_value"),
+  enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+})

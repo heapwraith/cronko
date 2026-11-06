@@ -1,3 +1,4 @@
+import { findEnabledMaintenanceWindows } from "@cronko/database/queries/maintenance"
 import { findMonitorById } from "@cronko/database/queries/monitors"
 import {
   deleteDeliveriesOlderThan,
@@ -7,6 +8,7 @@ import {
   markDeliveryAttemptFailed,
   markDeliverySent,
 } from "@cronko/database/queries/notifications"
+import { activeMaintenanceUntil } from "@cronko/shared/maintenance"
 import { env } from "../env"
 import { logger } from "../lib/logger"
 import { type ChannelRow, DeliveryError, deliver } from "./channels"
@@ -51,11 +53,17 @@ export async function sendNotification(
   detail?: string,
   path?: string,
 ) {
-  // A muted monitor (maintenance) still changes state and opens incidents, but stays quiet.
+  // A muted monitor, or one inside a maintenance window, still changes state and
+  // opens incidents, but stays quiet.
   if (monitor.id) {
-    const mutedUntil = (await findMonitorById(monitor.id))?.mutedUntil
-    if (mutedUntil && mutedUntil.getTime() > Date.now()) {
+    const row = await findMonitorById(monitor.id)
+    const now = new Date()
+    if (row?.mutedUntil && row.mutedUntil.getTime() > now.getTime()) {
       logger.info({ monitor: monitor.name, event }, "alert suppressed: monitor muted")
+      return
+    }
+    if (row && activeMaintenanceUntil(await findEnabledMaintenanceWindows(), row, now)) {
+      logger.info({ monitor: monitor.name, event }, "alert suppressed: maintenance window")
       return
     }
   }

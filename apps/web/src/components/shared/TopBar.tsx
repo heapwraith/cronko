@@ -84,6 +84,7 @@ export function TopBar({ instanceName, email }: { instanceName?: string; email?:
     { to: "/incidents", label: t("nav.incidents") },
     { to: "/notifications", label: t("nav.notifications") },
     { to: "/settings", label: t("nav.settings") },
+    { to: "/status-pages", label: t("nav.status") },
     { to: "/how-to-use", label: t("nav.howto") },
   ]
 

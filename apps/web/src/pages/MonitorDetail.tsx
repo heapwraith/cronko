@@ -2,7 +2,7 @@ import { isRunSample } from "@cronko/shared/run-stats"
 import type { MonitorStatus } from "@cronko/shared/types"
 import { formatDuration, formatRelativeTime } from "@cronko/shared/utils"
 import { useQuery } from "@tanstack/react-query"
-import { OctagonX } from "lucide-react"
+import { OctagonX, Wrench } from "lucide-react"
 import type { ReactNode } from "react"
 import { useParams } from "react-router"
 import { DurationBars } from "@/components/monitors/DurationBars"
@@ -11,6 +11,7 @@ import { MuteControl, MutedBadge } from "@/components/monitors/MuteControl"
 import { NextPingCountdown } from "@/components/monitors/NextPingCountdown"
 import { RunHistory, runOutput } from "@/components/monitors/RunHistory"
 import { TagChips } from "@/components/monitors/TagInput"
+import { useMaintenance } from "@/components/monitors/useMaintenance"
 import { Breadcrumb } from "@/components/shared/Breadcrumb"
 import { Button } from "@/components/shared/Button"
 import { CopyButton } from "@/components/shared/CopyButton"
@@ -67,6 +68,7 @@ function Fact({ label, children }: { label: string; children: ReactNode }) {
 function MonitorDetailView({ monitor, incidents }: { monitor: Monitor; incidents: Incident[] }) {
   const { t, locale } = useT()
   const status = monitor.status as MonitorStatus
+  const maintenance = useMaintenance()(monitor)
   const runs = monitor.recentHeartbeats
   const last = runs[0]
   const lastOutput = last ? runOutput(last) : null
@@ -113,6 +115,17 @@ function MonitorDetailView({ monitor, incidents }: { monitor: Monitor; incidents
           <h1 className="text-3xl leading-tight">{monitor.name}</h1>
           <StatusBadge status={status} />
           <MutedBadge mutedUntil={monitor.mutedUntil} />
+          {maintenance && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-[var(--chip-missed-bg)] px-2 py-0.5 text-xs font-medium text-[var(--chip-missed-fg)]">
+              <Wrench className="h-3 w-3" aria-hidden="true" />
+              {t("maint.inMaintenance", {
+                time: maintenance.toLocaleTimeString(locale, {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }),
+              })}
+            </span>
+          )}
           <TagChips tags={monitor.tags} linked />
         </div>
         <div className="flex flex-wrap items-center gap-2">

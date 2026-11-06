@@ -6,7 +6,16 @@ import { env } from "./env"
 import { logger } from "./lib/logger"
 
 // Paths owned by the API; unknown ones must 404 as JSON, not fall back to the SPA.
-const API_PREFIXES = ["/api/", "/auth/", "/ping/", "/badge/", "/health", "/openapi.json", "/docs"]
+const API_PREFIXES = [
+  "/api/",
+  "/auth/",
+  "/ping/",
+  "/badge/",
+  "/public/",
+  "/health",
+  "/openapi.json",
+  "/docs",
+]
 
 function findWebDist(): string | undefined {
   const candidates = [

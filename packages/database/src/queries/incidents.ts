@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm"
+import { and, desc, eq, gte, inArray, isNull, or } from "drizzle-orm"
 import { db } from "../index"
 import { incidents } from "../schema"
 
@@ -50,4 +50,20 @@ export async function createIncident(input: { id: string; monitorId: string; sta
 
 export async function resolveIncident(id: string, resolvedAt: Date) {
   await db.update(incidents).set({ status: "resolved", resolvedAt }).where(eq(incidents.id, id))
+}
+
+/** Incidents of these monitors that were open at any point since `since`. */
+export async function findIncidentsOverlapping(monitorIds: string[], since: Date) {
+  if (monitorIds.length === 0) return []
+  return db
+    .select()
+    .from(incidents)
+    .where(
+      and(
+        inArray(incidents.monitorId, monitorIds),
+        or(isNull(incidents.resolvedAt), gte(incidents.resolvedAt, since)),
+      ),
+    )
+    .orderBy(desc(incidents.startedAt))
+    .all()
 }

@@ -275,6 +275,59 @@ const spec = {
         responses: { "200": { description: "Array of incidents" } },
       },
     },
+    "/api/status-pages": {
+      get: {
+        summary: "List status pages",
+        security: [{ bearerAuth: [] }],
+        responses: { "200": { description: "Array of status pages" } },
+      },
+      post: {
+        summary: "Create a status page (disabled unless enabled: true)",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["slug", "title", "tag"],
+                properties: {
+                  slug: { type: "string", pattern: "^[a-z0-9](?:[a-z0-9-]{0,46}[a-z0-9])?$" },
+                  title: { type: "string", maxLength: 80 },
+                  description: { type: ["string", "null"], maxLength: 280 },
+                  tag: { type: "string" },
+                  enabled: { type: "boolean" },
+                },
+              },
+            },
+          },
+        },
+        responses: { "201": { description: "Created" }, "409": { description: "Slug in use" } },
+      },
+    },
+    "/api/status-pages/{id}": {
+      patch: {
+        summary: "Update a status page",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        responses: { "200": { description: "Updated" }, "404": { description: "Not found" } },
+      },
+      delete: {
+        summary: "Delete a status page",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        responses: { "200": { description: "Deleted" }, "404": { description: "Not found" } },
+      },
+    },
+    "/public/status/{slug}": {
+      get: {
+        summary: "Public status data (no authentication; enabled pages only)",
+        description:
+          "Title, description, overall state, each tagged monitor's name, public state and 90 days of daily availability, and incidents of the last 30 days. Never tokens, ping URLs, ids, output or IPs. Missing and disabled pages both return 404.",
+        parameters: [{ name: "slug", in: "path", required: true, schema: { type: "string" } }],
+        responses: { "200": { description: "Public status" }, "404": { description: "Not found" } },
+      },
+    },
     "/api/monitors/{id}/mute": {
       post: {
         summary: "Silence alerts for N minutes (max 30 days); minutes: null unmutes",

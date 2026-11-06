@@ -1,10 +1,11 @@
 import type { MonitorStatus } from "@cronko/shared/types"
 import { formatDuration, formatRelativeTime } from "@cronko/shared/utils"
-import { BellOff } from "lucide-react"
+import { BellOff, Wrench } from "lucide-react"
 import type { ReactNode } from "react"
 import { Link } from "react-router"
 import { isMuted } from "@/components/monitors/MuteControl"
 import { TagChips } from "@/components/monitors/TagInput"
+import { useMaintenance } from "@/components/monitors/useMaintenance"
 import { StatusBadge } from "@/components/shared/StatusBadge"
 import type { api } from "@/lib/api"
 import { formatInterval, formatRunDuration, severityRank } from "@/lib/format"
@@ -39,6 +40,7 @@ export function DeparturesTable({
   actions?: (row: MonitorRow) => ReactNode
 }) {
   const { t, locale } = useT()
+  const maintenanceUntil = useMaintenance()
   const now = Date.now()
 
   const next = (row: MonitorRow): string => {
@@ -108,6 +110,15 @@ export function DeparturesTable({
                   {row.tags.length > 0 && (
                     <span className="ml-2">
                       <TagChips tags={row.tags} />
+                    </span>
+                  )}
+                  {maintenanceUntil(row) && (
+                    <span
+                      title={t("maint.title")}
+                      className="ml-2 inline-flex align-middle text-dim"
+                    >
+                      <Wrench className="h-3.5 w-3.5" aria-hidden="true" />
+                      <span className="sr-only">{t("maint.title")}</span>
                     </span>
                   )}
                   {isMuted(row.mutedUntil) && (
