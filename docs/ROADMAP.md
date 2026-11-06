@@ -56,7 +56,8 @@ making product claims.
 1. Done: `cronko-run <ping-url> -- <cmd>` wrapper (POSIX sh + curl, served at
    `/cronko-run`; duration, exit code, output tail) and recipes for crontab,
    systemd, Kubernetes CronJob, GitHub Actions and Docker in `docs/recipes.md`.
-2. Run analytics: p50/p95 duration, slow/anomalous run detection, overlapping runs.
+2. Run analytics: done for display (p50/p95 baseline per run, "much slower than usual"
+   flag, overlapping /start runs). Not yet alerting on them.
 3. Public status page per group with SLA and incident history.
 4. Tags/groups, maintenance windows, daily/weekly digest.
 

@@ -10,7 +10,8 @@
     "./constants": "./src/constants.ts",
     "./utils": "./src/utils.ts",
     "./schedule": "./src/schedule.ts",
-    "./translations": "./src/translations.ts"
+    "./translations": "./src/translations.ts",
+    "./run-stats": "./src/run-stats.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

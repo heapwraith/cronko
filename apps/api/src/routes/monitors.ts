@@ -3,6 +3,7 @@ import {
   findHeartbeatsByMonitor,
   findLatestHeartbeats,
   findRunContext,
+  findRunSamples,
 } from "@cronko/database/queries/heartbeats"
 import { findIncidentsByMonitor, findOpenIncident } from "@cronko/database/queries/incidents"
 import {
@@ -18,6 +19,12 @@ import {
 } from "@cronko/database/queries/monitors"
 import { monitors as monitorsTable } from "@cronko/database/schema"
 import { DEFAULT_GRACE_PERIOD_SECONDS } from "@cronko/shared/constants"
+import {
+  BASELINE_RUNS,
+  durationStats,
+  isRunSample,
+  isUnusuallySlow,
+} from "@cronko/shared/run-stats"
 import { isValidSchedule, isValidTimezone, schedulePeriodSeconds } from "@cronko/shared/schedule"
 import { zValidator } from "@hono/zod-validator"
 import type { InferSelectModel } from "drizzle-orm"
@@ -171,7 +178,19 @@ monitorsRoute.get("/:id", async (c) => {
     return c.json({ error: "Not found", code: "NOT_FOUND" }, 404)
   }
 
-  const recentHeartbeats = await findHeartbeatsByMonitor(id, { limit: 20 })
+  const recent = await findHeartbeatsByMonitor(id, { limit: 20 })
+  // One query covers the baseline of every listed run: each run is compared with
+  // the runs before it, never with itself.
+  const samples = await findRunSamples(id, { limit: BASELINE_RUNS + recent.length })
+  const recentHeartbeats = recent.map((hb) => {
+    if (!isRunSample(hb)) return { ...hb, unusuallySlow: false }
+    const earlier = samples
+      .filter((s) => s.receivedAt < hb.receivedAt)
+      .slice(0, BASELINE_RUNS)
+      .map((s) => s.durationMs)
+    return { ...hb, unusuallySlow: isUnusuallySlow(hb.durationMs, durationStats(earlier)) }
+  })
+  const typical = durationStats(samples.slice(0, BASELINE_RUNS).map((s) => s.durationMs))
   const openIncident = await findOpenIncident(id)
 
   return c.json({
@@ -181,6 +200,7 @@ monitorsRoute.get("/:id", async (c) => {
         ? null
         : expectedWindow(monitor, recentHeartbeats[0]?.receivedAt).nextExpected.toISOString(),
       recentHeartbeats,
+      typical,
       openIncident,
     },
   })
@@ -323,7 +343,15 @@ monitorsRoute.get("/:id/incidents", async (c) => {
 monitorsRoute.get("/:id/runs/:runId", async (c) => {
   const ctx = await findRunContext(c.req.param("id") ?? "", c.req.param("runId") ?? "")
   if (!ctx) return c.json({ error: "Run not found", code: "NOT_FOUND" }, 404)
-  return c.json({ data: ctx })
+
+  // Baseline: the runs before this one, so a slow run does not dilute its own yardstick.
+  const earlier = await findRunSamples(ctx.run.monitorId, {
+    limit: BASELINE_RUNS,
+    before: ctx.run.receivedAt,
+  })
+  const typical = durationStats(earlier.map((s) => s.durationMs))
+  const unusuallySlow = isRunSample(ctx.run) && isUnusuallySlow(ctx.run.durationMs, typical)
+  return c.json({ data: { ...ctx, typical, unusuallySlow } })
 })
 
 monitorsRoute.get("/:id/heartbeats", async (c) => {

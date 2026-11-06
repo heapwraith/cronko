@@ -39,6 +39,10 @@ export const heartbeats = sqliteTable(
     durationMs: integer("duration_ms"),
     exitCode: integer("exit_code"),
     body: text("body"),
+    // "start" / "finish" for the two halves of a /start + /finish run; null for a plain ping.
+    kind: text("kind", { enum: ["start", "finish"] }),
+    // This run started while the previous one had not reported its finish yet.
+    overlapped: integer("overlapped", { mode: "boolean" }).notNull().default(false),
   },
   (t) => [index("heartbeats_monitor_received_idx").on(t.monitorId, t.receivedAt)],
 )

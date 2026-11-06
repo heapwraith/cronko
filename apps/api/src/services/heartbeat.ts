@@ -4,6 +4,7 @@ import {
   updateHeartbeatDuration,
 } from "@cronko/database/queries/heartbeats"
 import { findMonitorByToken } from "@cronko/database/queries/monitors"
+import { logger } from "../lib/logger"
 import { markFailed, markSlow, recoverOnPing } from "./monitor-state"
 
 export async function processHeartbeat(
@@ -33,6 +34,18 @@ export async function processHeartbeat(
   let stored = false
 
   const prevPulse = await findLatestHeartbeat(monitor.id)
+  const now = new Date()
+
+  // A start while the previous start never reported its finish means two runs overlap.
+  // Past two intervals the old start is treated as abandoned (crashed), not running.
+  const overlapped =
+    options.pulseType === "start" &&
+    prevPulse?.kind === "start" &&
+    prevPulse.durationMs === null &&
+    now.getTime() - prevPulse.receivedAt.getTime() < monitor.expectedIntervalSeconds * 2_000
+  if (overlapped) {
+    logger.warn({ monitor: monitor.name }, "run started while the previous run was still open")
+  }
 
   if (
     options.pulseType === "finish" &&
@@ -49,6 +62,9 @@ export async function processHeartbeat(
         durationMs: options.durationMs,
         ...(options.exitCode !== undefined && { exitCode: options.exitCode }),
         body: options.body ?? "pulse:finish",
+        kind: "finish",
+        // The finish row is what the UI shows for the run, so it carries the flag too.
+        overlapped: prevPulse.overlapped,
       })
       stored = true
     }
@@ -61,6 +77,8 @@ export async function processHeartbeat(
       ...(options.durationMs !== undefined && { durationMs: options.durationMs }),
       ...(options.exitCode !== undefined && { exitCode: options.exitCode }),
       ...(options.body !== undefined && { body: options.body }),
+      ...(options.pulseType === "start" && { kind: "start" as const }),
+      ...(overlapped && { overlapped: true }),
     })
     stored = true
   }

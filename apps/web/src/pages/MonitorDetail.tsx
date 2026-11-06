@@ -1,3 +1,4 @@
+import { isRunSample } from "@cronko/shared/run-stats"
 import type { MonitorStatus } from "@cronko/shared/types"
 import { formatDuration, formatRelativeTime } from "@cronko/shared/utils"
 import { useQuery } from "@tanstack/react-query"
@@ -74,12 +75,14 @@ function MonitorDetailView({ monitor, incidents }: { monitor: Monitor; incidents
 
   const points = [...runs]
     .reverse()
-    .filter((r) => r.durationMs != null && r.durationMs > 0)
+    // Start rows repeat their finish row's duration; count each run once.
+    .filter((r) => isRunSample(r) && (r.durationMs ?? 0) > 0)
     .slice(-40)
     .map((r) => ({
       id: r.id,
       durationMs: r.durationMs as number,
       failed: r.exitCode != null && r.exitCode !== 0,
+      slow: r.unusuallySlow,
       label: new Date(r.receivedAt).toLocaleString(locale),
     }))
 

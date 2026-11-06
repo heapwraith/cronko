@@ -1,4 +1,19 @@
-import { and, asc, desc, eq, gt, gte, inArray, isNull, lt, lte, or, sql } from "drizzle-orm"
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gt,
+  gte,
+  inArray,
+  isNotNull,
+  isNull,
+  lt,
+  lte,
+  ne,
+  or,
+  sql,
+} from "drizzle-orm"
 import { db } from "../index"
 import { heartbeats } from "../schema"
 
@@ -42,6 +57,8 @@ export async function createHeartbeat(input: {
   exitCode?: number
   body?: string
   receivedAt?: Date
+  kind?: "start" | "finish"
+  overlapped?: boolean
 }) {
   await db.insert(heartbeats).values({
     id: input.id,
@@ -52,7 +69,36 @@ export async function createHeartbeat(input: {
     durationMs: input.durationMs ?? null,
     exitCode: input.exitCode ?? null,
     body: input.body ?? null,
+    kind: input.kind ?? null,
+    overlapped: input.overlapped ?? false,
   })
+}
+
+/**
+ * Durations of the most recent runs, newest first, for analytics. Start rows are
+ * skipped: their run is counted through its finish row.
+ */
+export async function findRunSamples(
+  monitorId: string,
+  options: { limit: number; before?: Date },
+): Promise<{ receivedAt: Date; durationMs: number }[]> {
+  const rows = db
+    .select({ receivedAt: heartbeats.receivedAt, durationMs: heartbeats.durationMs })
+    .from(heartbeats)
+    .where(
+      and(
+        eq(heartbeats.monitorId, monitorId),
+        isNotNull(heartbeats.durationMs),
+        or(isNull(heartbeats.kind), ne(heartbeats.kind, "start")),
+        options.before ? lt(heartbeats.receivedAt, options.before) : undefined,
+      ),
+    )
+    .orderBy(desc(heartbeats.receivedAt))
+    .limit(Math.min(options.limit, 1000))
+    .all()
+  return rows.flatMap((r) =>
+    r.durationMs == null ? [] : [{ receivedAt: r.receivedAt, durationMs: r.durationMs }],
+  )
 }
 
 export async function updateHeartbeatDuration(id: string, durationMs: number) {
