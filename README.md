@@ -30,6 +30,9 @@ sudo chmod +x /usr/local/bin/cronko-run
 0 2 * * * cronko-run https://cronko.example.com/ping/TOKEN -- /usr/local/bin/backup.sh
 ```
 
+Ready-made setups for systemd timers, Kubernetes CronJobs, GitHub Actions and
+Docker are in [docs/recipes.md](docs/recipes.md).
+
 Or call the ping URL yourself:
 
 ```bash
@@ -39,7 +42,7 @@ Or call the ping URL yourself:
 # measure duration; a non-zero exit code alerts immediately
 curl -fsS https://cronko.example.com/ping/TOKEN/start
 ./long-job.sh; code=$?
-curl -fsS "https://cronko.example.com/ping/TOKEN/finish?d=$SECONDS&exit=$code"
+curl -fsS "https://cronko.example.com/ping/TOKEN/finish?d=$((SECONDS * 1000))&exit=$code"  # d is in ms
 
 # or report a failure explicitly, with the job output as the body (up to 10 KB)
 ./job.sh 2>&1 | tail -c 5000 | curl -fsS --data-binary @- -H 'content-type: text/plain' \

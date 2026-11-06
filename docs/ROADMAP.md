@@ -54,8 +54,8 @@ making product claims.
 ## P2 - differentiators
 
 1. Done: `cronko-run <ping-url> -- <cmd>` wrapper (POSIX sh + curl, served at
-   `/cronko-run`; duration, exit code, output tail). Remaining: ready-made snippets
-   for systemd, Kubernetes CronJob and GitHub Actions.
+   `/cronko-run`; duration, exit code, output tail) and recipes for crontab,
+   systemd, Kubernetes CronJob, GitHub Actions and Docker in `docs/recipes.md`.
 2. Run analytics: p50/p95 duration, slow/anomalous run detection, overlapping runs.
 3. Public status page per group with SLA and incident history.
 4. Tags/groups, maintenance windows, daily/weekly digest.
