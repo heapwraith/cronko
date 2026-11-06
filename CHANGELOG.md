@@ -7,15 +7,20 @@ include breaking changes; they are called out below.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-06
+
+The first published release (image on `ghcr.io/heapwraith/cronko`). It includes
+everything listed under 0.1.0, which was prepared but never tagged, plus:
+
 ### Added
 
 - Recurring maintenance windows: pick days, a start time, a duration (up to 7 days) and a timezone, for all monitors, one tag or one monitor. While a window runs, alerts are held back; state and incidents are still recorded. Stored as a cron start plus duration, so daylight saving time follows the window's timezone. Managed on the Notifications page; monitors in maintenance get a wrench mark (migration `0015`).
 - Public status pages (`/status/<slug>`, no login), one per tag: overall state, each monitor's public state (operational, degraded, problem, paused), 90 days of daily availability (share of each UTC day without an open incident) and the last 30 days of incidents. They expose only those fields, are off until published, and missing and unpublished pages answer the same 404. Managed under "Status" (migration `0014`).
 - Tags on monitors: up to 10 per monitor, normalized (lowercase, no accents, `a-z 0-9 . _ -`). Tags show next to each job, the dashboard and monitor list have a tag filter kept in the URL, and `GET /api/monitors?tag=` filters the API (migration `0013`).
 
-## [0.1.0] - 2026-11-06
+## [0.1.0] - 2026-11-06 [not published]
 
-The first tagged release. Cronko is a self-hosted dead man's switch for cron
+Prepared but never tagged or published; everything below ships in 0.2.0. Cronko is a self-hosted dead man's switch for cron
 jobs, backups and ETLs: each job pings a URL when it runs, and Cronko alerts you
 when a ping is late, missing or reports a failure.
 
@@ -61,5 +66,5 @@ when a ping is late, missing or reports a failure.
 - Security: fetch-metadata CSRF protection, strict CSP, rate-limited pings and login, audit log.
 - Tests against a real SQLite database, a Playwright end-to-end smoke test, and CI with a Docker smoke test.
 
-[Unreleased]: https://github.com/heapwraith/cronko/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/heapwraith/cronko/releases/tag/v0.1.0
+[Unreleased]: https://github.com/heapwraith/cronko/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/heapwraith/cronko/releases/tag/v0.2.0
