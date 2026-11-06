@@ -4,6 +4,7 @@ import { Button } from "@/components/shared/Button"
 import { Toggle } from "@/components/shared/Toggle"
 import type { MonitorInput } from "@/lib/api"
 import { useT } from "@/lib/i18n"
+import { TagInput } from "./TagInput"
 
 type Mode = "interval" | "cron"
 type Unit = "seconds" | "minutes" | "hours" | "days"
@@ -19,6 +20,7 @@ export interface MonitorFormValues {
   scheduleCron?: string | null
   timezone?: string | null
   alertOnAnomalies?: boolean
+  tags?: string[]
 }
 
 /** Largest unit that divides the value evenly, so 7200 s reads as "2 hours". */
@@ -89,6 +91,7 @@ export function MonitorForm({
     initial?.maxDurationMs ? String(Math.round(initial.maxDurationMs / 60_000)) : "",
   )
   const [anomalies, setAnomalies] = useState(initial?.alertOnAnomalies ?? false)
+  const [tags, setTags] = useState<string[]>(initial?.tags ?? [])
   const [touched, setTouched] = useState(false)
 
   const intervalSeconds = Math.round(Number(amount) * UNIT_SECONDS[unit])
@@ -124,6 +127,7 @@ export function MonitorForm({
       gracePeriodSeconds: graceSeconds,
       ...(maxMs !== undefined && { maxDurationMs: maxMs }),
       alertOnAnomalies: anomalies,
+      tags,
       ...(mode === "cron"
         ? { scheduleCron: cron.trim(), timezone }
         : {
@@ -320,6 +324,8 @@ export function MonitorForm({
           <p className={hint}>{t("form.maxDurationHint")}</p>
         </div>
       </div>
+
+      <TagInput value={tags} onChange={setTags} label={t("tags.label")} hint={t("tags.hint")} />
 
       <Toggle
         label={t("form.alertOnAnomalies")}

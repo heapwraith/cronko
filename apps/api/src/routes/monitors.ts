@@ -26,6 +26,7 @@ import {
   isUnusuallySlow,
 } from "@cronko/shared/run-stats"
 import { isValidSchedule, isValidTimezone, schedulePeriodSeconds } from "@cronko/shared/schedule"
+import { MAX_TAGS, normalizeTags } from "@cronko/shared/tags"
 import { zValidator } from "@hono/zod-validator"
 import type { InferSelectModel } from "drizzle-orm"
 import { eq } from "drizzle-orm"
@@ -60,6 +61,12 @@ function checkSchedule(
   }
 }
 
+/** Accepts free-form labels and stores them normalized (see @cronko/shared/tags). */
+const tagsSchema = z
+  .array(z.string().max(64))
+  .max(MAX_TAGS * 2)
+  .transform((tags) => normalizeTags(tags))
+
 const createMonitorSchema = z
   .object({
     name: z.string().min(1).max(100),
@@ -69,6 +76,7 @@ const createMonitorSchema = z
     gracePeriodSeconds: z.number().int().min(0).max(86_400).default(DEFAULT_GRACE_PERIOD_SECONDS),
     maxDurationMs: z.number().int().min(0).max(86_400_000).optional(),
     alertOnAnomalies: z.boolean().optional(),
+    tags: tagsSchema.optional(),
   })
   .superRefine((v, ctx) => {
     if (v.expectedIntervalSeconds === undefined && !v.scheduleCron) {
@@ -91,6 +99,7 @@ const updateMonitorSchema = z
     gracePeriodSeconds: z.number().int().min(0).max(86_400).optional(),
     maxDurationMs: z.number().int().min(0).max(86_400_000).optional(),
     alertOnAnomalies: z.boolean().optional(),
+    tags: tagsSchema.optional(),
   })
   .superRefine(checkSchedule)
 
@@ -100,7 +109,9 @@ function intervalFor(cron: string, timezone: string | undefined, fallback: numbe
 }
 
 monitorsRoute.get("/", async (c) => {
-  const monitors = await findAllMonitors()
+  const tag = c.req.query("tag")
+  const all = await findAllMonitors()
+  const monitors = tag ? all.filter((m) => m.tags.includes(tag.trim().toLowerCase())) : all
 
   const ids = monitors.map((m: MonitorRow) => m.id)
   const heartbeats = await findLatestHeartbeats(ids)
@@ -155,6 +166,7 @@ monitorsRoute.post("/", zValidator("json", createMonitorSchema), async (c) => {
     gracePeriodSeconds: body.gracePeriodSeconds,
     ...(body.maxDurationMs !== undefined && { maxDurationMs: body.maxDurationMs }),
     ...(body.alertOnAnomalies !== undefined && { alertOnAnomalies: body.alertOnAnomalies }),
+    ...(body.tags !== undefined && { tags: body.tags }),
     ...(body.scheduleCron && {
       scheduleCron: body.scheduleCron,
       timezone: body.timezone ?? "UTC",
@@ -240,6 +252,7 @@ monitorsRoute.patch("/:id", zValidator("json", updateMonitorSchema), async (c) =
     }),
     ...(body.maxDurationMs !== undefined && { maxDurationMs: body.maxDurationMs }),
     ...(body.alertOnAnomalies !== undefined && { alertOnAnomalies: body.alertOnAnomalies }),
+    ...(body.tags !== undefined && { tags: body.tags }),
     now,
   })
 

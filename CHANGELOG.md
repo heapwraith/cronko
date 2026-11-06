@@ -7,6 +7,10 @@ include breaking changes; they are called out below.
 
 ## [Unreleased]
 
+### Added
+
+- Tags on monitors: up to 10 per monitor, normalized (lowercase, no accents, `a-z 0-9 . _ -`). Tags show next to each job, the dashboard and monitor list have a tag filter kept in the URL, and `GET /api/monitors?tag=` filters the API (migration `0013`).
+
 ## [0.1.0] - 2026-11-06
 
 The first tagged release. Cronko is a self-hosted dead man's switch for cron

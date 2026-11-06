@@ -4,6 +4,7 @@ import { BellOff } from "lucide-react"
 import type { ReactNode } from "react"
 import { Link } from "react-router"
 import { isMuted } from "@/components/monitors/MuteControl"
+import { TagChips } from "@/components/monitors/TagInput"
 import { StatusBadge } from "@/components/shared/StatusBadge"
 import type { api } from "@/lib/api"
 import { formatInterval, formatRunDuration, severityRank } from "@/lib/format"
@@ -104,6 +105,11 @@ export function DeparturesTable({
                   >
                     {row.name}
                   </Link>
+                  {row.tags.length > 0 && (
+                    <span className="ml-2">
+                      <TagChips tags={row.tags} />
+                    </span>
+                  )}
                   {isMuted(row.mutedUntil) && (
                     <span
                       title={t("mute.muted")}

@@ -92,6 +92,13 @@
       "when": 1782300000000,
       "tag": "0012_add_alert_on_anomalies",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1782400000000,
+      "tag": "0013_add_monitor_tags",
+      "breakpoints": true
     }
   ]
 }

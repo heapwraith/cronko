@@ -188,6 +188,14 @@ const spec = {
       get: {
         summary: "List all monitors",
         security: [{ bearerAuth: [] }, { csrf: [] }],
+        parameters: [
+          {
+            name: "tag",
+            in: "query",
+            schema: { type: "string" },
+            description: "Only monitors carrying this tag (case-insensitive)",
+          },
+        ],
         responses: { "200": { description: "Array of monitors with latest heartbeat" } },
       },
       post: {

@@ -10,6 +10,7 @@ import { MonitorActions } from "@/components/monitors/MonitorActions"
 import { MuteControl, MutedBadge } from "@/components/monitors/MuteControl"
 import { NextPingCountdown } from "@/components/monitors/NextPingCountdown"
 import { RunHistory, runOutput } from "@/components/monitors/RunHistory"
+import { TagChips } from "@/components/monitors/TagInput"
 import { Breadcrumb } from "@/components/shared/Breadcrumb"
 import { Button } from "@/components/shared/Button"
 import { CopyButton } from "@/components/shared/CopyButton"
@@ -112,6 +113,7 @@ function MonitorDetailView({ monitor, incidents }: { monitor: Monitor; incidents
           <h1 className="text-3xl leading-tight">{monitor.name}</h1>
           <StatusBadge status={status} />
           <MutedBadge mutedUntil={monitor.mutedUntil} />
+          <TagChips tags={monitor.tags} linked />
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button href={csvUrl} variant="ghost" size="sm" target="_blank" rel="noreferrer">

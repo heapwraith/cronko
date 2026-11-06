@@ -18,6 +18,7 @@ export async function findAllMonitors() {
       timezone: monitors.timezone,
       mutedUntil: monitors.mutedUntil,
       alertOnAnomalies: monitors.alertOnAnomalies,
+      tags: monitors.tags,
       displayOrder: monitors.displayOrder,
       createdAt: monitors.createdAt,
       updatedAt: monitors.updatedAt,
@@ -50,6 +51,7 @@ export async function createMonitor(input: {
   scheduleCron?: string
   timezone?: string
   alertOnAnomalies?: boolean
+  tags?: string[]
   now: Date
 }) {
   await db.insert(monitors).values({
@@ -63,6 +65,7 @@ export async function createMonitor(input: {
     scheduleCron: input.scheduleCron ?? null,
     timezone: input.timezone ?? null,
     alertOnAnomalies: input.alertOnAnomalies ?? false,
+    tags: input.tags ?? [],
     status: "pending",
     createdAt: input.now,
     updatedAt: input.now,
@@ -84,6 +87,7 @@ export async function updateMonitor(
     scheduleCron?: string | null
     timezone?: string | null
     alertOnAnomalies?: boolean
+    tags?: string[]
     now: Date
   },
 ) {
@@ -101,6 +105,7 @@ export async function updateMonitor(
       ...(input.scheduleCron !== undefined && { scheduleCron: input.scheduleCron }),
       ...(input.timezone !== undefined && { timezone: input.timezone }),
       ...(input.alertOnAnomalies !== undefined && { alertOnAnomalies: input.alertOnAnomalies }),
+      ...(input.tags !== undefined && { tags: input.tags }),
       updatedAt: input.now,
     })
     .where(eq(monitors.id, id))

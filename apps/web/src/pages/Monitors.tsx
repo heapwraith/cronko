@@ -3,6 +3,7 @@ import { Search } from "lucide-react"
 import { useEffect, useId, useState } from "react"
 import { DeleteMonitorButton } from "@/components/monitors/DeleteMonitorButton"
 import { DeparturesTable, sortBySeverity } from "@/components/monitors/DeparturesTable"
+import { TagFilter, useTagFilter } from "@/components/monitors/TagFilter"
 import { Button } from "@/components/shared/Button"
 import { NoMonitorsEmptyState } from "@/components/shared/EmptyState"
 import { SkeletonTable } from "@/components/shared/Skeleton"
@@ -26,8 +27,10 @@ export default function MonitorsPage() {
     if (error) toast(t("monitors.failedLoad"), "error")
   }, [error, toast, t])
 
-  const rows = sortBySeverity(monitors).filter((m) =>
-    m.name.toLowerCase().includes(search.trim().toLowerCase()),
+  const [tag, setTag] = useTagFilter()
+  const rows = sortBySeverity(monitors).filter(
+    (m) =>
+      m.name.toLowerCase().includes(search.trim().toLowerCase()) && (!tag || m.tags.includes(tag)),
   )
 
   return (
@@ -35,6 +38,7 @@ export default function MonitorsPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="text-2xl leading-tight">{t("monitors.title")}</h1>
         <div className="flex flex-wrap items-center gap-3">
+          <TagFilter monitors={monitors} value={tag} onChange={setTag} />
           <div className="relative">
             <label htmlFor={searchId} className="sr-only">
               {t("board.search")}

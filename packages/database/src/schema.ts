@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm"
+import { relations, sql } from "drizzle-orm"
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
 export const monitors = sqliteTable("monitors", {
@@ -19,6 +19,8 @@ export const monitors = sqliteTable("monitors", {
   // When set, deadlines come from the next scheduled run, not from the last ping.
   scheduleCron: text("schedule_cron"),
   timezone: text("timezone"),
+  // Short labels for filtering and grouping, normalized by @cronko/shared/tags.
+  tags: text("tags", { mode: "json" }).$type<string[]>().notNull().default(sql`'[]'`),
   // Opt-in: also alert on runs much slower than usual and on overlapping runs.
   alertOnAnomalies: integer("alert_on_anomalies", { mode: "boolean" }).notNull().default(false),
   // Alerts are silenced until this moment; state and incidents are still tracked.
