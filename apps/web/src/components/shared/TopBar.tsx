@@ -89,7 +89,7 @@ export function TopBar({ instanceName, email }: { instanceName?: string; email?:
 
   return (
     <header className="sticky top-0 z-30 border-b border-line-strong bg-ground">
-      <div className="mx-auto flex max-w-[1120px] items-center gap-4 px-4 py-2.5 sm:px-8">
+      <div className="mx-auto flex max-w-[1440px] items-center gap-4 px-4 py-2.5 sm:px-8">
         <NavLink to="/dashboard" className="flex items-center gap-2.5" aria-label="Cronko">
           <CronkoLogo className="h-6 w-6 text-ink" />
           <span className="font-serif text-xl font-medium tracking-tight text-ink">
@@ -113,7 +113,7 @@ export function TopBar({ instanceName, email }: { instanceName?: string; email?:
       </div>
 
       <nav aria-label="Principal" className="border-t border-line">
-        <ul className="mx-auto flex max-w-[1120px] gap-1 overflow-x-auto px-2 sm:px-6">
+        <ul className="mx-auto flex max-w-[1440px] gap-1 overflow-x-auto px-2 sm:px-6">
           {tabs.map(({ to, label }) => (
             <li key={to}>
               <NavLink

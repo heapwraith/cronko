@@ -37,7 +37,7 @@ export function AppLayout() {
         {...(instanceName !== undefined && { instanceName })}
         {...(session.data?.email !== undefined && { email: session.data.email })}
       />
-      <main id="main-content" className="mx-auto w-full max-w-[1120px] flex-1 px-4 py-10 sm:px-8">
+      <main id="main-content" className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-10 sm:px-8">
         <Outlet />
       </main>
     </div>

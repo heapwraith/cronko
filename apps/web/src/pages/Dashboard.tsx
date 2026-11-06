@@ -118,57 +118,62 @@ export default function DashboardPage() {
             <DeparturesTable rows={rows} caption={t("board.caption")} />
           )}
 
-          {(data?.incidents.length ?? 0) > 0 && (
-            <section
-              aria-labelledby="open-incidents"
-              className="space-y-3 border-t border-line-strong pt-4"
-            >
-              <h2 id="open-incidents" className="text-base font-semibold text-ink">
-                {t("board.openIncidents")}
-              </h2>
-              <ul className="divide-y divide-line border-y border-line">
-                {data?.incidents.map((i) => (
-                  <li key={i.id} className="flex items-center justify-between gap-4 py-3 text-sm">
-                    <Link to={`/monitors/${i.monitorId}`} className="font-semibold hover:underline">
-                      {names.get(i.monitorId) ?? i.monitorId}
-                    </Link>
-                    <span className="text-dim">
-                      {t("board.since", {
-                        time: formatRelativeTime(new Date(i.startedAt), locale),
-                      })}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
+          <div className="grid items-start gap-x-12 gap-y-8 xl:grid-cols-2">
+            {(data?.incidents.length ?? 0) > 0 && (
+              <section
+                aria-labelledby="open-incidents"
+                className="space-y-3 border-t border-line-strong pt-4"
+              >
+                <h2 id="open-incidents" className="text-base font-semibold text-ink">
+                  {t("board.openIncidents")}
+                </h2>
+                <ul className="divide-y divide-line border-y border-line">
+                  {data?.incidents.map((i) => (
+                    <li key={i.id} className="flex items-center justify-between gap-4 py-3 text-sm">
+                      <Link
+                        to={`/monitors/${i.monitorId}`}
+                        className="font-semibold hover:underline"
+                      >
+                        {names.get(i.monitorId) ?? i.monitorId}
+                      </Link>
+                      <span className="text-dim">
+                        {t("board.since", {
+                          time: formatRelativeTime(new Date(i.startedAt), locale),
+                        })}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
 
-          {undelivered.length > 0 && (
-            <section
-              aria-labelledby="undelivered"
-              className="space-y-3 border-t border-line-strong pt-4"
-            >
-              <h2 id="undelivered" className="text-base font-semibold text-ink">
-                {t("board.undelivered")}
-              </h2>
-              <ul className="divide-y divide-line border-y border-line">
-                {undelivered.map((d) => (
-                  <li
-                    key={d.id}
-                    className="flex flex-wrap items-center justify-between gap-2 py-3 text-sm"
-                  >
-                    <span>
-                      <span className="font-semibold">{d.monitorName}</span>{" "}
-                      <span className="text-dim">→ {d.channelName}</span>
-                    </span>
-                    <span className="font-mono text-xs text-down tnum">
-                      {d.lastError ?? "—"} · {t("board.attempts", { n: d.attempts })}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
+            {undelivered.length > 0 && (
+              <section
+                aria-labelledby="undelivered"
+                className="space-y-3 border-t border-line-strong pt-4"
+              >
+                <h2 id="undelivered" className="text-base font-semibold text-ink">
+                  {t("board.undelivered")}
+                </h2>
+                <ul className="divide-y divide-line border-y border-line">
+                  {undelivered.map((d) => (
+                    <li
+                      key={d.id}
+                      className="flex flex-wrap items-center justify-between gap-2 py-3 text-sm"
+                    >
+                      <span>
+                        <span className="font-semibold">{d.monitorName}</span>{" "}
+                        <span className="text-dim">→ {d.channelName}</span>
+                      </span>
+                      <span className="font-mono text-xs text-down tnum">
+                        {d.lastError ?? "—"} · {t("board.attempts", { n: d.attempts })}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </div>
         </>
       )}
     </div>

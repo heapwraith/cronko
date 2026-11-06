@@ -13,8 +13,7 @@
       "!**/node_modules",
       "!pnpm-lock.yaml",
       "!**/migrations/meta",
-      "!**/public/sw.js",
-      "!**/DESIGN.md"
+      "!**/public/sw.js"
     ]
   },
   "formatter": {
