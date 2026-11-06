@@ -7,6 +7,11 @@ include breaking changes; they are called out below.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-06
+
+Closes the last gaps against Healthchecks: a periodic digest and ping by e-mail.
+Upgrading from 0.2 only needs a new image; migration `0016` is applied on boot.
+
 ### Added
 
 - Ping by e-mail: an optional SMTP listener (`INBOUND_SMTP_PORT`, `INBOUND_EMAIL_DOMAIN`, optional STARTTLS with `INBOUND_SMTP_TLS_CERT`/`_KEY`). Mail to `<token>@<domain>` is a ping whose output is the sender, subject and text, and `<token>+fail@<domain>` is a failure. Each monitor can also list failure words that mark a message as failed by its subject. Unknown recipients are refused at `RCPT`; the listener never relays, has no login, caps messages at 1 MB and applies the ping rate limit. Monitor pages show the address when the listener is on (migration `0016`).
@@ -15,6 +20,14 @@ include breaking changes; they are called out below.
 ### Changed
 
 - `POST /api/settings` now rejects an unknown `timezone`.
+- `TELEGRAM_BOT_TOKEN` is gone from the environment and `.env.example`: it was never read (Telegram is set per channel in the UI). Leaving it set is harmless.
+
+### Fixed
+
+- `/finish` without `d` now takes its duration from the open `/start`, as the docs said. Before, the run had no duration and the `/start` stayed open, so the next run could be flagged as overlapping.
+- A `/finish` with no open `/start` is kept as a plain run instead of being dropped. A duration is never attached to an earlier plain ping.
+- OpenAPI: `d` on `/finish` is in milliseconds (it said seconds). The spec now documents the cron, tags, anomaly and e-mail fields on monitors, maintenance windows, the delivery log and the digest test.
+- README, `.env.example` and the in-app guide: the `/start` + `/finish` example, `AUTO_MIGRATE` defaults, `pnpm e2e`, alert events, the monitor form steps, and ping by e-mail.
 
 ## [0.2.0] - 2026-11-06
 
@@ -75,5 +88,6 @@ when a ping is late, missing or reports a failure.
 - Security: fetch-metadata CSRF protection, strict CSP, rate-limited pings and login, audit log.
 - Tests against a real SQLite database, a Playwright end-to-end smoke test, and CI with a Docker smoke test.
 
-[Unreleased]: https://github.com/heapwraith/cronko/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/heapwraith/cronko/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/heapwraith/cronko/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/heapwraith/cronko/releases/tag/v0.2.0

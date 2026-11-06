@@ -48,35 +48,40 @@ export async function processHeartbeat(
     logger.warn({ monitor: monitor.name }, "run started while the previous run was still open")
   }
 
-  if (
-    options.pulseType === "finish" &&
-    options.durationMs !== undefined &&
-    options.durationMs !== null
-  ) {
-    if (prevPulse && prevPulse.durationMs === null) {
-      await updateHeartbeatDuration(prevPulse.id, options.durationMs)
-      await createHeartbeat({
-        id: heartbeatId,
-        monitorId: monitor.id,
-        ...(options.sourceIp !== undefined && { sourceIp: options.sourceIp }),
-        ...(options.userAgent !== undefined && { userAgent: options.userAgent }),
-        durationMs: options.durationMs,
-        ...(options.exitCode !== undefined && { exitCode: options.exitCode }),
-        body: options.body ?? "pulse:finish",
-        receivedAt: now,
-        kind: "finish",
-        // The finish row is what the UI shows for the run, so it carries the flag too.
-        overlapped: prevPulse.overlapped,
-      })
-      stored = true
-    }
-  } else {
+  // The /start this /finish closes, if one is still open.
+  const openStart =
+    options.pulseType === "finish" && prevPulse?.kind === "start" && prevPulse.durationMs === null
+      ? prevPulse
+      : null
+  // Without ?d=, a /finish is timed from its /start.
+  const durationMs =
+    options.durationMs ??
+    (openStart ? Math.max(0, now.getTime() - openStart.receivedAt.getTime()) : undefined)
+
+  if (openStart && durationMs !== undefined) {
+    await updateHeartbeatDuration(openStart.id, durationMs)
     await createHeartbeat({
       id: heartbeatId,
       monitorId: monitor.id,
       ...(options.sourceIp !== undefined && { sourceIp: options.sourceIp }),
       ...(options.userAgent !== undefined && { userAgent: options.userAgent }),
-      ...(options.durationMs !== undefined && { durationMs: options.durationMs }),
+      durationMs,
+      ...(options.exitCode !== undefined && { exitCode: options.exitCode }),
+      body: options.body ?? "pulse:finish",
+      receivedAt: now,
+      kind: "finish",
+      // The finish row is what the UI shows for the run, so it carries the flag too.
+      overlapped: openStart.overlapped,
+    })
+    stored = true
+  } else {
+    // A plain ping, a /start, or a /finish with no open /start (kept as a plain run).
+    await createHeartbeat({
+      id: heartbeatId,
+      monitorId: monitor.id,
+      ...(options.sourceIp !== undefined && { sourceIp: options.sourceIp }),
+      ...(options.userAgent !== undefined && { userAgent: options.userAgent }),
+      ...(durationMs !== undefined && { durationMs }),
       ...(options.exitCode !== undefined && { exitCode: options.exitCode }),
       ...(options.body !== undefined && { body: options.body }),
       receivedAt: now,
@@ -91,9 +96,7 @@ export async function processHeartbeat(
     const failed =
       options.failed === true || (options.exitCode !== undefined && options.exitCode !== 0)
     const exceededMax =
-      options.durationMs != null &&
-      monitor.maxDurationMs != null &&
-      options.durationMs > monitor.maxDurationMs
+      durationMs != null && monitor.maxDurationMs != null && durationMs > monitor.maxDurationMs
 
     const runId = stored ? heartbeatId : undefined
     if (failed) {
@@ -107,8 +110,8 @@ export async function processHeartbeat(
     if (stored) {
       await alertOnRunAnomalies(monitor, {
         id: heartbeatId,
-        kind: options.pulseType === "finish" ? "finish" : null,
-        durationMs: options.durationMs ?? null,
+        kind: openStart ? "finish" : null,
+        durationMs: durationMs ?? null,
         receivedAt: now,
         overlapped: false,
         alreadyAlerted: failed || exceededMax,

@@ -8,7 +8,8 @@ backups and ETLs: one container, one SQLite file.
 
 > **Resumo em português:** o Cronko avisa quando um cron job, backup ou ETL deixa de
 > rodar. Cada monitor ganha uma URL de ping; se ela não for chamada no prazo, você é
-> alertado (Discord, Telegram, e-mail, Slack, Teams, ntfy, Pushover, PagerDuty, webhook). Instalação: veja _Quick start_ abaixo
+> alertado (Discord, Telegram, e-mail, Slack, Teams, ntfy, Pushover, PagerDuty, webhook).
+> Equipamentos que só mandam e-mail podem pingar por e-mail. Instalação: veja _Quick start_ abaixo
 > (`docker compose up -d`) e abra `http://localhost:3000`. A interface tem pt-BR e en.
 
 ## How it works
@@ -39,10 +40,10 @@ Or call the ping URL yourself:
 # crontab: ping only if the backup succeeded
 0 2 * * * /usr/local/bin/backup.sh && curl -fsS https://cronko.example.com/ping/TOKEN
 
-# measure duration; a non-zero exit code alerts immediately
+# measure duration: /finish is timed from /start; a non-zero exit code alerts immediately
 curl -fsS https://cronko.example.com/ping/TOKEN/start
-./long-job.sh; code=$?
-curl -fsS "https://cronko.example.com/ping/TOKEN/finish?d=$((SECONDS * 1000))&exit=$code"  # d is in ms
+./long-job.sh
+curl -fsS "https://cronko.example.com/ping/TOKEN/finish?exit=$?"  # or pass d=<ms> yourself
 
 # or report a failure explicitly, with the job output as the body (up to 10 KB)
 ./job.sh 2>&1 | tail -c 5000 | curl -fsS --data-binary @- -H 'content-type: text/plain' \
@@ -66,7 +67,7 @@ Or run the published image (amd64 and arm64) without cloning:
 docker run -d --name cronko -p 3000:3000 -v cronko_data:/app/data \
   -e JWT_SECRET="$(openssl rand -hex 32)" \
   -e ADMIN_EMAIL=you@example.com -e ADMIN_PASSWORD='change-me-now' \
-  ghcr.io/heapwraith/cronko:0.2
+  ghcr.io/heapwraith/cronko:0.3
 ```
 
 Data lives in the `cronko_data` volume (`/app/data/cronko.db`). Behind a reverse
@@ -115,7 +116,7 @@ pnpm --filter @cronko/web dev     # web on :3000, proxies the API
 | `INBOUND_SMTP_PORT`, `INBOUND_EMAIL_DOMAIN`                     | no       | Ping by e-mail: an SMTP listener on this port accepts mail for `<token>@<domain>` (see below)                                                                     |
 | `INBOUND_SMTP_TLS_CERT`, `INBOUND_SMTP_TLS_KEY`                 | no       | PEM files to offer STARTTLS on the e-mail listener                                                                                                                |
 | `PUBLIC_URL`                                                    | no       | Public address of this Cronko (e.g. `https://cronko.example.com`); alerts then include a link to the failing run or monitor                                       |
-| `AUTO_MIGRATE`                                                  | no       | Apply migrations on boot (default `true`)                                                                                                                         |
+| `AUTO_MIGRATE`                                                  | no       | Apply migrations on boot (default `true`, but `false` when `NODE_ENV=production`; the image sets `true`)                                                          |
 | `WEB_DIST`                                                      | no       | Path of the built web app (auto-detected)                                                                                                                         |
 
 Notification channels are configured in the UI: Discord/Slack take a
@@ -152,6 +153,8 @@ check yours before relying on it.
 - CSRF: state-changing requests with a cookie session must be same-origin
   (`Sec-Fetch-Site`, falling back to `Origin`); `Authorization` clients are exempt.
 - Login limited to 5 attempts per 15 minutes per IP and e-mail; pings are rate limited per token.
+- Public status pages expose only names, states, availability and incident times; never tokens or job output.
+- The optional e-mail listener accepts mail only for existing monitors and never relays.
 - Strict CSP, `X-Frame-Options: DENY`, HSTS in production, no CORS (same origin).
 - Report vulnerabilities privately to the maintainer, not in public issues.
 
@@ -164,6 +167,7 @@ pnpm lint        # Biome (lint + format + import order); `pnpm format` fixes
 pnpm typecheck
 pnpm test        # Vitest; API tests use a real, migrated SQLite
 pnpm build
+pnpm e2e         # Playwright smoke tests against the built app
 ```
 
 Commits follow [Conventional Commits](https://www.conventionalcommits.org/)
