@@ -12,8 +12,8 @@ with it is the entry ticket and the differentiators below are the reason to swit
 | Ping URL, grace period, incidents, recovery alerts | yes               | yes             | partial ("push" monitor) |
 | Start / finish events, duration, exit code         | yes               | yes             | no                       |
 | Max-duration alert                                 | yes               | partial         | no                       |
-| Cron expression + timezone schedule                | **no**            | yes             | no                       |
-| Explicit `/fail` signal                            | **no**            | yes             | no                       |
+| Cron expression + timezone schedule                | yes               | yes             | no                       |
+| Explicit `/fail` signal                            | yes               | yes             | no                       |
 | Per-check event log with output                    | basic             | yes             | partial                  |
 | Notification channels                              | 4                 | many            | many                     |
 | Public status pages                                | badge only        | badges          | yes                      |
@@ -33,6 +33,8 @@ making product claims.
 - Tests against a real migrated SQLite; Biome; CI with a Docker smoke test.
 - Notification outbox with retry/backoff and a delivery log API.
 - `/fail` signal and a distinct `failed` state with an immediate alert.
+- Cron-expression + timezone schedules with next-expected-run preview (API and unified monitor form).
+- Monitor detail redesigned around diagnosis.
 
 ## P0 - reliability (a lost alert is fatal)
 
@@ -44,7 +46,7 @@ making product claims.
 
 ## P1 - parity with Healthchecks
 
-1. Cron expression + timezone schedules, with next-expected-run.
+1. ~~Cron expression + timezone schedules, with next-expected-run.~~ Done.
 2. Per-check event log with captured output (size-limited).
 3. More channels: generic webhook, ntfy, Pushover, PagerDuty, Teams.
 4. Ping by e-mail; mute per check.
