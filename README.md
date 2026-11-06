@@ -93,6 +93,7 @@ pnpm --filter @cronko/web dev     # web on :3000, proxies the API
 - Tags per monitor, with a tag filter on the dashboard and monitor list (`?tag=` in the API)
 - Public status pages per tag (`/status/<slug>`, no login): current state, 90 days of daily availability and recent incidents, never tokens or job output
 - Recurring maintenance windows (days, start time, duration and timezone) for all monitors, a tag or one monitor: alerts are held back while one runs
+- Scoped API tokens (read or write) for scripts and CI, managed in Settings
 - Ping by e-mail (`<token>@your-domain`) for devices that can only send mail, with optional failure words per monitor
 - Daily or weekly digest to every channel: state, failures, new incidents and jobs that went silent
 - Mute a monitor's alerts for maintenance (1 h to 7 days); state and incidents are still tracked
@@ -185,6 +186,22 @@ curl -X POST "$CRONKO/api/import/kuma?dryRun=true" -H "Authorization: Bearer $TO
   -H "Content-Type: application/json" --data @kuma-backup.json
 ```
 
+### API tokens
+
+For scripts and CI, create a token in Settings → API tokens (name, scope, optional
+expiry). It is shown once; Cronko keeps only its SHA-256 hash and the first
+characters to identify it. Send it as `Authorization: Bearer crk_...` on the API:
+
+```sh
+curl -H "Authorization: Bearer $CRONKO_TOKEN" https://cronko.example.com/api/monitors
+```
+
+- `read`: `GET` requests only.
+- `write`: also create, edit, pause and delete monitors (`/api/monitors`). Nothing else.
+- A token can never manage tokens or settings. Revoke it in the same screen; an expired
+  or revoked token gets `401`, a request outside its scope `403`.
+- Creating and revoking tokens is recorded in the audit log, and the list shows when each was last used.
+
 ## Security
 
 - Passwords: bcrypt (12 rounds). Sessions: HS256 JWT, 15-minute access token and
@@ -194,6 +211,7 @@ curl -X POST "$CRONKO/api/import/kuma?dryRun=true" -H "Authorization: Bearer $TO
 - Login limited to 5 attempts per 15 minutes per IP and e-mail; pings are rate limited per token.
 - Public status pages expose only names, states, availability and incident times; never tokens or job output.
 - The optional e-mail listener accepts mail only for existing monitors and never relays.
+- API tokens are hashed at rest, scoped (`read` or `write` for monitors), revocable and optionally expiring.
 - Strict CSP, `X-Frame-Options: DENY`, HSTS in production, no CORS (same origin).
 - Report vulnerabilities privately to the maintainer, not in public issues.
 

@@ -15,7 +15,8 @@
     "./queries/users": "./src/queries/users.ts",
     "./queries/status-pages": "./src/queries/status-pages.ts",
     "./queries/maintenance": "./src/queries/maintenance.ts",
-    "./queries/metrics": "./src/queries/metrics.ts"
+    "./queries/metrics": "./src/queries/metrics.ts",
+    "./queries/api-tokens": "./src/queries/api-tokens.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

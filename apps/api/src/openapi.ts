@@ -536,6 +536,27 @@ const spec = {
         responses: { "200": { description: "Settings updated" } },
       },
     },
+    "/api/settings/tokens": {
+      get: {
+        summary: "List API tokens (never the secret). Session only, not usable with an API token",
+        security: [{ bearerAuth: [] }],
+        responses: { "200": { description: "Array of tokens with scope, status and last use" } },
+      },
+      post: {
+        summary:
+          "Create an API token (scope read|write, optional expiresInDays). The secret is returned once. Use it as Authorization: Bearer crk_...",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        responses: { "201": { description: "Token and its one-time secret" } },
+      },
+    },
+    "/api/settings/tokens/{id}": {
+      delete: {
+        summary: "Revoke an API token",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        responses: { "200": { description: "Revoked" }, "404": { description: "Not found" } },
+      },
+    },
     "/api/settings/digest/test": {
       post: {
         summary: "Queue a digest for the last period on every enabled channel",
