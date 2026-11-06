@@ -1,6 +1,6 @@
 ---
 
-version: 1
+version: 2
 slug: "src-app-tsx"
 primary_target: "src/App.tsx"
 related_targets: []
@@ -8,22 +8,22 @@ related_targets: []
 
 # Surface brief: Cronko web app (all screens)
 
-Mode: Operate. Visitor: a developer/sysadmin diagnosing an alert or taking an occasional glance. Build path: code-led.
+Mode: Operate. Visitor: a developer/sysadmin who arrives from an alert (phone first) or glances occasionally. Build path: code-led.
 
-Chosen world: **Quadro de Partidas** (airport / rail departures board). IMPECCABLE'S PICK. Sketch: `.impeccable/mocks/decision/model-pick.html`.
+Chosen world: **The Logbook** (editorial, light by default). Replaces the retired "Quadro de Partidas". Full system in `apps/web/DESIGN.md`.
 
 ## Direction contract
 
-THESIS: Every job run is a departure: on time, late, failed or cancelled. The app refuses the category default of rounded cards on a grey ground and treats the table of departures as the product.
+THESIS: Every job run is an entry in a logbook. The product is the run timeline, not a monitor list: an alert opens the exact entry that explains it, beside the previous good one.
 
-OWN-WORLD: Near-black graphite ground (#14161a family, tinted, never pure black), warm board-white text (#f1e9d0 family), a single signalling amber (#f2b705) for the header rule, active tab and focus; state colours carry meaning only (healthy green, failed magenta-rose, down red, missed amber-brown, paused slate, pending blue) and are always paired with a text label and a distinct glyph shape. Tabular monospaced figures for times, durations and exit codes; a workhorse humanist sans for names and labels. Dense rows, hairline dividers, state badges as solid chips. Light theme inverts to warm paper with the same amber and the same state hues adjusted for contrast.
+OWN-WORLD: Warm paper ground, dark ink, serif headings, hyperlegible sans body, mono only for data. Hairline rules and white space instead of boxes. One accent (ink blue) for the primary action and focus. State = drawn glyph + word + colour. Dark theme is warm "lamplight", never pure black.
 
-STORY: The visitor understands in one glance what needs attention, opens the failing job, and sees when it ran, how long, its exit code and output, then acts (pause, edit, ack). Quiet and uneventful when everything is fine.
+STORY: The visitor taps an alert link, lands on the failing run, sees when it ran, how long against the median, exit code and output, compares with the last good run, then acts (acknowledge, pause, edit).
 
-FIRST VIEWPORT: Top bar with CRONKO wordmark left, live date/clock right, a 3px amber rule below; standard tab navigation (Painel, Monitores, Incidentes, Canais, Ajustes); a one-line attention summary (count of failed/down/late) then the departures table: NEXT, JOB, SCHEDULE, DURATION, EXIT, STATE, sorted by severity; the primary action "Novo monitor" sits top right of the table header.
+FUNCTIONAL SHAPE: List (ledger, entry point) -> Monitor (timeline of runs) -> Run (diagnosis, deep-linkable at /monitors/:id/runs/:runId). Command palette is the primary navigation. Phones keep next time, duration and exit code on a second line.
 
-FORM: Departures board, position 1 on my grounded list; assigned was my 5th (Tide Almanac), the user chose the pick. seed:063984b72579c4a3.
+FIRST VIEWPORT (list): masthead with serif wordmark and live date; text tabs; one-line attention summary; the ledger sorted by severity, one primary action "Novo monitor".
 
-SIGNATURE MOVE: severity-sorted departures table with solid state chips and a mono time column, plus a quiet board-style clock in the top bar.
+SIGNATURE MOVE: the run timeline with the failing entry expanded in place and the last good entry pinned for comparison.
 
-FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+FINISH: unreviewed and undocumented is unfinished; the build ends with the finish review, the verdict, and a scan-mode refresh of DESIGN.md.
