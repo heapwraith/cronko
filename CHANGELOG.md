@@ -9,6 +9,7 @@ include breaking changes; they are called out below.
 
 ### Added
 
+- Ping by e-mail: an optional SMTP listener (`INBOUND_SMTP_PORT`, `INBOUND_EMAIL_DOMAIN`, optional STARTTLS with `INBOUND_SMTP_TLS_CERT`/`_KEY`). Mail to `<token>@<domain>` is a ping whose output is the sender, subject and text, and `<token>+fail@<domain>` is a failure. Each monitor can also list failure words that mark a message as failed by its subject. Unknown recipients are refused at `RCPT`; the listener never relays, has no login, caps messages at 1 MB and applies the ping rate limit. Monitor pages show the address when the listener is on (migration `0016`).
 - Daily or weekly digest (Settings → Periodic digest), off by default. At a chosen hour in the instance timezone (weekly: Mondays) every enabled channel gets one message: current state, monitors that need attention and for how long, runs and failures in the period, new incidents per monitor, and jobs that sent no ping although they were due. PagerDuty skips it. A restart neither repeats nor skips one, turning it on never sends one for a slot that already passed, and after a long downtime only the latest one goes out. "Send one now" queues a digest for the last period to check how it looks. No migration.
 
 ### Changed

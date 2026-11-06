@@ -49,7 +49,7 @@ making product claims.
 1. ~~Cron expression + timezone schedules, with next-expected-run.~~ Done.
 2. ~~Per-check event log with captured output (size-limited).~~ Done (run page, 10 KB output).
 3. More channels: generic webhook, ntfy, Pushover, Teams and PagerDuty are done.
-4. Ping by e-mail (still missing); mute per check is done (1 h to 7 days, state and incidents still tracked).
+4. ~~Ping by e-mail~~ done (built-in SMTP listener, `+fail` address, failure words per monitor); mute per check is done (1 h to 7 days, state and incidents still tracked).
 
 ## P2 - differentiators
 

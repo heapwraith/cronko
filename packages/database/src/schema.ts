@@ -21,6 +21,11 @@ export const monitors = sqliteTable("monitors", {
   timezone: text("timezone"),
   // Short labels for filtering and grouping, normalized by @cronko/shared/tags.
   tags: text("tags", { mode: "json" }).$type<string[]>().notNull().default(sql`'[]'`),
+  // Ping by e-mail: a subject containing any of these (case-insensitive) is a failure.
+  emailFailureKeywords: text("email_failure_keywords", { mode: "json" })
+    .$type<string[]>()
+    .notNull()
+    .default(sql`'[]'`),
   // Opt-in: also alert on runs much slower than usual and on overlapping runs.
   alertOnAnomalies: integer("alert_on_anomalies", { mode: "boolean" }).notNull().default(false),
   // Alerts are silenced until this moment; state and incidents are still tracked.

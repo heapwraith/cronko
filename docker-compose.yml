@@ -4,6 +4,8 @@ services:
     image: cronko:local
     ports:
       - "3000:3000"
+      # Ping by e-mail: public port 25 to the listener (also set INBOUND_* below).
+      # - "25:2525"
     environment:
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env (openssl rand -base64 32)}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-}
@@ -19,6 +21,8 @@ services:
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
       SMTP_FROM: ${SMTP_FROM:-}
+      INBOUND_SMTP_PORT: ${INBOUND_SMTP_PORT:-}
+      INBOUND_EMAIL_DOMAIN: ${INBOUND_EMAIL_DOMAIN:-}
     volumes:
       - cronko_data:/app/data
     restart: unless-stopped

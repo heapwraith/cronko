@@ -18,6 +18,7 @@ export async function findAllMonitors() {
       timezone: monitors.timezone,
       mutedUntil: monitors.mutedUntil,
       alertOnAnomalies: monitors.alertOnAnomalies,
+      emailFailureKeywords: monitors.emailFailureKeywords,
       tags: monitors.tags,
       displayOrder: monitors.displayOrder,
       createdAt: monitors.createdAt,
@@ -51,6 +52,7 @@ export async function createMonitor(input: {
   scheduleCron?: string
   timezone?: string
   alertOnAnomalies?: boolean
+  emailFailureKeywords?: string[]
   tags?: string[]
   now: Date
 }) {
@@ -65,6 +67,7 @@ export async function createMonitor(input: {
     scheduleCron: input.scheduleCron ?? null,
     timezone: input.timezone ?? null,
     alertOnAnomalies: input.alertOnAnomalies ?? false,
+    emailFailureKeywords: input.emailFailureKeywords ?? [],
     tags: input.tags ?? [],
     status: "pending",
     createdAt: input.now,
@@ -87,6 +90,7 @@ export async function updateMonitor(
     scheduleCron?: string | null
     timezone?: string | null
     alertOnAnomalies?: boolean
+    emailFailureKeywords?: string[]
     tags?: string[]
     now: Date
   },
@@ -105,6 +109,9 @@ export async function updateMonitor(
       ...(input.scheduleCron !== undefined && { scheduleCron: input.scheduleCron }),
       ...(input.timezone !== undefined && { timezone: input.timezone }),
       ...(input.alertOnAnomalies !== undefined && { alertOnAnomalies: input.alertOnAnomalies }),
+      ...(input.emailFailureKeywords !== undefined && {
+        emailFailureKeywords: input.emailFailureKeywords,
+      }),
       ...(input.tags !== undefined && { tags: input.tags }),
       updatedAt: input.now,
     })

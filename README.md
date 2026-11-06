@@ -92,6 +92,7 @@ pnpm --filter @cronko/web dev     # web on :3000, proxies the API
 - Tags per monitor, with a tag filter on the dashboard and monitor list (`?tag=` in the API)
 - Public status pages per tag (`/status/<slug>`, no login): current state, 90 days of daily availability and recent incidents, never tokens or job output
 - Recurring maintenance windows (days, start time, duration and timezone) for all monitors, a tag or one monitor: alerts are held back while one runs
+- Ping by e-mail (`<token>@your-domain`) for devices that can only send mail, with optional failure words per monitor
 - Daily or weekly digest to every channel: state, failures, new incidents and jobs that went silent
 - Mute a monitor's alerts for maintenance (1 h to 7 days); state and incidents are still tracked
 - Public SVG status badge (`/badge/:token`), CSV export of heartbeats
@@ -111,6 +112,8 @@ pnpm --filter @cronko/web dev     # web on :3000, proxies the API
 | `TRUSTED_ORIGINS`                                               | no       | Extra public origins allowed to make changes, comma-separated                                                                                                     |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | no       | E-mail alerts                                                                                                                                                     |
 | `SELF_HEARTBEAT_URL`, `SELF_HEARTBEAT_INTERVAL_SECONDS`         | no       | Monitor the monitor: Cronko pings this URL (default every 300 s) only while its database and scheduler are healthy; point it at another Cronko or Healthchecks.io |
+| `INBOUND_SMTP_PORT`, `INBOUND_EMAIL_DOMAIN`                     | no       | Ping by e-mail: an SMTP listener on this port accepts mail for `<token>@<domain>` (see below)                                                                     |
+| `INBOUND_SMTP_TLS_CERT`, `INBOUND_SMTP_TLS_KEY`                 | no       | PEM files to offer STARTTLS on the e-mail listener                                                                                                                |
 | `PUBLIC_URL`                                                    | no       | Public address of this Cronko (e.g. `https://cronko.example.com`); alerts then include a link to the failing run or monitor                                       |
 | `AUTO_MIGRATE`                                                  | no       | Apply migrations on boot (default `true`)                                                                                                                         |
 | `WEB_DIST`                                                      | no       | Path of the built web app (auto-detected)                                                                                                                         |
@@ -124,6 +127,23 @@ and an `appToken`. Microsoft Teams takes the `webhookUrl` of a Workflows flow
 ("Post to a channel when a webhook request is received"), since Office 365
 connectors are retired. PagerDuty takes the `routingKey` of an Events API v2
 integration: problems trigger an incident (one per monitor) and recovery resolves it.
+
+### Ping by e-mail
+
+For devices and software that can only send e-mail (NAS backups, Veeam, routers),
+Cronko can receive mail itself. Set `INBOUND_SMTP_PORT` (the image runs as a
+non-root user, so use `2525` and publish it as `25:2525`) and
+`INBOUND_EMAIL_DOMAIN`, then add an MX record for that domain pointing at the
+host. Each monitor page then shows its address:
+
+- `<token>@<domain>`: a success ping. The sender, subject and text become the run output.
+- `<token>+fail@<domain>`: a failure.
+- Optional per monitor: failure words (e.g. `error, failed`). A subject containing one counts as a failure.
+
+The listener only accepts mail for existing monitors and refuses everything else
+at the `RCPT` step. It never relays and has no login. Messages are capped at 1 MB,
+and the ping rate limit applies. Some cloud providers block inbound port 25;
+check yours before relying on it.
 
 ## Security
 
