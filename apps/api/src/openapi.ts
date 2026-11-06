@@ -64,6 +64,14 @@ const spec = {
           { name: "token", in: "path", required: true, schema: { type: "string" } },
           { name: "d", in: "query", schema: { type: "integer", description: "Duration in ms" } },
           { name: "exit", in: "query", schema: { type: "integer", description: "Exit code" } },
+          {
+            name: "rid",
+            in: "query",
+            required: false,
+            schema: { type: "string", format: "uuid" },
+            description:
+              "Client-picked run id; pairs a start with its finish, fail or success. Invalid values get 400.",
+          },
         ],
         responses: {
           "200": { description: "ok" },
@@ -100,8 +108,74 @@ const spec = {
     "/ping/{token}/start": {
       post: {
         summary: "Pulse start — begin a long-running job (GET is also accepted)",
-        parameters: [{ name: "token", in: "path", required: true, schema: { type: "string" } }],
+        description:
+          "With `rid`, the matching `/finish`, `/fail` or success ping that carries the same `rid` closes this run, so concurrent runs are timed correctly.",
+        parameters: [
+          { name: "token", in: "path", required: true, schema: { type: "string" } },
+          {
+            name: "rid",
+            in: "query",
+            required: false,
+            schema: { type: "string", format: "uuid" },
+            description:
+              "Client-picked run id; pairs a start with its finish, fail or success. Invalid values get 400.",
+          },
+        ],
         responses: { "200": { description: "ok" }, "404": { description: "Monitor not found" } },
+      },
+    },
+    "/ping/{token}/log": {
+      post: {
+        summary: "Log an event without changing the monitor (GET is also accepted)",
+        description:
+          "Stores the request body (up to 10 KB) as an event. It is not a ping: status, schedule, runs and statistics stay as they are. Listed by `GET /api/monitors/{id}/logs`.",
+        parameters: [
+          { name: "token", in: "path", required: true, schema: { type: "string" } },
+          {
+            name: "rid",
+            in: "query",
+            required: false,
+            schema: { type: "string", format: "uuid" },
+            description:
+              "Client-picked run id; pairs a start with its finish, fail or success. Invalid values get 400.",
+          },
+        ],
+        responses: {
+          "200": { description: "ok" },
+          "400": { description: "Invalid rid" },
+          "404": { description: "Monitor not found" },
+          "413": { description: "Body too large" },
+        },
+      },
+    },
+    "/ping/{token}/{exitStatus}": {
+      post: {
+        summary: "Report a script's exit status: 0 is a success, any other value a failure",
+        description:
+          "Same as `/ping/{token}?exit=N`, Healthchecks style. The status is an integer from 0 to 255 (larger values get 400). GET is also accepted.",
+        parameters: [
+          { name: "token", in: "path", required: true, schema: { type: "string" } },
+          {
+            name: "exitStatus",
+            in: "path",
+            required: true,
+            schema: { type: "integer", minimum: 0, maximum: 255 },
+          },
+          {
+            name: "rid",
+            in: "query",
+            required: false,
+            schema: { type: "string", format: "uuid" },
+            description:
+              "Client-picked run id; pairs a start with its finish, fail or success. Invalid values get 400.",
+          },
+        ],
+        responses: {
+          "200": { description: "ok" },
+          "400": { description: "Invalid exit status or rid" },
+          "404": { description: "Monitor not found" },
+          "413": { description: "Body too large" },
+        },
       },
     },
     "/ping/{token}/fail": {
@@ -112,6 +186,14 @@ const spec = {
         parameters: [
           { name: "token", in: "path", required: true, schema: { type: "string" } },
           { name: "exit", in: "query", required: false, schema: { type: "integer" } },
+          {
+            name: "rid",
+            in: "query",
+            required: false,
+            schema: { type: "string", format: "uuid" },
+            description:
+              "Client-picked run id; pairs a start with its finish, fail or success. Invalid values get 400.",
+          },
         ],
         responses: {
           "200": { description: "ok" },
@@ -433,6 +515,17 @@ const spec = {
           "200": { description: "{ run, previous, previousGood, nextId }" },
           "404": { description: "Run not found" },
         },
+      },
+    },
+    "/api/monitors/{id}/logs": {
+      get: {
+        summary: "Events sent to /ping/{token}/log, newest first",
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string" } },
+          { name: "limit", in: "query", schema: { type: "integer", maximum: 500 } },
+          { name: "before", in: "query", schema: { type: "string", format: "date-time" } },
+        ],
+        responses: { "200": { description: "Array of log events" } },
       },
     },
     "/api/monitors/{id}/heartbeats": {

@@ -75,7 +75,7 @@ Compared against the Healthchecks docs (Pinging API, Management API, badges, not
 and Cronitor's integrations page. Better Stack, Sentry Crons, Dead Man's Snitch and Uptime Kuma were
 not verified in depth, so claims about them are unconfirmed. In order of value over effort:
 
-1. Ping API parity: `/log`, `/<exit-status>` in the path, and `rid=<uuid>` to pair concurrent start/finish runs.
+1. ~~Ping API parity: `/log`, `/<exit-status>` in the path, and `rid=<uuid>` to pair concurrent start/finish runs.~~ Done (Unreleased).
 2. Generic webhook with a custom template and headers (covers many missing channels at once).
 3. Cheap channels: Google Chat, Mattermost/Rocket.Chat, Gotify, Matrix, Opsgenie.
 4. 2FA (TOTP, later WebAuthn): the UI is internet-facing and holds ping tokens.
