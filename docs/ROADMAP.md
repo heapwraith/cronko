@@ -78,7 +78,7 @@ not verified in depth, so claims about them are unconfirmed. In order of value o
 1. Ping API parity: `/log`, `/<exit-status>` in the path, and `rid=<uuid>` to pair concurrent start/finish runs.
 2. Generic webhook with a custom template and headers (covers many missing channels at once).
 3. Cheap channels: Google Chat, Mattermost/Rocket.Chat, Gotify, Matrix, Opsgenie.
-4. 2FA (TOTP, later WebAuthn): the UI is internet-facing and holds ping tokens.
+4. ~~2FA (TOTP, later WebAuthn): the UI is internet-facing and holds ping tokens.~~ TOTP done (Settings, recovery codes, login code step; see README). WebAuthn is still open.
 5. Scheduled automatic SQLite backup and a JSON export of monitors and channels.
 6. Ping by slug with a project key and `?create=1` (provisioning from CI/IaC).
 7. Badges per tag, JSON/Shields.io formats, three states.
