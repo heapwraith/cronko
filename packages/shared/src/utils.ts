@@ -61,9 +61,9 @@ export function formatDuration(ms: number): string {
   return `${seconds}s`
 }
 
-export function formatRelativeTime(date: Date): string {
+export function formatRelativeTime(date: Date, locale = "pt-BR"): string {
   const diff = Date.now() - date.getTime()
-  const rtf = new Intl.RelativeTimeFormat("pt-BR", { numeric: "auto" })
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" })
 
   if (diff < 60_000) return rtf.format(-Math.round(diff / 1000), "seconds")
   if (diff < 3_600_000) return rtf.format(-Math.round(diff / 60_000), "minutes")

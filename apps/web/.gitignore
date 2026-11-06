@@ -1,0 +1,6 @@
+
+# Impeccable: working files (the surface brief under .impeccable/surfaces is kept)
+.impeccable/mocks/
+.impeccable/review/
+.impeccable/build/
+.impeccable/config.local.json

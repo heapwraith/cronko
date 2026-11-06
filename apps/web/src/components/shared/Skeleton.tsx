@@ -1,70 +1,46 @@
 import type { ReactNode } from "react"
 
 export function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`animate-pulse rounded-md bg-zinc-200 dark:bg-zinc-800/60 ${className}`} />
+  return <div aria-hidden="true" className={`animate-pulse rounded-[4px] bg-raised ${className}`} />
 }
 
 export function SkeletonCard({ children }: { children?: ReactNode }) {
   return (
-    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 p-4">
-      <div className="flex items-center gap-2">
-        <Skeleton className="h-8 w-8 rounded-lg" />
-        <Skeleton className="h-3 w-24" />
-      </div>
-      <div className="mt-3">
-        <Skeleton className="h-8 w-16" />
-      </div>
-      {children}
+    <div aria-hidden="true" className="rounded-[6px] border border-line bg-panel p-4">
+      {children ?? (
+        <>
+          <Skeleton className="mb-3 h-3 w-24" />
+          <Skeleton className="h-7 w-16" />
+        </>
+      )}
     </div>
   )
 }
 
 export function SkeletonTable({ rows = 5, cols = 4 }: { rows?: number; cols?: number }) {
   return (
-    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900">
-      <div className="border-b border-zinc-200 dark:border-zinc-800/80 px-4 py-3">
-        <Skeleton className="h-3 w-20" />
+    <div role="status" aria-label="Loading" className="rounded-[6px] border border-line bg-panel">
+      <div className="flex gap-4 border-b-2 border-line-strong px-3 py-3">
+        {Array.from({ length: cols }, (_, c) => (
+          <Skeleton key={`h${c}`} className="h-3 flex-1" />
+        ))}
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-zinc-200 dark:border-zinc-800/80">
-              {Array.from({ length: cols }).map((_, i) => (
-                <th key={i} className="px-4 py-2">
-                  <Skeleton className="h-3 w-16" />
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {Array.from({ length: rows }).map((_, r) => (
-              <tr key={r} className="border-b border-zinc-100 dark:border-zinc-800/50">
-                {Array.from({ length: cols }).map((_, c) => (
-                  <td key={c} className="px-4 py-3">
-                    <Skeleton className="h-4 w-full max-w-30" />
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {Array.from({ length: rows }, (_, r) => (
+        <div key={`r${r}`} className="flex gap-4 border-b border-line px-3 py-4 last:border-b-0">
+          {Array.from({ length: cols }, (_, c) => (
+            <Skeleton key={`c${c}`} className="h-4 flex-1" />
+          ))}
+        </div>
+      ))}
     </div>
   )
 }
 
 export function SkeletonList({ rows = 5 }: { rows?: number }) {
   return (
-    <div className="space-y-2">
-      {Array.from({ length: rows }).map((_, i) => (
-        <div
-          key={i}
-          className="flex items-center gap-3 rounded-lg border border-zinc-200 dark:border-zinc-800/50 bg-white dark:bg-zinc-900 p-4"
-        >
-          <Skeleton className="h-4 w-4 rounded-full shrink-0" />
-          <Skeleton className="h-4 flex-1 max-w-50" />
-          <Skeleton className="h-5 w-16 rounded-full" />
-        </div>
+    <div role="status" aria-label="Loading" className="space-y-2">
+      {Array.from({ length: rows }, (_, r) => (
+        <Skeleton key={`l${r}`} className="h-12 w-full" />
       ))}
     </div>
   )

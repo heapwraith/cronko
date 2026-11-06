@@ -18,7 +18,7 @@ export function NProgress() {
         height: 2px;
       }
       #nprogress .bar {
-        background: #5e6ad2;
+        background: var(--signal);
         position: absolute;
         top: 0;
         left: 0;

@@ -1,103 +1,138 @@
-@layer base {
-  :root {
-    /* ── Status Colors ── */
-    --color-success: #10b981;
-    --color-success-soft: #10b98115;
-    --color-warning: #f59e0b;
-    --color-warning-soft: #f59e0b15;
-    --color-danger: #ef4444;
-    --color-danger-soft: #ef444415;
-    --color-info: #3b82f6;
-    --color-info-soft: #3b82f615;
+/*
+ * Design tokens — "Quadro de Partidas" (departures board).
+ * Semantic roles first (ground, panel, line, ink, signal, state chips); the
+ * Tailwind `zinc` and `emerald` scales are re-pointed so legacy markup that
+ * still uses them inherits the board palette until it is rewritten.
+ */
 
-    /* ── Brand ── */
-    --color-accent: #5e6ad2;
-    --color-accent-soft: #5e6ad215;
+@theme {
+  --font-sans: "Atkinson Hyperlegible Next Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, "SFMono-Regular", monospace;
 
-    /* ── Light Mode Palette (Linear/Stripe inspired) ── */
-    --bg-page: #f6f8fa;
-    --bg-surface: #ffffff;
-    --bg-surface-hover: #f4f5f7;
-    --bg-elevated: #ffffff;
-    --bg-sidebar: #fbfbfa;
+  /* Neutrals: warm graphite, slightly tinted toward the board's amber. */
+  --color-zinc-50: oklch(0.985 0.004 90);
+  --color-zinc-100: oklch(0.965 0.007 90);
+  --color-zinc-200: oklch(0.92 0.009 90);
+  --color-zinc-300: oklch(0.86 0.011 90);
+  --color-zinc-400: oklch(0.72 0.013 90);
+  --color-zinc-500: oklch(0.58 0.013 90);
+  --color-zinc-600: oklch(0.45 0.012 90);
+  --color-zinc-700: oklch(0.34 0.012 90);
+  --color-zinc-800: oklch(0.27 0.012 90);
+  --color-zinc-900: oklch(0.225 0.011 90);
+  --color-zinc-950: oklch(0.19 0.01 90);
 
-    --border-subtle: #e8eaed;
-    --border-default: #dde0e4;
-    --border-hover: #caced5;
+  /* Legacy "brand" green becomes the board's signal amber. */
+  --color-emerald-50: oklch(0.98 0.03 92);
+  --color-emerald-100: oklch(0.95 0.07 92);
+  --color-emerald-200: oklch(0.91 0.12 92);
+  --color-emerald-300: oklch(0.87 0.15 92);
+  --color-emerald-400: oklch(0.83 0.165 92);
+  --color-emerald-500: oklch(0.56 0.13 78);
+  --color-emerald-600: oklch(0.5 0.12 75);
+  --color-emerald-700: oklch(0.43 0.1 72);
+  --color-emerald-800: oklch(0.36 0.08 70);
+  --color-emerald-900: oklch(0.3 0.06 70);
+  --color-emerald-950: oklch(0.24 0.045 70);
+}
 
-    --text-primary: #1a1f36;
-    --text-secondary: #3c4257;
-    --text-muted: #697386;
-    --text-placeholder: #8e99a8;
+/* Semantic colours, switched by the `.dark` class on <html>. */
+@theme inline {
+  --color-ground: var(--ground);
+  --color-panel: var(--panel);
+  --color-raised: var(--raised);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-dim: var(--dim);
+  --color-signal: var(--signal);
+  --color-signal-fg: var(--signal-fg);
+  --color-signal-text: var(--signal-text);
 
-    /* ── Radii ── */
-    --radius-sm: 0.375rem;
-    --radius-md: 0.5rem;
-    --radius-lg: 0.625rem;
-    --radius-xl: 0.75rem;
-    --radius-2xl: 1rem;
-    --radius-full: 9999px;
+  --color-healthy: var(--st-healthy);
+  --color-missed: var(--st-missed);
+  --color-down: var(--st-down);
+  --color-failed: var(--st-failed);
+  --color-paused: var(--st-paused);
+  --color-pending: var(--st-pending);
+}
 
-    /* ── Shadows (light mode) ── */
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.03);
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
-    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.04), 0 2px 4px rgba(0, 0, 0, 0.03);
-    --shadow-input: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+:root {
+  color-scheme: light;
+  /* Light: warm paper, ink text. */
+  --ground: oklch(0.965 0.012 90);
+  --panel: oklch(0.99 0.006 90);
+  --raised: oklch(0.945 0.014 90);
+  --line: oklch(0.89 0.015 90);
+  --line-strong: oklch(0.78 0.02 90);
+  --ink: oklch(0.22 0.02 260);
+  --dim: oklch(0.45 0.02 260);
+  --signal: oklch(0.82 0.17 92);
+  --signal-fg: oklch(0.22 0.02 260);
+  --signal-text: oklch(0.46 0.1 75);
 
-    /* ── Transitions ── */
-    --transition-fast: 150ms ease;
-    --transition-base: 200ms ease;
-    --transition-slow: 300ms ease;
+  /* Solid hues for glyphs and bars. */
+  --st-healthy: oklch(0.52 0.14 155);
+  --st-missed: oklch(0.58 0.16 55);
+  --st-down: oklch(0.52 0.2 27);
+  --st-failed: oklch(0.52 0.2 350);
+  --st-paused: oklch(0.5 0.03 255);
+  --st-pending: oklch(0.52 0.15 250);
 
-    /* Focus ring */
-    --focus-ring: 0 0 0 2px var(--color-accent);
-    --focus-ring-offset: 2px;
-  }
+  /* Chips: solid fill + text, both checked for 4.5:1. */
+  --chip-healthy-bg: oklch(0.92 0.06 155);
+  --chip-healthy-fg: oklch(0.32 0.09 155);
+  --chip-missed-bg: oklch(0.93 0.07 60);
+  --chip-missed-fg: oklch(0.36 0.1 50);
+  --chip-down-bg: oklch(0.92 0.06 27);
+  --chip-down-fg: oklch(0.36 0.12 27);
+  --chip-failed-bg: oklch(0.93 0.05 350);
+  --chip-failed-fg: oklch(0.36 0.12 350);
+  --chip-paused-bg: oklch(0.92 0.01 255);
+  --chip-paused-fg: oklch(0.38 0.03 255);
+  --chip-pending-bg: oklch(0.93 0.04 250);
+  --chip-pending-fg: oklch(0.36 0.1 250);
+}
 
-  @media (prefers-contrast: high) {
-    :root {
-      --border-subtle: currentColor;
-      --border-default: currentColor;
-      --text-muted: currentColor;
-    }
-  }
+.dark {
+  color-scheme: dark;
+  /* Dark: graphite board, warm board-white text. */
+  --ground: oklch(0.19 0.01 260);
+  --panel: oklch(0.225 0.011 258);
+  --raised: oklch(0.265 0.012 258);
+  --line: oklch(0.31 0.012 258);
+  --line-strong: oklch(0.42 0.014 258);
+  --ink: oklch(0.94 0.025 92);
+  --dim: oklch(0.72 0.022 92);
+  --signal: oklch(0.82 0.17 92);
+  --signal-fg: oklch(0.2 0.02 260);
+  --signal-text: oklch(0.84 0.16 92);
 
-  @media (prefers-reduced-motion: reduce) {
-    :root {
-      --transition-fast: 0ms;
-      --transition-base: 0ms;
-      --transition-slow: 0ms;
-    }
+  --st-healthy: oklch(0.78 0.15 155);
+  --st-missed: oklch(0.8 0.15 60);
+  --st-down: oklch(0.72 0.19 27);
+  --st-failed: oklch(0.74 0.18 350);
+  --st-paused: oklch(0.7 0.03 255);
+  --st-pending: oklch(0.76 0.12 250);
 
-    *,
-    *::before,
-    *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-    }
-  }
+  --chip-healthy-bg: oklch(0.36 0.08 155);
+  --chip-healthy-fg: oklch(0.94 0.05 155);
+  --chip-missed-bg: oklch(0.42 0.09 55);
+  --chip-missed-fg: oklch(0.95 0.05 70);
+  --chip-down-bg: oklch(0.42 0.13 27);
+  --chip-down-fg: oklch(0.95 0.04 27);
+  --chip-failed-bg: oklch(0.4 0.12 350);
+  --chip-failed-fg: oklch(0.95 0.04 350);
+  --chip-paused-bg: oklch(0.33 0.02 255);
+  --chip-paused-fg: oklch(0.85 0.02 255);
+  --chip-pending-bg: oklch(0.38 0.08 250);
+  --chip-pending-fg: oklch(0.94 0.04 250);
+}
 
-  /* ── Dark Mode ── */
+@media (prefers-contrast: more) {
+  :root,
   .dark {
-    --bg-page: #09090b;
-    --bg-surface: #18181b;
-    --bg-surface-hover: #27272a;
-    --bg-elevated: #1f1f23;
-    --bg-sidebar: #0f0f13;
-
-    --border-subtle: #27272a;
-    --border-default: #3f3f46;
-    --border-hover: #52525b;
-
-    --text-primary: #fafafa;
-    --text-secondary: #a1a1aa;
-    --text-muted: #71717a;
-    --text-placeholder: #52525b;
-
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.15);
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
-    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.25);
-    --shadow-input: none;
+    --line: currentColor;
+    --line-strong: currentColor;
   }
 }

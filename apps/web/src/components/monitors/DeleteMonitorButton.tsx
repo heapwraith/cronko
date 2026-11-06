@@ -3,6 +3,7 @@ import { Trash2 } from "lucide-react"
 import { useRef, useState } from "react"
 import { useNavigate } from "react-router"
 import { ConfirmModal } from "@/components/shared/ConfirmModal"
+import { IconButton } from "@/components/shared/IconButton"
 import { useToast } from "@/components/shared/Toast"
 import { api } from "@/lib/api"
 import { useT } from "@/lib/i18n"
@@ -48,15 +49,14 @@ export function DeleteMonitorButton({ monitorId }: { monitorId: string }) {
 
   return (
     <>
-      <button
-        onClick={() => setConfirmOpen(true)}
+      <IconButton
+        label={t("monitors.delete")}
+        className="hover:text-down"
         disabled={loading}
-        className="rounded-lg bg-zinc-800 dark:bg-zinc-800 px-2 py-1 text-xs font-medium text-red-400 hover:bg-zinc-700 dark:hover:bg-zinc-700 disabled:opacity-50 inline-flex items-center gap-1 transition-colors"
-        title={t("monitors.delete")}
+        onClick={() => setConfirmOpen(true)}
       >
-        <Trash2 className="h-3 w-3" />
-        {loading ? t("monitors.deleting").replace("...", "") || "..." : ""}
-      </button>
+        <Trash2 className="h-4 w-4" strokeWidth={1.75} />
+      </IconButton>
 
       <ConfirmModal
         open={confirmOpen}
