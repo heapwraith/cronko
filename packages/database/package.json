@@ -13,7 +13,8 @@
     "./queries/notifications": "./src/queries/notifications.ts",
     "./queries/settings": "./src/queries/settings.ts",
     "./queries/users": "./src/queries/users.ts",
-    "./queries/status-pages": "./src/queries/status-pages.ts"
+    "./queries/status-pages": "./src/queries/status-pages.ts",
+    "./queries/maintenance": "./src/queries/maintenance.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

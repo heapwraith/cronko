@@ -10,6 +10,7 @@ import { registerOpenApi } from "./openapi"
 import { auditRoute } from "./routes/audit"
 import { authRoute } from "./routes/auth"
 import { incidentsRoute } from "./routes/incidents"
+import { maintenanceRoute } from "./routes/maintenance"
 import { monitorsRoute } from "./routes/monitors"
 import { notificationsRoute } from "./routes/notifications"
 import { pingRoute } from "./routes/ping"
@@ -128,6 +129,7 @@ api.route("/stats", statsRoute)
 api.route("/settings", settingsRoute)
 api.route("/audit", auditRoute)
 api.route("/status-pages", statusPagesRoute)
+api.route("/maintenance-windows", maintenanceRoute)
 
 app.route("/api", api)
 

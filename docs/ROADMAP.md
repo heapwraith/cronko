@@ -60,7 +60,7 @@ making product claims.
    flag, overlapping /start runs), with opt-in alerts per monitor (off by default;
    PagerDuty skips them).
 3. ~~Public status page per group with SLA and incident history.~~ Done: one page per tag, 90-day daily availability, 30-day incidents, off until published.
-4. Tags are done (up to 10 per monitor, filter in the UI and `?tag=` in the API). Maintenance windows and a daily/weekly digest remain.
+4. Tags are done (up to 10 per monitor, filter in the UI and `?tag=` in the API). Recurring maintenance windows are done. A daily/weekly digest remains.
 
 ## P3 - reach
 

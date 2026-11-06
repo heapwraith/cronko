@@ -91,6 +91,7 @@ pnpm --filter @cronko/web dev     # web on :3000, proxies the API
 - Run analytics: each run is compared with the runs before it (median, p95); runs much slower than usual and runs that started before the previous one finished are flagged, with optional alerts per monitor
 - Tags per monitor, with a tag filter on the dashboard and monitor list (`?tag=` in the API)
 - Public status pages per tag (`/status/<slug>`, no login): current state, 90 days of daily availability and recent incidents, never tokens or job output
+- Recurring maintenance windows (days, start time, duration and timezone) for all monitors, a tag or one monitor: alerts are held back while one runs
 - Mute a monitor's alerts for maintenance (1 h to 7 days); state and incidents are still tracked
 - Public SVG status badge (`/badge/:token`), CSV export of heartbeats
 - Dashboard, dark/light theme, English and pt-BR, installable PWA

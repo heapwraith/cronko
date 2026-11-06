@@ -9,6 +9,7 @@ include breaking changes; they are called out below.
 
 ### Added
 
+- Recurring maintenance windows: pick days, a start time, a duration (up to 7 days) and a timezone, for all monitors, one tag or one monitor. While a window runs, alerts are held back; state and incidents are still recorded. Stored as a cron start plus duration, so daylight saving time follows the window's timezone. Managed on the Notifications page; monitors in maintenance get a wrench mark (migration `0015`).
 - Public status pages (`/status/<slug>`, no login), one per tag: overall state, each monitor's public state (operational, degraded, problem, paused), 90 days of daily availability (share of each UTC day without an open incident) and the last 30 days of incidents. They expose only those fields, are off until published, and missing and unpublished pages answer the same 404. Managed under "Status" (migration `0014`).
 - Tags on monitors: up to 10 per monitor, normalized (lowercase, no accents, `a-z 0-9 . _ -`). Tags show next to each job, the dashboard and monitor list have a tag filter kept in the URL, and `GET /api/monitors?tag=` filters the API (migration `0013`).
 

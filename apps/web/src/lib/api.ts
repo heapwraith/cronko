@@ -116,6 +116,24 @@ export interface MonitorInput {
   tags?: string[]
 }
 
+export interface MaintenanceInput {
+  name: string
+  schedule: string
+  timezone: string
+  durationMinutes: number
+  target: "all" | "tag" | "monitor"
+  targetValue?: string | null
+  enabled?: boolean
+}
+
+export interface MaintenanceWindowView extends Required<Omit<MaintenanceInput, "targetValue">> {
+  id: string
+  targetValue: string | null
+  /** Set while the window is running. */
+  activeUntil: string | null
+  nextStart: string | null
+}
+
 export interface StatusPageInput {
   slug: string
   title: string
@@ -150,6 +168,14 @@ export const api = {
         uptimePercent: number
         heartbeatsByHour: number[]
       }>("/api/stats"),
+  },
+  maintenance: {
+    list: () => get<MaintenanceWindowView[]>("/api/maintenance-windows"),
+    create: (body: MaintenanceInput) =>
+      post<MaintenanceWindowView>("/api/maintenance-windows", body),
+    update: (id: string, body: Partial<MaintenanceInput>) =>
+      patch<MaintenanceWindowView>(`/api/maintenance-windows/${id}`, body),
+    delete: (id: string) => del<{ ok: boolean }>(`/api/maintenance-windows/${id}`),
   },
   statusPages: {
     list: () => get<StatusPageAdmin[]>("/api/status-pages"),

@@ -173,3 +173,20 @@ export const statusPages = sqliteTable("status_pages", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 })
+
+/**
+ * Recurring maintenance: alerts for the targeted monitors are held back while a
+ * window runs. `schedule` is a cron start in `timezone`; see @cronko/shared/maintenance.
+ */
+export const maintenanceWindows = sqliteTable("maintenance_windows", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  schedule: text("schedule").notNull(),
+  timezone: text("timezone").notNull().default("UTC"),
+  durationMinutes: integer("duration_minutes").notNull(),
+  target: text("target", { enum: ["all", "tag", "monitor"] }).notNull(),
+  targetValue: text("target_value"),
+  enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+})

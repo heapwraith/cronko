@@ -11,6 +11,7 @@ import {
   validateConfig,
 } from "@/components/notifications/channels"
 import { DeliveryLog } from "@/components/notifications/DeliveryLog"
+import { MaintenanceWindows } from "@/components/notifications/MaintenanceWindows"
 import { Button } from "@/components/shared/Button"
 import { ConfirmModal } from "@/components/shared/ConfirmModal"
 import { EmptyState } from "@/components/shared/EmptyState"
@@ -317,6 +318,8 @@ export default function NotificationsPage() {
           </div>
         )}
       </section>
+
+      <MaintenanceWindows />
 
       <DeliveryLog />
 
