@@ -14,9 +14,9 @@ with it is the entry ticket and the differentiators below are the reason to swit
 | Max-duration alert                                 | yes               | partial         | no                       |
 | Cron expression + timezone schedule                | yes               | yes             | no                       |
 | Explicit `/fail` signal                            | yes               | yes             | no                       |
-| Per-check event log with output                    | basic             | yes             | partial                  |
+| Per-check event log with output                    | yes               | yes             | partial                  |
 | Notification channels                              | 9                 | many            | many                     |
-| Public status pages                                | badge only        | badges          | yes                      |
+| Public status pages                                | yes (per tag)     | badges          | yes                      |
 | Active HTTP/TCP checks                             | no (out of scope) | no              | yes                      |
 | Single container, one SQLite file                  | yes               | no              | yes                      |
 
@@ -60,7 +60,7 @@ making product claims.
    flag, overlapping /start runs), with opt-in alerts per monitor (off by default;
    PagerDuty skips them).
 3. ~~Public status page per group with SLA and incident history.~~ Done: one page per tag, 90-day daily availability, 30-day incidents, off until published.
-4. Tags are done (up to 10 per monitor, filter in the UI and `?tag=` in the API). Recurring maintenance windows are done. A daily/weekly digest remains.
+4. Tags are done (up to 10 per monitor, filter in the UI and `?tag=` in the API). Recurring maintenance windows are done. The daily/weekly digest is done (off by default, PagerDuty skips it).
 
 ## P3 - reach
 

@@ -68,6 +68,7 @@ const PUSHOVER_PRIORITY: Record<string, number> = {
   missed: 0,
   slow: 0,
   recovered: -1,
+  digest: -1,
 }
 
 /**
@@ -142,6 +143,7 @@ const NTFY_PRIORITY: Record<string, string> = {
   slow: "3",
   unusual: "3",
   overlap: "3",
+  digest: "2",
 }
 const NTFY_TAGS: Record<string, string> = {
   down: "red_circle",
@@ -151,10 +153,11 @@ const NTFY_TAGS: Record<string, string> = {
   recovered: "white_check_mark",
   unusual: "snail",
   overlap: "warning",
+  digest: "bar_chart",
 }
 
-/** Informative analytics events; they never open or close anything. */
-export const ANALYTICS_EVENTS = new Set(["unusual", "overlap"])
+/** Informative events; they never open or close anything, so PagerDuty skips them. */
+export const ANALYTICS_EVENTS = new Set(["unusual", "overlap", "digest"])
 
 /** HTTP headers are Latin-1 only; ntfy accepts RFC 2047 for anything else (emoji, CJK). */
 export function headerText(value: string): string {
@@ -263,7 +266,8 @@ export async function deliver(
         await mailer.sendMail({
           from: env.SMTP_FROM,
           to: (channel.config as EmailConfig).to,
-          subject: `Cronko — ${event} alert`,
+          subject:
+            event === "digest" ? `Cronko — ${monitorName ?? "resumo"}` : `Cronko — ${event} alert`,
           text,
         })
       } catch (err) {

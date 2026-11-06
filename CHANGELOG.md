@@ -7,6 +7,14 @@ include breaking changes; they are called out below.
 
 ## [Unreleased]
 
+### Added
+
+- Daily or weekly digest (Settings → Periodic digest), off by default. At a chosen hour in the instance timezone (weekly: Mondays) every enabled channel gets one message: current state, monitors that need attention and for how long, runs and failures in the period, new incidents per monitor, and jobs that sent no ping although they were due. PagerDuty skips it. A restart neither repeats nor skips one, turning it on never sends one for a slot that already passed, and after a long downtime only the latest one goes out. "Send one now" queues a digest for the last period to check how it looks. No migration.
+
+### Changed
+
+- `POST /api/settings` now rejects an unknown `timezone`.
+
 ## [0.2.0] - 2026-11-06
 
 The first published release (image on `ghcr.io/heapwraith/cronko`). It includes

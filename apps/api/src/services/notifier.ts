@@ -33,12 +33,12 @@ const messages: Record<NotificationEvent, (name: string) => string> = {
   overlap: (name) => `⚠️ ${name} começou antes da execução anterior terminar`,
 }
 
-/** Delay before retry N (1-based): 30s, 1m, 2m, 5m, 10m — then give up. */
 /** Absolute link into the web app, or undefined when PUBLIC_URL is not configured. */
 export function appLink(path: string): string | undefined {
   return env.PUBLIC_URL ? `${env.PUBLIC_URL.replace(/\/+$/, "")}${path}` : undefined
 }
 
+/** Delay before retry N (1-based): 30s, 1m, 2m, 5m, 10m — then give up. */
 export const RETRY_DELAYS_MS = [30_000, 60_000, 120_000, 300_000, 600_000]
 export const MAX_ATTEMPTS = RETRY_DELAYS_MS.length + 1
 
@@ -70,22 +70,35 @@ export async function sendNotification(
   const link = path ? appLink(path) : undefined
   const message =
     messages[event](monitor.name) + (detail ? ` (${detail})` : "") + (link ? `\n${link}` : "")
-  const channels = await findEnabledNotificationChannels()
-  if (channels.length === 0) return
+  await broadcast(event, message, monitor.name)
+}
 
-  const now = new Date()
+/**
+ * Queue one message for every enabled channel and kick the worker. No mute or
+ * maintenance check: callers that belong to a monitor go through sendNotification.
+ * Returns how many deliveries were queued.
+ */
+export async function broadcast(
+  event: NotificationEvent | "digest",
+  message: string,
+  label: string,
+): Promise<number> {
+  const channels = await findEnabledNotificationChannels()
+  if (channels.length === 0) return 0
+
   await enqueueDeliveries(
     channels.map((channel: ChannelRow) => ({
       id: crypto.randomUUID(),
       channelId: channel.id,
-      monitorName: monitor.name,
+      monitorName: label,
       event,
       message,
     })),
-    now,
+    new Date(),
   )
 
   void processDueDeliveries()
+  return channels.length
 }
 
 let processing = false

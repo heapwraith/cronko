@@ -48,6 +48,19 @@ export async function findHeartbeatsSince(since: Date) {
   return db.select().from(heartbeats).where(gte(heartbeats.receivedAt, since)).all()
 }
 
+/** Outcome of every ping in [from, to), without bodies: enough for the digest. */
+export async function findRunOutcomesBetween(from: Date, to: Date) {
+  return db
+    .select({
+      monitorId: heartbeats.monitorId,
+      exitCode: heartbeats.exitCode,
+      kind: heartbeats.kind,
+    })
+    .from(heartbeats)
+    .where(and(gte(heartbeats.receivedAt, from), lt(heartbeats.receivedAt, to)))
+    .all()
+}
+
 export async function createHeartbeat(input: {
   id: string
   monitorId: string

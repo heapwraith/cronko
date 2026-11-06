@@ -5,6 +5,7 @@ import {
 import { findAllMonitors } from "@cronko/database/queries/monitors"
 import { logger } from "../lib/logger"
 import { currentSettings } from "../routes/settings"
+import { maybeSendDigest } from "./digest"
 import { evaluateMonitor, markOverdue } from "./monitor-state"
 import { cleanupDeliveries, processDueDeliveries } from "./notifier"
 
@@ -68,6 +69,11 @@ export async function runTick(now = Date.now()) {
     await cleanupOldHeartbeats()
     // Retry alerts whose backoff has elapsed (also covers a restart mid-retry).
     await processDueDeliveries(new Date(now))
+    try {
+      await maybeSendDigest(new Date(now))
+    } catch (err) {
+      logger.error({ err }, "digest failed")
+    }
 
     const [allMonitors, lastPings] = await Promise.all([
       findAllMonitors(),

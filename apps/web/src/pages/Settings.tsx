@@ -1,3 +1,4 @@
+import type { DigestFrequency } from "@cronko/shared/digest"
 import type { Locale } from "@cronko/shared/translations"
 import { formatDuration } from "@cronko/shared/utils"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
@@ -8,7 +9,7 @@ import { Skeleton } from "@/components/shared/Skeleton"
 import { useTheme } from "@/components/shared/ThemeProvider"
 import { useToast } from "@/components/shared/Toast"
 import { Toggle } from "@/components/shared/Toggle"
-import { api } from "@/lib/api"
+import { ApiError, api } from "@/lib/api"
 import { useT } from "@/lib/i18n"
 
 type SettingsData = {
@@ -20,6 +21,8 @@ type SettingsData = {
   pingRateLimitPerMinute: number
   maxHeartbeatsPerMonitor: number
   heartbeatHistoryDays: number
+  digestFrequency: DigestFrequency
+  digestHour: number
 }
 
 const DEFAULTS: SettingsData = {
@@ -31,7 +34,11 @@ const DEFAULTS: SettingsData = {
   pingRateLimitPerMinute: 60,
   maxHeartbeatsPerMonitor: 500,
   heartbeatHistoryDays: 90,
+  digestFrequency: "off",
+  digestHour: 9,
 }
+
+const HOURS = Array.from({ length: 24 }, (_, h) => `${String(h).padStart(2, "0")}:00`)
 
 const control =
   "min-h-10 w-full rounded-md border border-line-strong bg-ground px-3 text-sm text-ink placeholder:text-dim focus-visible:outline-2 disabled:opacity-50"
@@ -121,6 +128,7 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null)
   const [resetOpen, setResetOpen] = useState(false)
   const [compact, setCompact] = useState(() => localStorage.getItem("cronko_compact") === "true")
+  const [sendingDigest, setSendingDigest] = useState(false)
 
   useEffect(() => {
     if (data) setSettings(data)
@@ -172,6 +180,23 @@ export default function SettingsPage() {
     localStorage.setItem("cronko_compact", String(checked))
     document.documentElement.classList.toggle("compact", checked)
     window.dispatchEvent(new Event("compactchange"))
+  }
+
+  async function sendTestDigest() {
+    setSendingDigest(true)
+    try {
+      await api.settings.sendTestDigest()
+      toast(t("settings.digestTestSent"), "success")
+    } catch (err) {
+      toast(
+        err instanceof ApiError && err.status === 400
+          ? t("settings.digestNoChannel")
+          : t("settings.digestTestFailed"),
+        "error",
+      )
+    } finally {
+      setSendingDigest(false)
+    }
   }
 
   const off = isPending
@@ -329,6 +354,51 @@ export default function SettingsPage() {
                 max={10000}
               />
             </Field>
+          </Group>
+
+          <Group title={t("settings.digest")}>
+            <p className="text-sm text-dim">{t("settings.digestIntro")}</p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label={t("settings.digestFrequency")}>
+                <select
+                  value={settings.digestFrequency}
+                  onChange={(e) => set("digestFrequency", e.target.value as DigestFrequency)}
+                  className={control}
+                >
+                  <option value="off">{t("settings.digestOff")}</option>
+                  <option value="daily">{t("settings.digestDaily")}</option>
+                  <option value="weekly">{t("settings.digestWeekly")}</option>
+                </select>
+              </Field>
+              <Field
+                label={t("settings.digestHour")}
+                hint={t("settings.digestHourHint", { tz: settings.timezone })}
+              >
+                <select
+                  value={settings.digestHour}
+                  onChange={(e) => set("digestHour", Number(e.target.value))}
+                  disabled={settings.digestFrequency === "off"}
+                  className={`${control} font-mono tnum`}
+                >
+                  {HOURS.map((label, h) => (
+                    <option key={label} value={h}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={sendTestDigest}
+                disabled={sendingDigest}
+              >
+                {t("settings.digestSendTest")}
+              </Button>
+              <span className="text-xs text-dim">{t("settings.digestSendTestHint")}</span>
+            </div>
           </Group>
 
           <Group title={t("settings.history")}>
