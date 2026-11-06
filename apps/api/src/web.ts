@@ -13,6 +13,7 @@ const API_PREFIXES = [
   "/badge/",
   "/public/",
   "/health",
+  "/metrics",
   "/openapi.json",
   "/docs",
 ]

@@ -11,6 +11,7 @@ import { auditRoute } from "./routes/audit"
 import { authRoute } from "./routes/auth"
 import { incidentsRoute } from "./routes/incidents"
 import { maintenanceRoute } from "./routes/maintenance"
+import { metricsRoute } from "./routes/metrics"
 import { monitorsRoute } from "./routes/monitors"
 import { notificationsRoute } from "./routes/notifications"
 import { pingRoute } from "./routes/ping"
@@ -63,6 +64,8 @@ app.onError((err, c) => {
 })
 
 app.route("/ping", pingRoute)
+// Prometheus scrape endpoint: off unless METRICS_TOKEN is set (see routes/metrics.ts).
+app.route("/metrics", metricsRoute)
 // Public status pages: read-only, no session (see routes/public-status.ts).
 app.route("/public/status", publicStatusRoute)
 app.use("/auth/*", csrf)

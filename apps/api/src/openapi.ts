@@ -45,6 +45,18 @@ const spec = {
         responses: { "200": { description: "uptime, scheduler stats, memory" } },
       },
     },
+    "/metrics": {
+      get: {
+        summary: "Prometheus metrics (opt-in)",
+        description:
+          "Text exposition format: per-monitor status, last ping, last duration, open incidents, and notification outbox counts. Disabled (404) unless METRICS_TOKEN is set; send it as `Authorization: Bearer <token>`.",
+        responses: {
+          "200": { description: "Prometheus text format", content: { "text/plain": {} } },
+          "401": { description: "Missing or wrong token" },
+          "404": { description: "METRICS_TOKEN is not set" },
+        },
+      },
+    },
     "/ping/{token}": {
       get: {
         summary: "Send a heartbeat (GET)",
