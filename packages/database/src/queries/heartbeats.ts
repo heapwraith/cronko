@@ -63,32 +63,36 @@ export async function deleteHeartbeatsOlderThan(cutoff: Date) {
   await db.delete(heartbeats).where(lte(heartbeats.receivedAt, cutoff))
 }
 
+type LatestHeartbeat = { receivedAt: Date; durationMs: number | null; exitCode: number | null }
+
+/** Newest heartbeat per monitor; ranking and filtering happen in SQL. */
 export async function findLatestHeartbeats(
   monitorIds: string[],
-): Promise<Map<string, { receivedAt: Date; durationMs: number | null }>> {
+): Promise<Map<string, LatestHeartbeat>> {
   if (monitorIds.length === 0) return new Map()
 
-  const rows = await db
+  const ranked = db
     .select({
       monitorId: heartbeats.monitorId,
       receivedAt: heartbeats.receivedAt,
       durationMs: heartbeats.durationMs,
-      rn: sql<number>`ROW_NUMBER() OVER (PARTITION BY ${heartbeats.monitorId} ORDER BY ${heartbeats.receivedAt} DESC)`.as(
+      exitCode: heartbeats.exitCode,
+      rn: sql<number>`row_number() over (partition by ${heartbeats.monitorId} order by ${heartbeats.receivedAt} desc)`.as(
         "rn",
       ),
     })
     .from(heartbeats)
     .where(inArray(heartbeats.monitorId, monitorIds))
-    .all()
+    .as("ranked")
 
-  const map = new Map<string, { receivedAt: Date; durationMs: number | null }>()
-  for (const row of rows) {
-    if ((row as { rn: number }).rn === 1) {
-      map.set(row.monitorId, { receivedAt: row.receivedAt, durationMs: row.durationMs })
-    }
-  }
+  const rows = db.select().from(ranked).where(eq(ranked.rn, 1)).all()
 
-  return map
+  return new Map(
+    rows.map((row) => [
+      row.monitorId,
+      { receivedAt: row.receivedAt, durationMs: row.durationMs, exitCode: row.exitCode },
+    ]),
+  )
 }
 
 /** Most recent heartbeat time per monitor, in a single query. */
