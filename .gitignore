@@ -58,3 +58,6 @@ sbom.json
 *.tgz
 # Playwright e2e scratch
 .e2e/
+
+# Claude Code worktrees and local state
+.claude/
