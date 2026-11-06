@@ -63,7 +63,7 @@ export const notificationChannels = sqliteTable("notification_channels", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   type: text("type", {
-    enum: ["discord", "telegram", "email", "slack", "webhook", "ntfy"],
+    enum: ["discord", "telegram", "email", "slack", "webhook", "ntfy", "pushover", "teams"],
   }).notNull(),
   enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
   config: text("config", { mode: "json" }).notNull(),

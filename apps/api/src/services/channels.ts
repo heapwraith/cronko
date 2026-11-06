@@ -3,6 +3,7 @@ import type {
   DiscordConfig,
   EmailConfig,
   NtfyConfig,
+  PushoverConfig,
   TelegramConfig,
   WebhookConfig,
 } from "@cronko/shared"
@@ -59,6 +60,40 @@ function postJson(url: string, body: unknown, label: string) {
   )
 }
 
+/** Pushover priorities: 1 high (bypasses quiet hours), 0 normal, -1 quiet. */
+const PUSHOVER_PRIORITY: Record<string, number> = {
+  down: 1,
+  failed: 1,
+  missed: 0,
+  slow: 0,
+  recovered: -1,
+}
+
+/** Microsoft Teams Workflows webhooks take an Adaptive Card wrapped in a message. */
+export function teamsCard(text: string, link?: string) {
+  const [headline = text, ...rest] = text.split("\n").filter((l) => !l.startsWith("http"))
+  return {
+    type: "message",
+    attachments: [
+      {
+        contentType: "application/vnd.microsoft.card.adaptive",
+        content: {
+          $schema: "http://adaptivecards.io/schemas/adaptive-card.json",
+          type: "AdaptiveCard",
+          version: "1.4",
+          body: [
+            { type: "TextBlock", text: headline, weight: "Bolder", wrap: true },
+            ...rest.map((line) => ({ type: "TextBlock", text: line, wrap: true })),
+          ],
+          ...(link && {
+            actions: [{ type: "Action.OpenUrl", title: "Open in Cronko", url: link }],
+          }),
+        },
+      },
+    ],
+  }
+}
+
 /** ntfy priorities: 5 urgent, 4 high, 3 default. */
 const NTFY_PRIORITY: Record<string, string> = { down: "5", failed: "4", missed: "4", slow: "3" }
 const NTFY_TAGS: Record<string, string> = {
@@ -105,6 +140,30 @@ export async function deliver(
         { event, monitor: monitorName ?? null, message: text, sentAt: new Date().toISOString() },
         "webhook",
       )
+    case "pushover": {
+      const cfg = channel.config as PushoverConfig
+      const link = text.match(/https?:\/\/\S+$/)?.[0]
+      return postJson(
+        "https://api.pushover.net/1/messages.json",
+        {
+          token: cfg.appToken,
+          user: cfg.userKey,
+          title: `Cronko: ${monitorName ?? event}`,
+          message: link ? text.slice(0, -link.length).trim() : text,
+          priority: PUSHOVER_PRIORITY[event] ?? 0,
+          ...(link && { url: link, url_title: "Open in Cronko" }),
+        },
+        "pushover",
+      )
+    }
+    case "teams": {
+      const link = text.match(/https?:\/\/\S+$/)?.[0]
+      return postJson(
+        (channel.config as { webhookUrl: string }).webhookUrl,
+        teamsCard(text, link),
+        "teams",
+      )
+    }
     case "ntfy": {
       const cfg = channel.config as NtfyConfig
       const server = (cfg.serverUrl || "https://ntfy.sh").replace(/\/+$/, "")

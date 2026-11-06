@@ -1,6 +1,14 @@
-import { Bell, Mail, MessageSquare, Send, Webhook } from "lucide-react"
+import { Bell, BellRing, Mail, MessageSquare, Send, Users, Webhook } from "lucide-react"
 
-export type ChannelType = "discord" | "telegram" | "email" | "slack" | "webhook" | "ntfy"
+export type ChannelType =
+  | "discord"
+  | "telegram"
+  | "email"
+  | "slack"
+  | "webhook"
+  | "ntfy"
+  | "pushover"
+  | "teams"
 
 export type Channel = {
   id: string
@@ -18,8 +26,10 @@ export type FieldSpec = {
   type?: "text" | "email" | "url"
   autoComplete?: string
   optional?: boolean
-  validate: (value: string) => "required" | "invalidUrl" | "invalidEmail" | "invalidTopic" | null
+  validate: (value: string) => FieldError | null
 }
+
+export type FieldError = "required" | "invalidUrl" | "invalidEmail" | "invalidTopic" | "invalidKey"
 
 const url = (v: string) => (!v.trim() ? "required" : v.startsWith("https://") ? null : "invalidUrl")
 const httpUrl = (v: string) =>
@@ -27,6 +37,8 @@ const httpUrl = (v: string) =>
 const optionalHttpUrl = (v: string) => (v.trim() ? httpUrl(v) : null)
 const topic = (v: string) =>
   !v.trim() ? "required" : /^[\w-]{1,64}$/.test(v.trim()) ? null : "invalidTopic"
+const pushoverKey = (v: string) =>
+  !v.trim() ? "required" : /^[A-Za-z0-9]{30}$/.test(v.trim()) ? null : "invalidKey"
 const required = (v: string) => (v.trim() ? null : "required")
 const email = (v: string) => (!v.trim() ? "required" : v.includes("@") ? null : "invalidEmail")
 
@@ -111,6 +123,29 @@ export const CHANNELS: Record<
       },
     ],
   },
+  pushover: {
+    label: "Pushover",
+    icon: BellRing,
+    fields: [
+      {
+        key: "userKey",
+        labelKey: "notifications.userKey",
+        placeholder: "uQiRzpo4DX…",
+        validate: pushoverKey,
+      },
+      {
+        key: "appToken",
+        labelKey: "notifications.appToken",
+        placeholder: "azGDORePK8…",
+        validate: pushoverKey,
+      },
+    ],
+  },
+  teams: {
+    label: "Microsoft Teams",
+    icon: Users,
+    fields: [{ ...webhook, placeholder: "https://prod-…logic.azure.com/workflows/…" }],
+  },
   email: {
     label: "Email",
     icon: Mail,
@@ -134,7 +169,7 @@ export function channelMeta(type: string) {
 }
 
 export function validateConfig(type: string, values: Record<string, string>) {
-  const errors: Record<string, "required" | "invalidUrl" | "invalidEmail" | "invalidTopic"> = {}
+  const errors: Record<string, FieldError> = {}
   for (const f of channelMeta(type).fields) {
     const err = f.validate(values[f.key] ?? "")
     if (err) errors[f.key] = err
