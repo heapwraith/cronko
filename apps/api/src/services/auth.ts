@@ -8,6 +8,8 @@ const jwtPayloadSchema = z.object({
   email: z.email(),
   iat: z.number(),
   exp: z.number(),
+  // Absent on tokens issued before logout revocation existed.
+  jti: z.string().optional(),
   iss: z.literal("cronko"),
   aud: z.literal("cronko-api"),
 })
@@ -17,8 +19,18 @@ const jwtRefreshSchema = z.object({
   email: z.email(),
   iat: z.number(),
   exp: z.number(),
+  jti: z.string().optional(),
   iss: z.literal("cronko"),
   aud: z.literal("cronko-refresh"),
+})
+
+const jwtChallengeSchema = z.object({
+  sub: z.uuid(),
+  email: z.email(),
+  iat: z.number(),
+  exp: z.number(),
+  iss: z.literal("cronko"),
+  aud: z.literal("cronko-2fa"),
 })
 
 export type JwtPayload = z.infer<typeof jwtPayloadSchema>
@@ -42,6 +54,7 @@ export async function generateAccessToken(userId: string, email: string): Promis
       email,
       iat: now,
       exp,
+      jti: crypto.randomUUID(),
       iss: "cronko",
       aud: "cronko-api",
     },
@@ -60,6 +73,7 @@ export async function generateRefreshToken(userId: string, email: string): Promi
       email,
       iat: now,
       exp,
+      jti: crypto.randomUUID(),
       iss: "cronko",
       aud: "cronko-refresh",
     },
@@ -76,4 +90,22 @@ export async function verifyAccessToken(token: string): Promise<JwtPayload> {
 export async function verifyRefreshToken(token: string): Promise<JwtRefreshPayload> {
   const payload = await verify(token, env.JWT_SECRET, "HS256")
   return jwtRefreshSchema.parse(payload)
+}
+
+/**
+ * Proof that the password step succeeded, valid for 5 minutes and only for the
+ * 2FA step (its own audience: it is useless as an access or refresh token).
+ */
+export async function generateTwoFactorChallenge(userId: string, email: string): Promise<string> {
+  const now = Math.floor(Date.now() / 1000)
+  return sign(
+    { sub: userId, email, iat: now, exp: now + 5 * 60, iss: "cronko", aud: "cronko-2fa" },
+    env.JWT_SECRET,
+    "HS256",
+  )
+}
+
+export async function verifyTwoFactorChallenge(token: string) {
+  const payload = await verify(token, env.JWT_SECRET, "HS256")
+  return jwtChallengeSchema.parse(payload)
 }

@@ -307,13 +307,34 @@ curl -H "Authorization: Bearer $CRONKO_TOKEN" https://cronko.example.com/api/mon
   or revoked token gets `401`, a request outside its scope `403`.
 - Creating and revoking tokens is recorded in the audit log, and the list shows when each was last used.
 
+### Two-factor authentication
+
+Turn it on in Settings → Two-factor authentication: scan the QR code (drawn in your
+browser, nothing is sent to a third party) or type the key into an authenticator app
+(RFC 6238 TOTP: SHA-1, 6 digits, 30 s), confirm with a code, and save the 10
+single-use recovery codes shown once. From then on, signing in takes the password and
+then a code (or a recovery code). Disabling needs the password and a code.
+
+- The TOTP secret is encrypted at rest (AES-256-GCM) with a key derived from `JWT_SECRET`.
+  **Rotating `JWT_SECRET` makes enrolled secrets unreadable**: app codes stop working for those
+  accounts. A recovery code still signs in (they are hashed, not encrypted); use it to disable 2FA
+  and enroll again.
+- A code works once per 30 s step (replays are refused); the code step shares the login
+  failure limit with the password step.
+- API tokens (`Authorization: Bearer crk_...`) are unaffected and cannot manage 2FA.
+- Locked out with no recovery code: stop Cronko and clear the columns directly,
+  `UPDATE users SET totp_secret = NULL, totp_enabled_at = NULL, totp_last_step = NULL;`
+  (and `DELETE FROM recovery_codes;`).
+
 ## Security
 
 - Passwords: bcrypt (12 rounds). Sessions: HS256 JWT, 15-minute access token and
   7-day refresh token in `HttpOnly`, `SameSite=Strict` cookies (`Secure` in production).
 - CSRF: state-changing requests with a cookie session must be same-origin
   (`Sec-Fetch-Site`, falling back to `Origin`); `Authorization` clients are exempt.
-- Login limited to 5 attempts per 15 minutes per IP and e-mail; pings are rate limited per token.
+- Optional TOTP two-factor login with hashed single-use recovery codes (see above).
+- Logout revokes the access and refresh tokens server-side (denylist by `jti`), not only the cookies.
+- Login limited to 5 attempts per 15 minutes per IP and e-mail (password and 2FA code share the count); pings are rate limited per token.
 - Public status pages expose only names, states, availability and incident times; never tokens or job output.
 - The optional e-mail listener accepts mail only for existing monitors and never relays.
 - API tokens are hashed at rest, scoped (`read` or `write` for monitors), revocable and optionally expiring.

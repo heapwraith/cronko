@@ -163,8 +163,40 @@ export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
+  /** AES-256-GCM envelope of the TOTP secret (see services/totp). Pending until `totpEnabledAt` is set. */
+  totpSecret: text("totp_secret"),
+  totpEnabledAt: integer("totp_enabled_at", { mode: "timestamp" }),
+  /** Last accepted 30 s time step; codes at or below it are replays. */
+  totpLastStep: integer("totp_last_step"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 })
+
+/** Single-use 2FA recovery codes; only the SHA-256 is stored, rows are deleted when spent. */
+export const recoveryCodes = sqliteTable(
+  "recovery_codes",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    codeHash: text("code_hash").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => [index("recovery_codes_user_idx").on(t.userId)],
+)
+
+/**
+ * Denylist of session JWT ids (`jti`) revoked at logout. Rows can be dropped once
+ * `expiresAt` passes, because the token itself would be rejected by then anyway.
+ */
+export const revokedTokens = sqliteTable(
+  "revoked_tokens",
+  {
+    jti: text("jti").primaryKey(),
+    expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => [index("revoked_tokens_expires_idx").on(t.expiresAt)],
+)
 
 /**
  * User-created API tokens for scripts and CI. Only the SHA-256 of the token is

@@ -52,6 +52,12 @@ export async function authenticate(c: Context, next: Next) {
 
   try {
     const payload = await verifyAccessToken(token)
+    if (payload.jti) {
+      const { isTokenRevoked } = await import("@cronko/database/queries/revoked-tokens")
+      if (await isTokenRevoked(payload.jti)) {
+        return c.json({ error: "Token expired or invalid", code: "UNAUTHORIZED" }, 401)
+      }
+    }
     c.set("jwtPayload", payload)
   } catch {
     return c.json({ error: "Token expired or invalid", code: "UNAUTHORIZED" }, 401)

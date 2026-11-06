@@ -16,7 +16,8 @@
     "./queries/status-pages": "./src/queries/status-pages.ts",
     "./queries/maintenance": "./src/queries/maintenance.ts",
     "./queries/metrics": "./src/queries/metrics.ts",
-    "./queries/api-tokens": "./src/queries/api-tokens.ts"
+    "./queries/api-tokens": "./src/queries/api-tokens.ts",
+    "./queries/revoked-tokens": "./src/queries/revoked-tokens.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
