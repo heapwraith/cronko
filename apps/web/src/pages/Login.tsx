@@ -82,14 +82,13 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-ground">
-      <div className="h-[3px] bg-signal" />
       <div className="flex justify-end p-3">
         <ThemeToggle />
       </div>
       <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-6 pb-24">
         <div className="mb-8 flex items-center gap-3">
-          <CronkoLogo className="h-9 w-9 text-signal-text" />
-          <span className="text-3xl font-bold uppercase tracking-[0.14em]">Cronko</span>
+          <CronkoLogo className="h-9 w-9 text-ink" />
+          <span className="font-serif text-4xl font-medium tracking-tight">Cronko</span>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>

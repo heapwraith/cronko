@@ -50,13 +50,15 @@ export default function DashboardPage() {
         : t("board.attention", { n: attention })
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-[1.75rem] leading-tight text-ink">{t("dashboard.title")}</h1>
           {!isPending && monitors.length > 0 && (
-            <p className="mt-1 text-sm text-dim" aria-live="polite">
-              <span className={attention > 0 ? "font-semibold text-ink" : ""}>{summary}</span>
+            <p className="mt-2 text-base text-dim" aria-live="polite">
+              <span className={attention > 0 ? "font-semibold text-ink" : "text-ink"}>
+                {summary}
+              </span>
               {data?.stats && data.stats.totalHeartbeats > 0 && (
                 <>
                   {" "}
@@ -85,7 +87,7 @@ export default function DashboardPage() {
         />
       ) : (
         <>
-          <fieldset className="flex flex-wrap gap-2">
+          <fieldset className="flex min-w-0 flex-wrap gap-1 border-0 border-b border-line p-0">
             <legend className="sr-only">{t("board.filterBy")}</legend>
             {(["all", ...FILTERS] as const)
               .filter((f) => f === "all" || (counts.get(f) ?? 0) > 0)
@@ -97,10 +99,8 @@ export default function DashboardPage() {
                     type="button"
                     aria-pressed={active}
                     onClick={() => setFilter(f)}
-                    className={`rounded-[2px] border px-3 py-1.5 text-sm font-medium transition-colors ${
-                      active
-                        ? "border-ink bg-ink text-ground"
-                        : "border-line-strong bg-panel text-dim hover:text-ink"
+                    className={`-mb-px border-b-2 px-3 py-2 text-sm font-semibold transition-colors ${
+                      active ? "border-ink text-ink" : "border-transparent text-dim hover:text-ink"
                     }`}
                   >
                     {f === "all" ? t("board.all") : t(statusKey(f))}
@@ -119,16 +119,16 @@ export default function DashboardPage() {
           )}
 
           {(data?.incidents.length ?? 0) > 0 && (
-            <section aria-labelledby="open-incidents" className="space-y-2">
-              <h2 id="open-incidents" className="text-sm font-semibold text-ink">
+            <section
+              aria-labelledby="open-incidents"
+              className="space-y-3 border-t border-line-strong pt-4"
+            >
+              <h2 id="open-incidents" className="text-base font-semibold text-ink">
                 {t("board.openIncidents")}
               </h2>
               <ul className="divide-y divide-line border-y border-line">
                 {data?.incidents.map((i) => (
-                  <li
-                    key={i.id}
-                    className="flex items-center justify-between gap-4 px-4 py-2.5 text-sm"
-                  >
+                  <li key={i.id} className="flex items-center justify-between gap-4 py-3 text-sm">
                     <Link to={`/monitors/${i.monitorId}`} className="font-semibold hover:underline">
                       {names.get(i.monitorId) ?? i.monitorId}
                     </Link>
@@ -144,15 +144,18 @@ export default function DashboardPage() {
           )}
 
           {undelivered.length > 0 && (
-            <section aria-labelledby="undelivered" className="space-y-2">
-              <h2 id="undelivered" className="text-sm font-semibold text-ink">
+            <section
+              aria-labelledby="undelivered"
+              className="space-y-3 border-t border-line-strong pt-4"
+            >
+              <h2 id="undelivered" className="text-base font-semibold text-ink">
                 {t("board.undelivered")}
               </h2>
               <ul className="divide-y divide-line border-y border-line">
                 {undelivered.map((d) => (
                   <li
                     key={d.id}
-                    className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 text-sm"
+                    className="flex flex-wrap items-center justify-between gap-2 py-3 text-sm"
                   >
                     <span>
                       <span className="font-semibold">{d.monitorName}</span>{" "}
