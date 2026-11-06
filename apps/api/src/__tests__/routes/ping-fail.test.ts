@@ -82,6 +82,16 @@ describe("/ping/:token/fail (HTTP, real SQLite)", () => {
     expect(sent).toEqual([])
   })
 
+  it("counts each ping once against the rate limit, on every ping path", async () => {
+    for (const path of ["", "/start", "/finish", "/fail"]) {
+      const t = crypto.randomUUID()
+      const first = await app.request(`/ping/${t}${path}`)
+      expect(first.headers.get("x-ratelimit-remaining"), path || "/").toBe("59")
+      const second = await app.request(`/ping/${t}${path}`)
+      expect(second.headers.get("x-ratelimit-remaining"), path || "/").toBe("58")
+    }
+  })
+
   it("unknown token -> 404 on /fail", async () => {
     expect((await app.request("/ping/nope/fail")).status).toBe(404)
   })

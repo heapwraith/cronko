@@ -10,7 +10,7 @@ const MAX_BODY_LENGTH = 10_000
 
 type PingKind = "success" | "start" | "finish" | "fail"
 
-pingRoute.use("/:token", rateLimit)
+// "/:token/*" also matches "/:token", so one registration counts every ping once.
 pingRoute.use("/:token/*", rateLimit)
 
 function intParam(value: string | undefined): number | undefined {
