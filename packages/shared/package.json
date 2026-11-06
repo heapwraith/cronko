@@ -9,6 +9,7 @@
     "./types": "./src/types.ts",
     "./constants": "./src/constants.ts",
     "./utils": "./src/utils.ts",
+    "./schedule": "./src/schedule.ts",
     "./translations": "./src/translations.ts"
   },
   "scripts": {
@@ -19,5 +20,8 @@
   },
   "devDependencies": {
     "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "croner": "^11.0.0"
   }
 }

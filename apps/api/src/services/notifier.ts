@@ -1,3 +1,4 @@
+import { findMonitorById } from "@cronko/database/queries/monitors"
 import {
   deleteDeliveriesOlderThan,
   enqueueDeliveries,
@@ -6,6 +7,7 @@ import {
   markDeliveryAttemptFailed,
   markDeliverySent,
 } from "@cronko/database/queries/notifications"
+import { env } from "../env"
 import { logger } from "../lib/logger"
 import { type ChannelRow, DeliveryError, deliver } from "./channels"
 
@@ -20,6 +22,11 @@ const messages: Record<NotificationEvent, (name: string) => string> = {
 }
 
 /** Delay before retry N (1-based): 30s, 1m, 2m, 5m, 10m — then give up. */
+/** Absolute link into the web app, or undefined when PUBLIC_URL is not configured. */
+export function appLink(path: string): string | undefined {
+  return env.PUBLIC_URL ? `${env.PUBLIC_URL.replace(/\/+$/, "")}${path}` : undefined
+}
+
 export const RETRY_DELAYS_MS = [30_000, 60_000, 120_000, 300_000, 600_000]
 export const MAX_ATTEMPTS = RETRY_DELAYS_MS.length + 1
 
@@ -29,10 +36,22 @@ export const MAX_ATTEMPTS = RETRY_DELAYS_MS.length + 1
  * never stall the scheduler, and queued alerts survive a restart.
  */
 export async function sendNotification(
-  monitor: { name: string },
+  monitor: { id?: string; name: string },
   event: NotificationEvent,
   detail?: string,
+  path?: string,
 ) {
+  // A muted monitor (maintenance) still changes state and opens incidents, but stays quiet.
+  if (monitor.id) {
+    const mutedUntil = (await findMonitorById(monitor.id))?.mutedUntil
+    if (mutedUntil && mutedUntil.getTime() > Date.now()) {
+      logger.info({ monitor: monitor.name, event }, "alert suppressed: monitor muted")
+      return
+    }
+  }
+  const link = path ? appLink(path) : undefined
+  const message =
+    messages[event](monitor.name) + (detail ? ` (${detail})` : "") + (link ? `\n${link}` : "")
   const channels = await findEnabledNotificationChannels()
   if (channels.length === 0) return
 
@@ -43,7 +62,7 @@ export async function sendNotification(
       channelId: channel.id,
       monitorName: monitor.name,
       event,
-      message: messages[event](monitor.name) + (detail ? ` (${detail})` : ""),
+      message,
     })),
     now,
   )
@@ -64,7 +83,7 @@ export async function processDueDeliveries(now = new Date()): Promise<number> {
       const attempts = delivery.attempts + 1
       handled++
       try {
-        await deliver(channel, delivery.event, delivery.message)
+        await deliver(channel, delivery.event, delivery.message, delivery.monitorName)
         await markDeliverySent(delivery.id, attempts, new Date())
       } catch (err) {
         const retryable = err instanceof DeliveryError ? err.retryable : true
@@ -99,7 +118,12 @@ export async function sendTestNotification(
   channel: ChannelRow,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
-    await deliver(channel, "recovered", messages.recovered("Test Notification"))
+    await deliver(
+      channel,
+      "recovered",
+      messages.recovered("Test Notification"),
+      "Test Notification",
+    )
     return { ok: true }
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "delivery failed" }

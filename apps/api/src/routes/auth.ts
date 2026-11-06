@@ -27,18 +27,20 @@ setInterval(() => {
   }
 }, 60_000).unref()
 
-function checkLoginRateLimit(ip: string, email: string): boolean {
-  const key = `${ip}:${email}`
+const loginKey = (ip: string, email: string) => `${ip}:${email.toLowerCase()}`
+
+/** Blocked once MAX_LOGIN_ATTEMPTS failures happened inside the window. */
+function isLoginBlocked(key: string): boolean {
+  const entry = loginStore.get(key)
+  return !!entry && Date.now() < entry.resetAt && entry.count >= MAX_LOGIN_ATTEMPTS
+}
+
+/** Only failures count: signing in correctly must never lock you out. */
+function recordLoginFailure(key: string) {
   const now = Date.now()
   const entry = loginStore.get(key)
-
-  if (entry && now < entry.resetAt) {
-    if (entry.count >= MAX_LOGIN_ATTEMPTS) return false
-    entry.count++
-  } else {
-    loginStore.set(key, { count: 1, resetAt: now + LOGIN_WINDOW_MS })
-  }
-  return true
+  if (entry && now < entry.resetAt) entry.count++
+  else loginStore.set(key, { count: 1, resetAt: now + LOGIN_WINDOW_MS })
 }
 
 const loginSchema = z.object({
@@ -53,13 +55,15 @@ authRoute.post("/login", zValidator("json", loginSchema), async (c) => {
 
   const ip = clientIp(c)
 
-  if (!checkLoginRateLimit(ip, email)) {
+  const limitKey = loginKey(ip, email)
+  if (isLoginBlocked(limitKey)) {
     return c.json({ error: "Too many login attempts. Try again later.", code: "RATE_LIMITED" }, 429)
   }
 
   const user = await findUserByEmail(email)
 
   if (!user) {
+    recordLoginFailure(limitKey)
     logAuditEvent({
       action: "login_failure",
       metadata: { email, reason: "user_not_found" },
@@ -71,6 +75,7 @@ authRoute.post("/login", zValidator("json", loginSchema), async (c) => {
   const valid = await verifyPassword(password, user.password)
 
   if (!valid) {
+    recordLoginFailure(limitKey)
     logAuditEvent({
       userId: user.id,
       action: "login_failure",
@@ -80,6 +85,7 @@ authRoute.post("/login", zValidator("json", loginSchema), async (c) => {
     return c.json({ error: "Invalid credentials" }, 401)
   }
 
+  loginStore.delete(limitKey)
   const accessToken = await generateAccessToken(user.id, user.email)
   const refreshToken = await generateRefreshToken(user.id, user.email)
 

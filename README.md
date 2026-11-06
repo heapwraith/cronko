@@ -8,7 +8,7 @@ backups and ETLs: one container, one SQLite file.
 
 > **Resumo em português:** o Cronko avisa quando um cron job, backup ou ETL deixa de
 > rodar. Cada monitor ganha uma URL de ping; se ela não for chamada no prazo, você é
-> alertado (Discord, Telegram, e-mail, Slack). Instalação: veja _Quick start_ abaixo
+> alertado (Discord, Telegram, e-mail, Slack, ntfy, webhook). Instalação: veja _Quick start_ abaixo
 > (`docker compose up -d`) e abra `http://localhost:3000`. A interface tem pt-BR e en.
 
 ## How it works
@@ -17,6 +17,20 @@ Each monitor has a unique ping URL. Your job calls it when it runs. If no ping
 arrives within _interval + grace_, the monitor becomes **missed**; if it stays
 silent for another interval it becomes **down**. A ping brings it back to
 **healthy**, closes the incident and sends a recovery alert.
+
+The easiest way is the `cronko-run` wrapper, served by your Cronko instance. It
+runs the job, times it, sends the exit code and the last 10 KB of output, and
+exits with the job's own code. It needs only `sh` and `curl`:
+
+```bash
+sudo curl -fsSL https://cronko.example.com/cronko-run -o /usr/local/bin/cronko-run
+sudo chmod +x /usr/local/bin/cronko-run
+
+# crontab
+0 2 * * * cronko-run https://cronko.example.com/ping/TOKEN -- /usr/local/bin/backup.sh
+```
+
+Or call the ping URL yourself:
 
 ```bash
 # crontab: ping only if the backup succeeded
@@ -61,7 +75,8 @@ pnpm --filter @cronko/web dev     # web on :3000, proxies the API
 - Pulse (`/start` + `/finish`) with duration, exit code and optional output
 - Explicit `/fail` signal and non-zero exit codes: a distinct `failed` state with an immediate alert
 - Max-duration alerts, incident history, audit log
-- Alerts to Discord, Telegram, e-mail (SMTP) and Slack
+- Alerts to Discord, Telegram, e-mail (SMTP), Slack, ntfy and any webhook
+- Mute a monitor's alerts for maintenance (1 h to 7 days); state and incidents are still tracked
 - Public SVG status badge (`/badge/:token`), CSV export of heartbeats
 - Dashboard, dark/light theme, English and pt-BR, installable PWA
 - OpenAPI docs at `/docs`; health probes at `/health/live` and `/health/ready`
@@ -69,20 +84,25 @@ pnpm --filter @cronko/web dev     # web on :3000, proxies the API
 
 ## Configuration
 
-| Variable                                                        | Required | Description                                                              |
-| --------------------------------------------------------------- | -------- | ------------------------------------------------------------------------ |
-| `JWT_SECRET`                                                    | yes      | Signing key, at least 32 characters                                      |
-| `DATABASE_URL`                                                  | yes      | SQLite file, e.g. `file:./data/cronko.db` (set in the image)             |
-| `ADMIN_EMAIL`, `ADMIN_PASSWORD`                                 | no       | Admin account created on first boot                                      |
-| `API_PORT`, `API_HOST`                                          | no       | Default `3001` / `0.0.0.0` (the image uses `3000`)                       |
-| `TRUST_PROXY`                                                   | no       | `true` to trust `X-Forwarded-For` / `X-Real-IP` (only behind your proxy) |
-| `TRUSTED_ORIGINS`                                               | no       | Extra public origins allowed to make changes, comma-separated            |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | no       | E-mail alerts                                                            |
-| `AUTO_MIGRATE`                                                  | no       | Apply migrations on boot (default `true`)                                |
-| `WEB_DIST`                                                      | no       | Path of the built web app (auto-detected)                                |
+| Variable                                                        | Required | Description                                                                                                                                                       |
+| --------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `JWT_SECRET`                                                    | yes      | Signing key, at least 32 characters                                                                                                                               |
+| `DATABASE_URL`                                                  | yes      | SQLite file, e.g. `file:./data/cronko.db` (set in the image)                                                                                                      |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD`                                 | no       | Admin account created on first boot                                                                                                                               |
+| `API_PORT`, `API_HOST`                                          | no       | Default `3001` / `0.0.0.0` (the image uses `3000`)                                                                                                                |
+| `TRUST_PROXY`                                                   | no       | `true` to trust `X-Forwarded-For` / `X-Real-IP` (only behind your proxy)                                                                                          |
+| `TRUSTED_ORIGINS`                                               | no       | Extra public origins allowed to make changes, comma-separated                                                                                                     |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | no       | E-mail alerts                                                                                                                                                     |
+| `SELF_HEARTBEAT_URL`, `SELF_HEARTBEAT_INTERVAL_SECONDS`         | no       | Monitor the monitor: Cronko pings this URL (default every 300 s) only while its database and scheduler are healthy; point it at another Cronko or Healthchecks.io |
+| `PUBLIC_URL`                                                    | no       | Public address of this Cronko (e.g. `https://cronko.example.com`); alerts then include a link to the failing run or monitor                                       |
+| `AUTO_MIGRATE`                                                  | no       | Apply migrations on boot (default `true`)                                                                                                                         |
+| `WEB_DIST`                                                      | no       | Path of the built web app (auto-detected)                                                                                                                         |
 
 Notification channels are configured in the UI: Discord/Slack take a
 `webhookUrl`, Telegram a `botToken` and `chatId`, e-mail a recipient `to`.
+ntfy takes a `topic` (plus optional `serverUrl` for a self-hosted server and an
+access `token`). A generic webhook takes a `url` and receives
+`{ "event", "monitor", "message", "sentAt" }` as JSON.
 
 ## Security
 

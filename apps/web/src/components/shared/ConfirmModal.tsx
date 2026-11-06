@@ -1,5 +1,6 @@
 import { TriangleAlert } from "lucide-react"
 import { useEffect, useRef } from "react"
+import { useT } from "@/lib/i18n"
 import { Button } from "./Button"
 
 interface ConfirmModalProps {
@@ -22,13 +23,14 @@ export function ConfirmModal({
   open,
   title,
   message,
-  confirmLabel = "Confirm",
-  cancelLabel = "Cancel",
+  confirmLabel,
+  cancelLabel,
   variant = "danger",
   loading = false,
   onConfirm,
   onCancel,
 }: ConfirmModalProps) {
+  const { t } = useT()
   const ref = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
@@ -43,7 +45,7 @@ export function ConfirmModal({
       ref={ref}
       onClose={onCancel}
       aria-labelledby="confirm-title"
-      className="m-auto w-[min(28rem,calc(100vw-2rem))] rounded-[6px] border border-line-strong bg-panel p-0 text-ink shadow-[0_18px_48px_-12px_rgb(0_0_0/0.6)] backdrop:bg-black/60"
+      className="m-auto w-[min(28rem,calc(100vw-2rem))] rounded-xl border border-line bg-panel p-0 text-ink shadow-[0_18px_48px_-12px_rgb(0_0_0/0.6)] backdrop:bg-black/60"
     >
       <div className="p-5">
         <div className="flex items-start gap-3">
@@ -61,7 +63,7 @@ export function ConfirmModal({
       </div>
       <div className="flex justify-end gap-2 border-t border-line bg-raised px-5 py-3">
         <Button variant="secondary" size="sm" onClick={onCancel} disabled={loading}>
-          {cancelLabel}
+          {cancelLabel ?? t("common.cancel")}
         </Button>
         <Button
           variant={variant === "danger" ? "danger" : "primary"}
@@ -69,7 +71,7 @@ export function ConfirmModal({
           onClick={onConfirm}
           disabled={loading}
         >
-          {confirmLabel}
+          {confirmLabel ?? t("common.confirm")}
         </Button>
       </div>
     </dialog>

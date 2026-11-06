@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { Plus, Search } from "lucide-react"
+import { Search } from "lucide-react"
 import { useEffect, useId, useState } from "react"
 import { DeleteMonitorButton } from "@/components/monitors/DeleteMonitorButton"
 import { DeparturesTable, sortBySeverity } from "@/components/monitors/DeparturesTable"
@@ -33,7 +33,7 @@ export default function MonitorsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="text-2xl font-bold tracking-tight">{t("monitors.title")}</h1>
+        <h1 className="text-2xl leading-tight">{t("monitors.title")}</h1>
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative">
             <label htmlFor={searchId} className="sr-only">
@@ -49,13 +49,10 @@ export default function MonitorsPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t("board.search")}
-              className="min-h-10 w-64 rounded-[4px] border border-line-strong bg-panel pl-9 pr-3 text-sm text-ink placeholder:text-dim focus-visible:outline-2"
+              className="min-h-10 w-64 rounded-md border border-line-strong bg-ground pl-9 pr-3 text-sm text-ink placeholder:text-dim focus-visible:outline-2"
             />
           </div>
-          <Button href="/monitors/new">
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            {t("dashboard.createMonitor")}
-          </Button>
+          <Button href="/monitors/new">{t("dashboard.createMonitor")}</Button>
         </div>
       </div>
 
@@ -69,7 +66,7 @@ export default function MonitorsPage() {
         <DeparturesTable
           rows={rows}
           caption={t("board.caption")}
-          actions={(m) => <DeleteMonitorButton monitorId={m.id} />}
+          actions={(m) => <DeleteMonitorButton monitorId={m.id} name={m.name} />}
         />
       )}
     </div>

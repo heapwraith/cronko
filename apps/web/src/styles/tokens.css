@@ -1,42 +1,40 @@
 /*
- * Design tokens — "Quadro de Partidas" (departures board).
- * Semantic roles first (ground, panel, line, ink, signal, state chips); the
- * Tailwind `zinc` and `emerald` scales are re-pointed so legacy markup that
- * still uses them inherits the board palette until it is rewritten.
+ * Design tokens — dark-first ops console (deep navy ground, indigo accent, Inter).
+ * Semantic roles: ground = page, panel = card surface, raised = hover / table head,
+ * line = hairline, ink = primary text, dim = secondary text, signal = accent.
+ * The Tailwind `zinc` and `emerald` scales are re-pointed for legacy markup.
  */
 
 @theme {
-  --font-sans: "Atkinson Hyperlegible Next Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-sans);
   --font-mono: "Geist Mono Variable", ui-monospace, "SFMono-Regular", monospace;
 
-  /* Neutrals: warm graphite, slightly tinted toward the board's amber. */
-  --color-zinc-50: oklch(0.985 0.004 90);
-  --color-zinc-100: oklch(0.965 0.007 90);
-  --color-zinc-200: oklch(0.92 0.009 90);
-  --color-zinc-300: oklch(0.86 0.011 90);
-  --color-zinc-400: oklch(0.72 0.013 90);
-  --color-zinc-500: oklch(0.58 0.013 90);
-  --color-zinc-600: oklch(0.45 0.012 90);
-  --color-zinc-700: oklch(0.34 0.012 90);
-  --color-zinc-800: oklch(0.27 0.012 90);
-  --color-zinc-900: oklch(0.225 0.011 90);
-  --color-zinc-950: oklch(0.19 0.01 90);
+  --color-zinc-50: oklch(0.985 0.003 265);
+  --color-zinc-100: oklch(0.965 0.005 265);
+  --color-zinc-200: oklch(0.92 0.008 265);
+  --color-zinc-300: oklch(0.86 0.012 265);
+  --color-zinc-400: oklch(0.71 0.018 265);
+  --color-zinc-500: oklch(0.56 0.022 265);
+  --color-zinc-600: oklch(0.44 0.024 265);
+  --color-zinc-700: oklch(0.33 0.024 265);
+  --color-zinc-800: oklch(0.25 0.022 265);
+  --color-zinc-900: oklch(0.2 0.02 265);
+  --color-zinc-950: oklch(0.16 0.018 265);
 
-  /* Legacy "brand" green becomes the board's signal amber. */
-  --color-emerald-50: oklch(0.98 0.03 92);
-  --color-emerald-100: oklch(0.95 0.07 92);
-  --color-emerald-200: oklch(0.91 0.12 92);
-  --color-emerald-300: oklch(0.87 0.15 92);
-  --color-emerald-400: oklch(0.83 0.165 92);
-  --color-emerald-500: oklch(0.56 0.13 78);
-  --color-emerald-600: oklch(0.5 0.12 75);
-  --color-emerald-700: oklch(0.43 0.1 72);
-  --color-emerald-800: oklch(0.36 0.08 70);
-  --color-emerald-900: oklch(0.3 0.06 70);
-  --color-emerald-950: oklch(0.24 0.045 70);
+  --color-emerald-50: oklch(0.97 0.02 277);
+  --color-emerald-100: oklch(0.93 0.04 277);
+  --color-emerald-200: oklch(0.87 0.07 277);
+  --color-emerald-300: oklch(0.79 0.11 277);
+  --color-emerald-400: oklch(0.7 0.15 277);
+  --color-emerald-500: oklch(0.6 0.19 277);
+  --color-emerald-600: oklch(0.53 0.2 277);
+  --color-emerald-700: oklch(0.46 0.19 277);
+  --color-emerald-800: oklch(0.38 0.15 277);
+  --color-emerald-900: oklch(0.3 0.11 277);
+  --color-emerald-950: oklch(0.22 0.07 277);
 }
 
-/* Semantic colours, switched by the `.dark` class on <html>. */
 @theme inline {
   --color-ground: var(--ground);
   --color-panel: var(--panel);
@@ -59,74 +57,74 @@
 
 :root {
   color-scheme: light;
-  /* Light: warm paper, ink text. */
-  --ground: oklch(0.965 0.012 90);
-  --panel: oklch(0.99 0.006 90);
-  --raised: oklch(0.945 0.014 90);
-  --line: oklch(0.89 0.015 90);
-  --line-strong: oklch(0.78 0.02 90);
-  --ink: oklch(0.22 0.02 260);
-  --dim: oklch(0.45 0.02 260);
-  --signal: oklch(0.82 0.17 92);
-  --signal-fg: oklch(0.22 0.02 260);
-  --signal-text: oklch(0.46 0.1 75);
+  --ground: oklch(0.975 0.004 265);
+  --panel: oklch(1 0 0);
+  --raised: oklch(0.96 0.006 265);
+  --line: oklch(0.91 0.008 265);
+  --line-strong: oklch(0.83 0.012 265);
+  --ink: oklch(0.21 0.025 265);
+  --dim: oklch(0.47 0.022 265);
+  --signal: oklch(0.52 0.2 277);
+  --signal-fg: oklch(1 0 0);
+  --signal-text: oklch(0.48 0.2 277);
 
-  /* Solid hues for glyphs and bars. */
-  --st-healthy: oklch(0.52 0.14 155);
-  --st-missed: oklch(0.58 0.16 55);
-  --st-down: oklch(0.52 0.2 27);
-  --st-failed: oklch(0.52 0.2 350);
-  --st-paused: oklch(0.5 0.03 255);
-  --st-pending: oklch(0.52 0.15 250);
+  --st-healthy: oklch(0.6 0.15 155);
+  --st-missed: oklch(0.68 0.15 70);
+  --st-down: oklch(0.58 0.21 25);
+  --st-failed: oklch(0.56 0.2 350);
+  --st-paused: oklch(0.55 0.02 265);
+  --st-pending: oklch(0.55 0.02 265);
 
-  /* Chips: solid fill + text, both checked for 4.5:1. */
-  --chip-healthy-bg: oklch(0.92 0.06 155);
-  --chip-healthy-fg: oklch(0.32 0.09 155);
-  --chip-missed-bg: oklch(0.93 0.07 60);
-  --chip-missed-fg: oklch(0.36 0.1 50);
-  --chip-down-bg: oklch(0.92 0.06 27);
-  --chip-down-fg: oklch(0.36 0.12 27);
-  --chip-failed-bg: oklch(0.93 0.05 350);
-  --chip-failed-fg: oklch(0.36 0.12 350);
-  --chip-paused-bg: oklch(0.92 0.01 255);
-  --chip-paused-fg: oklch(0.38 0.03 255);
-  --chip-pending-bg: oklch(0.93 0.04 250);
-  --chip-pending-fg: oklch(0.36 0.1 250);
+  --chip-healthy-bg: oklch(0.95 0.045 155);
+  --chip-healthy-fg: oklch(0.38 0.1 155);
+  --chip-missed-bg: oklch(0.95 0.06 80);
+  --chip-missed-fg: oklch(0.42 0.1 65);
+  --chip-down-bg: oklch(0.95 0.035 25);
+  --chip-down-fg: oklch(0.45 0.17 25);
+  --chip-failed-bg: oklch(0.95 0.03 350);
+  --chip-failed-fg: oklch(0.44 0.16 350);
+  --chip-paused-bg: oklch(0.95 0.006 265);
+  --chip-paused-fg: oklch(0.42 0.02 265);
+  --chip-pending-bg: oklch(0.95 0.006 265);
+  --chip-pending-fg: oklch(0.42 0.02 265);
+
+  --shadow-card: 0 1px 2px oklch(0.2 0.03 265 / 0.06), 0 1px 1px oklch(0.2 0.03 265 / 0.04);
 }
 
 .dark {
   color-scheme: dark;
-  /* Dark: graphite board, warm board-white text. */
-  --ground: oklch(0.19 0.01 260);
-  --panel: oklch(0.225 0.011 258);
-  --raised: oklch(0.265 0.012 258);
-  --line: oklch(0.31 0.012 258);
-  --line-strong: oklch(0.42 0.014 258);
-  --ink: oklch(0.94 0.025 92);
-  --dim: oklch(0.72 0.022 92);
-  --signal: oklch(0.82 0.17 92);
-  --signal-fg: oklch(0.2 0.02 260);
-  --signal-text: oklch(0.84 0.16 92);
+  --ground: oklch(0.165 0.022 268);
+  --panel: oklch(0.2 0.024 268);
+  --raised: oklch(0.235 0.026 268);
+  --line: oklch(0.28 0.026 268);
+  --line-strong: oklch(0.36 0.028 268);
+  --ink: oklch(0.96 0.006 265);
+  --dim: oklch(0.72 0.022 265);
+  --signal: oklch(0.6 0.19 277);
+  --signal-fg: oklch(1 0 0);
+  --signal-text: oklch(0.76 0.13 277);
 
-  --st-healthy: oklch(0.78 0.15 155);
-  --st-missed: oklch(0.8 0.15 60);
-  --st-down: oklch(0.72 0.19 27);
-  --st-failed: oklch(0.74 0.18 350);
-  --st-paused: oklch(0.7 0.03 255);
-  --st-pending: oklch(0.76 0.12 250);
+  --st-healthy: oklch(0.76 0.16 155);
+  --st-missed: oklch(0.82 0.14 80);
+  --st-down: oklch(0.7 0.19 25);
+  --st-failed: oklch(0.72 0.17 350);
+  --st-paused: oklch(0.7 0.02 265);
+  --st-pending: oklch(0.7 0.02 265);
 
-  --chip-healthy-bg: oklch(0.36 0.08 155);
-  --chip-healthy-fg: oklch(0.94 0.05 155);
-  --chip-missed-bg: oklch(0.42 0.09 55);
-  --chip-missed-fg: oklch(0.95 0.05 70);
-  --chip-down-bg: oklch(0.42 0.13 27);
-  --chip-down-fg: oklch(0.95 0.04 27);
-  --chip-failed-bg: oklch(0.4 0.12 350);
-  --chip-failed-fg: oklch(0.95 0.04 350);
-  --chip-paused-bg: oklch(0.33 0.02 255);
-  --chip-paused-fg: oklch(0.85 0.02 255);
-  --chip-pending-bg: oklch(0.38 0.08 250);
-  --chip-pending-fg: oklch(0.94 0.04 250);
+  --chip-healthy-bg: oklch(0.76 0.16 155 / 0.14);
+  --chip-healthy-fg: oklch(0.84 0.14 155);
+  --chip-missed-bg: oklch(0.82 0.14 80 / 0.14);
+  --chip-missed-fg: oklch(0.88 0.12 80);
+  --chip-down-bg: oklch(0.7 0.19 25 / 0.16);
+  --chip-down-fg: oklch(0.82 0.13 25);
+  --chip-failed-bg: oklch(0.72 0.17 350 / 0.15);
+  --chip-failed-fg: oklch(0.84 0.11 350);
+  --chip-paused-bg: oklch(0.7 0.02 265 / 0.14);
+  --chip-paused-fg: oklch(0.84 0.015 265);
+  --chip-pending-bg: oklch(0.7 0.02 265 / 0.14);
+  --chip-pending-fg: oklch(0.84 0.015 265);
+
+  --shadow-card: 0 1px 2px oklch(0 0 0 / 0.3);
 }
 
 @media (prefers-contrast: more) {

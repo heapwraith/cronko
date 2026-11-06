@@ -15,6 +15,12 @@ export const monitors = sqliteTable("monitors", {
   gracePeriodSeconds: integer("grace_period_seconds").notNull().default(300),
   paused: integer("paused", { mode: "boolean" }).notNull().default(false),
   maxDurationMs: integer("max_duration_ms"),
+  // Optional cron schedule (5 fields or @nickname) evaluated in `timezone` (IANA).
+  // When set, deadlines come from the next scheduled run, not from the last ping.
+  scheduleCron: text("schedule_cron"),
+  timezone: text("timezone"),
+  // Alerts are silenced until this moment; state and incidents are still tracked.
+  mutedUntil: integer("muted_until", { mode: "timestamp" }),
   displayOrder: integer("display_order").notNull().default(0),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
@@ -56,7 +62,9 @@ export const incidents = sqliteTable(
 export const notificationChannels = sqliteTable("notification_channels", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
-  type: text("type", { enum: ["discord", "telegram", "email", "slack"] }).notNull(),
+  type: text("type", {
+    enum: ["discord", "telegram", "email", "slack", "webhook", "ntfy"],
+  }).notNull(),
   enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
   config: text("config", { mode: "json" }).notNull(),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),

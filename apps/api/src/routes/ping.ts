@@ -49,7 +49,9 @@ function handle(kind: PingKind) {
     const { body, tooLarge } = await readBody(c)
     if (tooLarge) return c.json({ error: "Body too large", code: "PAYLOAD_TOO_LARGE" }, 413)
 
-    const durationMs = intParam(c.req.query("d"))
+    // A negative duration is a client clock glitch, not data.
+    const rawDuration = intParam(c.req.query("d"))
+    const durationMs = rawDuration !== undefined && rawDuration >= 0 ? rawDuration : undefined
     let exitCode = intParam(c.req.query("exit"))
     // An explicit failure with no exit code is reported as 1 so history shows it.
     if (kind === "fail") exitCode ??= 1

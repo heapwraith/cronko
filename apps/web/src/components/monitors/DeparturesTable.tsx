@@ -1,7 +1,9 @@
 import type { MonitorStatus } from "@cronko/shared/types"
 import { formatDuration, formatRelativeTime } from "@cronko/shared/utils"
+import { BellOff } from "lucide-react"
 import type { ReactNode } from "react"
 import { Link } from "react-router"
+import { isMuted } from "@/components/monitors/MuteControl"
 import { StatusBadge } from "@/components/shared/StatusBadge"
 import type { api } from "@/lib/api"
 import { formatInterval, formatRunDuration, severityRank } from "@/lib/format"
@@ -22,7 +24,7 @@ const TINT: Partial<Record<string, string>> = {
 }
 
 const th = "px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-dim"
-const td = "px-3 py-3 align-middle"
+const td = "px-3 py-4 align-middle"
 
 /** The departures board: one row per monitor, worst first. */
 export function DeparturesTable({
@@ -39,19 +41,21 @@ export function DeparturesTable({
   const now = Date.now()
 
   const next = (row: MonitorRow): string => {
-    if (row.paused || !row.latestHeartbeat) return "—"
-    const due =
-      new Date(row.latestHeartbeat.receivedAt).getTime() + row.expectedIntervalSeconds * 1000
+    if (row.paused) return "—"
+    // The server computes it (cron monitors follow their schedule, not the last ping).
+    const dueIso = row.nextExpectedAt
+    if (!dueIso) return "—"
+    const due = new Date(dueIso).getTime()
     return due >= now
       ? t("board.in", { time: formatDuration(due - now) })
       : t("board.overdue", { time: formatDuration(now - due) })
   }
 
   return (
-    <div className="overflow-x-auto rounded-[6px] border border-line bg-panel">
+    <div className="overflow-x-auto rounded-xl border border-line bg-panel shadow-[var(--shadow-card)]">
       <table className="w-full min-w-[20rem] border-collapse text-sm">
         <caption className="sr-only">{caption}</caption>
-        <thead className="border-b-2 border-line-strong">
+        <thead className="border-b border-line-strong bg-raised">
           <tr>
             <th scope="col" className={`${th} hidden md:table-cell`}>
               {t("board.next")}
@@ -76,7 +80,7 @@ export function DeparturesTable({
             </th>
             {actions && (
               <th scope="col" className={th}>
-                <span className="sr-only">Ações</span>
+                <span className="sr-only">{t("board.actions")}</span>
               </th>
             )}
           </tr>
@@ -96,10 +100,29 @@ export function DeparturesTable({
                 <th scope="row" className={`${td} text-left font-semibold`}>
                   <Link
                     to={`/monitors/${row.id}`}
-                    className="text-ink underline-offset-4 hover:underline focus-visible:underline"
+                    className="text-base text-ink underline-offset-4 hover:underline focus-visible:underline"
                   >
                     {row.name}
                   </Link>
+                  {isMuted(row.mutedUntil) && (
+                    <span
+                      title={t("mute.muted")}
+                      className="ml-2 inline-flex align-middle text-dim"
+                    >
+                      <BellOff className="h-3.5 w-3.5" aria-hidden="true" />
+                      <span className="sr-only">{t("mute.muted")}</span>
+                    </span>
+                  )}
+                  {/* Phones drop the NEXT/DURATION/EXIT columns; keep the data as a second line. */}
+                  <span className="mt-0.5 block font-mono text-xs font-normal text-dim tnum md:hidden">
+                    {[
+                      next(row),
+                      hb?.durationMs != null ? formatRunDuration(hb.durationMs) : null,
+                      exit != null ? `${t("board.exit")} ${exit}` : null,
+                    ]
+                      .filter((v) => v && v !== "—")
+                      .join(" · ")}
+                  </span>
                 </th>
                 <td className={`${td} hidden font-mono text-dim tnum lg:table-cell`}>
                   {formatInterval(row.expectedIntervalSeconds)}

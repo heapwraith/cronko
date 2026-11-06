@@ -1,10 +1,5 @@
+import "./load-env"
 import { z } from "zod"
-
-try {
-  process.loadEnvFile("../../.env")
-} catch {
-  // .env file not found — using process.env as-is (e.g. in CI or tests)
-}
 
 const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
@@ -19,6 +14,13 @@ const envSchema = z.object({
   SMTP_PASS: z.string().optional(),
   SMTP_FROM: z.email().optional(),
   TELEGRAM_BOT_TOKEN: z.string().optional(),
+  // Optional outbound dead-man's switch: Cronko pings this URL while it is healthy,
+  // so an external monitor alerts you when Cronko itself stops.
+  SELF_HEARTBEAT_URL: z.url().optional(),
+  // Public address of this Cronko (e.g. https://cronko.example.com). When set, alerts
+  // carry a link straight to the failing run or monitor.
+  PUBLIC_URL: z.url().optional(),
+  SELF_HEARTBEAT_INTERVAL_SECONDS: z.coerce.number().int().min(10).default(300),
   // Extra origins allowed to make state-changing requests (reverse proxy / custom domain)
   // Honour X-Forwarded-For / X-Real-IP (only behind a reverse proxy you control)
   TRUST_PROXY: z.enum(["true", "false"]).default("false"),

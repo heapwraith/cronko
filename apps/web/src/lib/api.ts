@@ -102,6 +102,17 @@ async function del<T>(path: string): Promise<T> {
   return json.data
 }
 
+/** Body for creating a monitor: an interval, or a cron schedule with a timezone. */
+export interface MonitorInput {
+  name: string
+  expectedIntervalSeconds?: number
+  /** null switches an existing monitor back to a plain interval (update only). */
+  scheduleCron?: string | null
+  timezone?: string
+  gracePeriodSeconds: number
+  maxDurationMs?: number
+}
+
 export const api = {
   auth: {
     login: (body: { email: string; password: string }) =>
@@ -134,6 +145,10 @@ export const api = {
           paused: boolean
           slug: string
           token: string
+          scheduleCron: string | null
+          timezone: string | null
+          mutedUntil: string | null
+          nextExpectedAt: string | null
           createdAt: string
           updatedAt: string
           latestHeartbeat: {
@@ -150,6 +165,11 @@ export const api = {
         status: string
         expectedIntervalSeconds: number
         gracePeriodSeconds: number
+        maxDurationMs: number | null
+        scheduleCron: string | null
+        timezone: string | null
+        mutedUntil: string | null
+        nextExpectedAt: string | null
         paused: boolean
         slug: string
         token: string
@@ -173,7 +193,7 @@ export const api = {
           resolvedAt: string | null
         } | null
       }>(`/api/monitors/${id}`),
-    create: (body: { name: string; expectedIntervalSeconds: number; gracePeriodSeconds: number }) =>
+    create: (body: MonitorInput) =>
       post<{
         id: string
         name: string
@@ -181,17 +201,14 @@ export const api = {
         slug: string
         token: string
       }>("/api/monitors", body),
-    update: (
-      id: string,
-      body: {
-        name?: string
-        expectedIntervalSeconds?: number
-        gracePeriodSeconds?: number
-      },
-    ) => patch<{ id: string; name: string }>(`/api/monitors/${id}`, body),
+    update: (id: string, body: Partial<MonitorInput>) =>
+      patch<{ id: string; name: string }>(`/api/monitors/${id}`, body),
     delete: (id: string) => del<{ ok: boolean }>(`/api/monitors/${id}`),
     pause: (id: string) => post<{ id: string; status: string }>(`/api/monitors/${id}/pause`),
     resume: (id: string) => post<{ id: string; status: string }>(`/api/monitors/${id}/resume`),
+    /** Silence alerts for `minutes`; null unmutes. */
+    mute: (id: string, minutes: number | null) =>
+      post<{ id: string; mutedUntil: string | null }>(`/api/monitors/${id}/mute`, { minutes }),
     heartbeats: (id: string, query?: { limit?: number; before?: string }) => {
       const params = new URLSearchParams()
       if (query?.limit) params.set("limit", String(query.limit))
@@ -208,6 +225,20 @@ export const api = {
           exitCode: number | null
         }>
       >(`/api/monitors/${id}/heartbeats${qs ? `?${qs}` : ""}`)
+    },
+    run: (id: string, runId: string) => {
+      type R = {
+        id: string
+        receivedAt: string
+        sourceIp: string | null
+        userAgent: string | null
+        durationMs: number | null
+        exitCode: number | null
+        body: string | null
+      }
+      return get<{ run: R; previous: R | null; previousGood: R | null; nextId: string | null }>(
+        `/api/monitors/${id}/runs/${runId}`,
+      )
     },
     incidents: (id: string, query?: { limit?: number; offset?: number }) => {
       const params = new URLSearchParams()

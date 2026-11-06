@@ -4,12 +4,18 @@ interface ToggleProps {
   onChange: (checked: boolean) => void
   disabled?: boolean
   hint?: string
+  /** Keep the label for assistive tech only (e.g. inside a table row). */
+  hideLabel?: boolean
 }
 
-export function Toggle({ label, checked, onChange, disabled, hint }: ToggleProps) {
+/**
+ * Switch: the thumb moves as well as the fill changing, so on/off never
+ * depends on colour alone.
+ */
+export function Toggle({ label, checked, onChange, disabled, hint, hideLabel }: ToggleProps) {
   return (
     <label
-      className={`flex items-start gap-3 select-none ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+      className={`flex select-none items-start gap-3 ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
     >
       <button
         type="button"
@@ -17,24 +23,23 @@ export function Toggle({ label, checked, onChange, disabled, hint }: ToggleProps
         aria-checked={checked}
         disabled={disabled}
         onClick={() => onChange(!checked)}
-        className={`relative mt-0.5 inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#5e6ad2]/40 ${
-          checked ? "bg-[#5e6ad2]" : "bg-[#dde0e4] dark:bg-zinc-600"
+        className={`relative mt-0.5 inline-flex h-5 w-9 shrink-0 items-center rounded-md border transition-colors duration-150 focus-visible:outline-2 ${
+          checked ? "border-signal bg-signal" : "border-line-strong bg-raised"
         } ${disabled ? "cursor-not-allowed" : "cursor-pointer"}`}
       >
         <span
-          className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-            checked ? "translate-x-4.5" : "translate-x-0.75"
+          aria-hidden="true"
+          className={`block h-3 w-3 rounded-md transition-transform duration-150 ${
+            checked ? "translate-x-[1.125rem] bg-signal-fg" : "translate-x-[0.1875rem] bg-dim"
           }`}
         />
       </button>
-      <div className="flex flex-col min-w-0">
-        <span className="text-xs font-medium text-[#1a1f36] dark:text-zinc-100">{label}</span>
-        {hint && (
-          <p className="text-[10px] text-[#8e99a8] dark:text-zinc-500 mt-0.5 leading-relaxed">
-            {hint}
-          </p>
+      <span className={hideLabel ? "sr-only" : "flex min-w-0 flex-col"}>
+        <span className="text-sm font-medium text-ink">{label}</span>
+        {hint && !hideLabel && (
+          <span className="mt-0.5 text-xs leading-relaxed text-dim">{hint}</span>
         )}
-      </div>
+      </span>
     </label>
   )
 }

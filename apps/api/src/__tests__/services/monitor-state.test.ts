@@ -297,3 +297,72 @@ describe("monitor lifecycle (real SQLite)", () => {
     expect(result).toMatchObject({ ok: false, status: 404 })
   })
 })
+
+describe("cron schedules (pure)", () => {
+  let mod: typeof StateModule
+
+  beforeAll(async () => {
+    await setupTestDb()
+    mod = await import("../../services/monitor-state")
+  })
+
+  const D = (iso: string) => new Date(iso)
+  const cron = (over: Partial<StateModule.MonitorSnapshot> = {}): StateModule.MonitorSnapshot => ({
+    id: "c1",
+    name: "nightly",
+    status: "healthy",
+    expectedIntervalSeconds: 86_400,
+    gracePeriodSeconds: 120,
+    createdAt: D("2026-11-05T12:00:00Z"),
+    scheduleCron: "0 2 * * *",
+    timezone: "UTC",
+    ...over,
+  })
+
+  it("derives the deadline from the next scheduled run, not the last ping", () => {
+    const w = mod.expectedWindow(cron(), D("2026-11-05T02:00:30Z"))
+    expect(w.nextExpected.toISOString()).toBe("2026-11-06T02:00:00.000Z")
+    expect(new Date(w.missedAt).toISOString()).toBe("2026-11-06T02:02:00.000Z")
+    expect(new Date(w.downAt).toISOString()).toBe("2026-11-07T02:02:00.000Z")
+  })
+
+  it.each([
+    ["before the run", "2026-11-06T01:00:00Z", "healthy", null],
+    ["inside the grace window", "2026-11-06T02:01:30Z", "healthy", null],
+    ["just past grace", "2026-11-06T02:02:01Z", "healthy", "missed"],
+    ["a full period late", "2026-11-07T02:03:00Z", "missed", "down"],
+  ] as const)("evaluates %s", (_label, at, status, expected) => {
+    const last = D("2026-11-05T02:00:30Z")
+    expect(mod.evaluateMonitor(cron({ status }), last, D(at).getTime())).toBe(expected)
+  })
+
+  it("treats a ping a few seconds before the slot as that slot's ping", () => {
+    const early = D("2026-11-06T01:59:50Z") // 10 s before the 02:00 slot
+    const w = mod.expectedWindow(cron(), early)
+    expect(w.nextExpected.toISOString()).toBe("2026-11-07T02:00:00.000Z")
+    expect(mod.evaluateMonitor(cron(), early, D("2026-11-06T02:10:00Z").getTime())).toBeNull()
+  })
+
+  it("does not swallow a genuinely early run for a frequent schedule", () => {
+    // */5: a ping at 12:01 is 4 min before the 12:05 slot, more than half the period.
+    const m = cron({ scheduleCron: "*/5 * * * *", expectedIntervalSeconds: 300 })
+    const w = mod.expectedWindow(m, D("2026-11-05T12:01:00Z"))
+    expect(w.nextExpected.toISOString()).toBe("2026-11-05T12:05:00.000Z")
+  })
+
+  it("counts from creation for a cron monitor that never pinged", () => {
+    const w = mod.expectedWindow(cron(), undefined)
+    expect(w.nextExpected.toISOString()).toBe("2026-11-06T02:00:00.000Z")
+  })
+
+  it("respects the timezone", () => {
+    // 02:00 in Sao Paulo (UTC-3, no DST since 2019) is 05:00 UTC.
+    const w = mod.expectedWindow(cron({ timezone: "America/Sao_Paulo" }), D("2026-11-05T12:00:00Z"))
+    expect(w.nextExpected.toISOString()).toBe("2026-11-06T05:00:00.000Z")
+  })
+
+  it("falls back to the interval when the stored cron is invalid", () => {
+    const w = mod.expectedWindow(cron({ scheduleCron: "not a cron" }), D("2026-11-05T12:00:00Z"))
+    expect(w.nextExpected.toISOString()).toBe("2026-11-06T12:00:00.000Z")
+  })
+})

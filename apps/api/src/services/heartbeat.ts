@@ -30,6 +30,7 @@ export async function processHeartbeat(
   }
 
   const heartbeatId = crypto.randomUUID()
+  let stored = false
 
   const prevPulse = await findLatestHeartbeat(monitor.id)
 
@@ -47,8 +48,9 @@ export async function processHeartbeat(
         ...(options.userAgent !== undefined && { userAgent: options.userAgent }),
         durationMs: options.durationMs,
         ...(options.exitCode !== undefined && { exitCode: options.exitCode }),
-        body: "pulse:finish",
+        body: options.body ?? "pulse:finish",
       })
+      stored = true
     }
   } else {
     await createHeartbeat({
@@ -60,6 +62,7 @@ export async function processHeartbeat(
       ...(options.exitCode !== undefined && { exitCode: options.exitCode }),
       ...(options.body !== undefined && { body: options.body }),
     })
+    stored = true
   }
 
   // A start pulse only says the job began: it must not recover or fail anything.
@@ -71,10 +74,11 @@ export async function processHeartbeat(
       monitor.maxDurationMs != null &&
       options.durationMs > monitor.maxDurationMs
 
+    const runId = stored ? heartbeatId : undefined
     if (failed) {
-      await markFailed(monitor, options.exitCode)
+      await markFailed(monitor, options.exitCode, new Date(), runId)
     } else if (exceededMax) {
-      await markSlow(monitor)
+      await markSlow(monitor, new Date(), runId)
     } else {
       await recoverOnPing(monitor)
     }

@@ -14,6 +14,9 @@ export async function findAllMonitors() {
       gracePeriodSeconds: monitors.gracePeriodSeconds,
       paused: monitors.paused,
       maxDurationMs: monitors.maxDurationMs,
+      scheduleCron: monitors.scheduleCron,
+      timezone: monitors.timezone,
+      mutedUntil: monitors.mutedUntil,
       displayOrder: monitors.displayOrder,
       createdAt: monitors.createdAt,
       updatedAt: monitors.updatedAt,
@@ -43,6 +46,8 @@ export async function createMonitor(input: {
   expectedIntervalSeconds: number
   gracePeriodSeconds: number
   maxDurationMs?: number
+  scheduleCron?: string
+  timezone?: string
   now: Date
 }) {
   await db.insert(monitors).values({
@@ -53,6 +58,8 @@ export async function createMonitor(input: {
     expectedIntervalSeconds: input.expectedIntervalSeconds,
     gracePeriodSeconds: input.gracePeriodSeconds,
     maxDurationMs: input.maxDurationMs ?? null,
+    scheduleCron: input.scheduleCron ?? null,
+    timezone: input.timezone ?? null,
     status: "pending",
     createdAt: input.now,
     updatedAt: input.now,
@@ -70,6 +77,9 @@ export async function updateMonitor(
     expectedIntervalSeconds?: number
     gracePeriodSeconds?: number
     maxDurationMs?: number
+    /** null clears the cron schedule (back to a plain interval). */
+    scheduleCron?: string | null
+    timezone?: string | null
     now: Date
   },
 ) {
@@ -84,6 +94,8 @@ export async function updateMonitor(
         gracePeriodSeconds: input.gracePeriodSeconds,
       }),
       ...(input.maxDurationMs !== undefined && { maxDurationMs: input.maxDurationMs }),
+      ...(input.scheduleCron !== undefined && { scheduleCron: input.scheduleCron }),
+      ...(input.timezone !== undefined && { timezone: input.timezone }),
       updatedAt: input.now,
     })
     .where(eq(monitors.id, id))
@@ -101,6 +113,15 @@ export async function pauseMonitor(id: string) {
     .set({ paused: true, status: "paused", updatedAt: new Date() })
     .where(eq(monitors.id, id))
 
+  return findMonitorById(id)
+}
+
+/** Silence alerts until `until` (null unmutes). Returns the updated monitor. */
+export async function setMonitorMutedUntil(id: string, until: Date | null) {
+  await db
+    .update(monitors)
+    .set({ mutedUntil: until, updatedAt: new Date() })
+    .where(eq(monitors.id, id))
   return findMonitorById(id)
 }
 

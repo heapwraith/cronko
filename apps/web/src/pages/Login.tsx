@@ -78,21 +78,24 @@ export default function LoginPage() {
   if (checking) return <div className="min-h-screen bg-ground" />
 
   const field =
-    "min-h-11 w-full rounded-[4px] border border-line-strong bg-panel px-3 text-[15px] text-ink placeholder:text-dim disabled:opacity-50"
+    "min-h-11 w-full rounded-md border border-line-strong bg-ground px-3 text-[15px] text-ink placeholder:text-dim disabled:opacity-50"
 
   return (
-    <div className="flex min-h-screen flex-col bg-ground">
-      <div className="h-[3px] bg-signal" />
+    <div className="flex min-h-screen flex-col bg-ground bg-[radial-gradient(60rem_30rem_at_50%_-10%,color-mix(in_oklch,var(--signal)_18%,transparent),transparent)]">
       <div className="flex justify-end p-3">
         <ThemeToggle />
       </div>
       <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-6 pb-24">
-        <div className="mb-8 flex items-center gap-3">
+        <div className="mb-8 flex items-center justify-center gap-3">
           <CronkoLogo className="h-9 w-9 text-signal-text" />
-          <span className="text-3xl font-bold uppercase tracking-[0.14em]">Cronko</span>
+          <span className="text-3xl font-semibold tracking-tight">Cronko</span>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 rounded-xl border border-line bg-panel p-6 shadow-[var(--shadow-card)]"
+          noValidate
+        >
           <div>
             <label htmlFor={emailId} className="mb-1.5 block text-sm font-semibold">
               {t("auth.email")}
@@ -144,7 +147,7 @@ export default function LoginPage() {
             <p
               id={errorId}
               role="alert"
-              className="rounded-[4px] bg-[var(--chip-down-bg)] px-3 py-2 text-sm text-[var(--chip-down-fg)]"
+              className="rounded-md bg-[var(--chip-down-bg)] px-3 py-2 text-sm text-[var(--chip-down-fg)]"
             >
               {error}
             </p>
@@ -164,7 +167,7 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        <p className="mt-8 text-sm text-dim">{t("auth.selfHosted")}</p>
+        <p className="mt-8 text-center text-sm text-dim">{t("auth.selfHosted")}</p>
       </main>
     </div>
   )

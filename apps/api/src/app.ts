@@ -106,11 +106,12 @@ app.get("/badge/:token", async (c) => {
 
 const api = new Hono<{ Variables: Variables }>()
 
-// Cache-Control for authenticated GET responses
+// Authenticated data changes on every ping or action: always revalidate, never
+// let the browser reuse a stale copy (a refetch right after an action must see it).
 api.use("*", async (c, next) => {
   await next()
   if (c.req.method === "GET") {
-    c.res.headers.set("Cache-Control", "private, max-age=5")
+    c.res.headers.set("Cache-Control", "private, no-cache")
   }
 })
 

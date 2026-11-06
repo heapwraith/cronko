@@ -76,6 +76,14 @@ describe("/ping/:token/fail (HTTP, real SQLite)", () => {
     expect(hb?.exitCode).toBe(1)
   })
 
+  it("ignores a negative duration (client clock glitch)", async () => {
+    await app.request(`/ping/${token}?d=-362&exit=0`)
+    const { findHeartbeatsByMonitor } = await import("@cronko/database/queries/heartbeats")
+    const [hb] = await findHeartbeatsByMonitor(monitorId, { limit: 1 })
+    expect(hb?.durationMs).toBeNull()
+    expect(await status()).toBe("healthy")
+  })
+
   it("?exit=0 on a normal ping stays healthy", async () => {
     await app.request(`/ping/${token}?exit=0`)
     expect(await status()).toBe("healthy")

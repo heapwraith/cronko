@@ -1,13 +1,21 @@
 import { useQueryClient } from "@tanstack/react-query"
-import { Pause, Pencil, Play, Trash2 } from "lucide-react"
 import { useState } from "react"
-import { Link, useNavigate } from "react-router"
+import { useNavigate } from "react-router"
+import { Button } from "@/components/shared/Button"
 import { ConfirmModal } from "@/components/shared/ConfirmModal"
 import { useToast } from "@/components/shared/Toast"
 import { api } from "@/lib/api"
 import { useT } from "@/lib/i18n"
 
-export function MonitorActions({ monitorId, status }: { monitorId: string; status: string }) {
+export function MonitorActions({
+  monitorId,
+  name,
+  status,
+}: {
+  monitorId: string
+  name: string
+  status: string
+}) {
   const { t } = useT()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -58,48 +66,34 @@ export function MonitorActions({ monitorId, status }: { monitorId: string; statu
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <Link
-        to={`/monitors/${monitorId}/edit`}
-        className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-100 hover:bg-zinc-700 transition-colors"
-      >
-        <Pencil className="h-3 w-3" />
+    <div className="flex flex-wrap items-center gap-2">
+      <Button href={`/monitors/${monitorId}/edit`} variant="secondary" size="sm">
         {t("monitors.edit")}
-      </Link>
+      </Button>
 
       {status !== "paused" ? (
-        <button
-          onClick={handlePause}
-          disabled={pauseLoading}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-800 px-3 py-1.5 text-xs font-medium text-amber-400 hover:bg-zinc-700 disabled:opacity-50 transition-colors"
-        >
-          <Pause className="h-3 w-3" />
+        <Button variant="secondary" size="sm" onClick={handlePause} disabled={pauseLoading}>
           {pauseLoading ? t("monitor.pausing") : t("monitors.pause")}
-        </button>
+        </Button>
       ) : (
-        <button
-          onClick={handleResume}
-          disabled={resumeLoading}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-800 px-3 py-1.5 text-xs font-medium text-emerald-400 hover:bg-zinc-700 disabled:opacity-50 transition-colors"
-        >
-          <Play className="h-3 w-3" />
+        <Button variant="secondary" size="sm" onClick={handleResume} disabled={resumeLoading}>
           {resumeLoading ? t("monitor.resuming") : t("monitors.resume")}
-        </button>
+        </Button>
       )}
 
-      <button
+      <Button
+        variant="danger"
+        size="sm"
         onClick={() => setConfirmOpen(true)}
         disabled={deleteLoading}
-        className="inline-flex items-center gap-1.5 rounded-lg bg-red-600/20 px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-600/30 disabled:opacity-50 transition-colors"
       >
-        <Trash2 className="h-3 w-3" />
         {deleteLoading ? t("monitors.deleting") : t("monitors.delete")}
-      </button>
+      </Button>
 
       <ConfirmModal
         open={confirmOpen}
         title={t("monitors.deleteConfirmTitle")}
-        message={t("monitors.deleteConfirmMessage", { name: "" })}
+        message={t("monitors.deleteConfirmMessage", { name })}
         confirmLabel={t("monitors.delete")}
         variant="danger"
         loading={deleteLoading}

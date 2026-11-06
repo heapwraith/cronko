@@ -1,7 +1,7 @@
 import type { MonitorStatus } from "@cronko/shared/types"
 import { formatRelativeTime } from "@cronko/shared/utils"
 import { useQuery } from "@tanstack/react-query"
-import { BarChart3, Plus } from "lucide-react"
+import { BarChart3 } from "lucide-react"
 import { useState } from "react"
 import { Link } from "react-router"
 import { DeparturesTable, sortBySeverity } from "@/components/monitors/DeparturesTable"
@@ -50,13 +50,15 @@ export default function DashboardPage() {
         : t("board.attention", { n: attention })
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-ink">{t("dashboard.title")}</h1>
+          <h1 className="text-2xl leading-tight text-ink">{t("dashboard.title")}</h1>
           {!isPending && monitors.length > 0 && (
-            <p className="mt-1 text-sm text-dim" aria-live="polite">
-              <span className={attention > 0 ? "font-semibold text-ink" : ""}>{summary}</span>
+            <p className="mt-2 text-base text-dim" aria-live="polite">
+              <span className={attention > 0 ? "font-semibold text-ink" : "text-ink"}>
+                {summary}
+              </span>
               {data?.stats && data.stats.totalHeartbeats > 0 && (
                 <>
                   {" "}
@@ -71,10 +73,7 @@ export default function DashboardPage() {
             </p>
           )}
         </div>
-        <Button href="/monitors/new">
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          {t("dashboard.createMonitor")}
-        </Button>
+        <Button href="/monitors/new">{t("dashboard.createMonitor")}</Button>
       </div>
 
       {isPending ? (
@@ -88,7 +87,7 @@ export default function DashboardPage() {
         />
       ) : (
         <>
-          <fieldset className="flex flex-wrap gap-2">
+          <fieldset className="mx-0 mb-0 min-w-0 inline-flex w-fit max-w-full flex-wrap gap-1 rounded-lg border border-line bg-raised p-1">
             <legend className="sr-only">{t("board.filterBy")}</legend>
             {(["all", ...FILTERS] as const)
               .filter((f) => f === "all" || (counts.get(f) ?? 0) > 0)
@@ -100,10 +99,8 @@ export default function DashboardPage() {
                     type="button"
                     aria-pressed={active}
                     onClick={() => setFilter(f)}
-                    className={`rounded-[4px] border px-3 py-1.5 text-sm font-medium transition-colors ${
-                      active
-                        ? "border-ink bg-ink text-ground"
-                        : "border-line-strong bg-panel text-dim hover:text-ink"
+                    className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                      active ? "bg-panel text-ink shadow-sm" : "text-dim hover:text-ink"
                     }`}
                   >
                     {f === "all" ? t("board.all") : t(statusKey(f))}
@@ -121,54 +118,62 @@ export default function DashboardPage() {
             <DeparturesTable rows={rows} caption={t("board.caption")} />
           )}
 
-          {(data?.incidents.length ?? 0) > 0 && (
-            <section aria-labelledby="open-incidents" className="space-y-2">
-              <h2 id="open-incidents" className="text-sm font-semibold text-ink">
-                {t("board.openIncidents")}
-              </h2>
-              <ul className="divide-y divide-line rounded-[6px] border border-line bg-panel">
-                {data?.incidents.map((i) => (
-                  <li
-                    key={i.id}
-                    className="flex items-center justify-between gap-4 px-4 py-2.5 text-sm"
-                  >
-                    <Link to={`/monitors/${i.monitorId}`} className="font-semibold hover:underline">
-                      {names.get(i.monitorId) ?? i.monitorId}
-                    </Link>
-                    <span className="text-dim">
-                      {t("board.since", {
-                        time: formatRelativeTime(new Date(i.startedAt), locale),
-                      })}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
+          <div className="grid items-start gap-6 xl:grid-cols-2">
+            {(data?.incidents.length ?? 0) > 0 && (
+              <section
+                aria-labelledby="open-incidents"
+                className="space-y-3 rounded-xl border border-line bg-panel p-5 shadow-[var(--shadow-card)]"
+              >
+                <h2 id="open-incidents" className="text-base font-semibold text-ink">
+                  {t("board.openIncidents")}
+                </h2>
+                <ul className="divide-y divide-line border-y border-line">
+                  {data?.incidents.map((i) => (
+                    <li key={i.id} className="flex items-center justify-between gap-4 py-3 text-sm">
+                      <Link
+                        to={`/monitors/${i.monitorId}`}
+                        className="font-semibold hover:underline"
+                      >
+                        {names.get(i.monitorId) ?? i.monitorId}
+                      </Link>
+                      <span className="text-dim">
+                        {t("board.since", {
+                          time: formatRelativeTime(new Date(i.startedAt), locale),
+                        })}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
 
-          {undelivered.length > 0 && (
-            <section aria-labelledby="undelivered" className="space-y-2">
-              <h2 id="undelivered" className="text-sm font-semibold text-ink">
-                {t("board.undelivered")}
-              </h2>
-              <ul className="divide-y divide-line rounded-[6px] border border-line bg-panel">
-                {undelivered.map((d) => (
-                  <li
-                    key={d.id}
-                    className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 text-sm"
-                  >
-                    <span>
-                      <span className="font-semibold">{d.monitorName}</span>{" "}
-                      <span className="text-dim">→ {d.channelName}</span>
-                    </span>
-                    <span className="font-mono text-xs text-down tnum">
-                      {d.lastError ?? "—"} · {t("board.attempts", { n: d.attempts })}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
+            {undelivered.length > 0 && (
+              <section
+                aria-labelledby="undelivered"
+                className="space-y-3 rounded-xl border border-line bg-panel p-5 shadow-[var(--shadow-card)]"
+              >
+                <h2 id="undelivered" className="text-base font-semibold text-ink">
+                  {t("board.undelivered")}
+                </h2>
+                <ul className="divide-y divide-line border-y border-line">
+                  {undelivered.map((d) => (
+                    <li
+                      key={d.id}
+                      className="flex flex-wrap items-center justify-between gap-2 py-3 text-sm"
+                    >
+                      <span>
+                        <span className="font-semibold">{d.monitorName}</span>{" "}
+                        <span className="text-dim">→ {d.channelName}</span>
+                      </span>
+                      <span className="font-mono text-xs text-down tnum">
+                        {d.lastError ?? "—"} · {t("board.attempts", { n: d.attempts })}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </div>
         </>
       )}
     </div>

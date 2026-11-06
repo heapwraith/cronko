@@ -4,6 +4,7 @@ import { useLocation } from "react-router"
 export function NProgress() {
   const { pathname, search } = useLocation()
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: pathname/search only retrigger the bar on navigation
   useEffect(() => {
     const style = document.createElement("style")
     style.id = "nprogress-style"

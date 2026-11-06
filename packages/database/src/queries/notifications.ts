@@ -1,9 +1,4 @@
-import type {
-  DiscordConfig,
-  EmailConfig,
-  NotificationChannelType,
-  TelegramConfig,
-} from "@cronko/shared"
+import type { NotificationChannel, NotificationChannelType } from "@cronko/shared"
 import { and, asc, desc, eq, lt, lte } from "drizzle-orm"
 import { db } from "../index"
 import { notificationChannels, notificationDeliveries } from "../schema"
@@ -25,7 +20,7 @@ export async function createNotificationChannel(input: {
   name: string
   type: NotificationChannelType
   enabled: boolean
-  config: DiscordConfig | TelegramConfig | EmailConfig
+  config: NotificationChannel["config"]
 }) {
   await db.insert(notificationChannels).values({
     id: input.id,
@@ -46,7 +41,7 @@ export async function updateNotificationChannel(
   input: {
     name?: string
     enabled?: boolean
-    config?: DiscordConfig | TelegramConfig | EmailConfig
+    config?: NotificationChannel["config"]
   },
 ) {
   await db

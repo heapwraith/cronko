@@ -10,11 +10,11 @@ interface ThemeContextValue {
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 
 function getSystemTheme(): "dark" | "light" {
-  if (typeof window === "undefined") return "dark"
+  if (typeof window === "undefined") return "light"
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
 }
 function getStoredTheme(): Theme {
-  if (typeof window === "undefined") return "dark"
+  if (typeof window === "undefined") return "light"
   return (localStorage.getItem("cronko_theme") as Theme) ?? "dark"
 }
 

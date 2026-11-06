@@ -1,14 +1,4 @@
-import {
-  Activity,
-  AlertTriangle,
-  Bell,
-  BookOpen,
-  LayoutDashboard,
-  LogOut,
-  Moon,
-  Settings,
-  Sun,
-} from "lucide-react"
+import { LogOut, Moon, Sun } from "lucide-react"
 import { useEffect, useState } from "react"
 import { NavLink, useNavigate } from "react-router"
 import { api } from "@/lib/api"
@@ -18,8 +8,8 @@ import { CronkoLogo } from "./CronkoLogo"
 import { IconButton } from "./IconButton"
 import { useTheme } from "./ThemeProvider"
 
-/** Departures-board clock: date and time, refreshed twice a minute. */
-function BoardClock() {
+/** Date and time for the logbook masthead, refreshed four times a minute. */
+function Masthead() {
   const { locale } = useT()
   const [now, setNow] = useState(() => new Date())
   useEffect(() => {
@@ -89,27 +79,27 @@ export function TopBar({ instanceName, email }: { instanceName?: string; email?:
   const { t } = useT()
 
   const tabs = [
-    { to: "/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
-    { to: "/monitors", label: t("nav.monitors"), icon: Activity },
-    { to: "/incidents", label: t("nav.incidents"), icon: AlertTriangle },
-    { to: "/notifications", label: t("nav.notifications"), icon: Bell },
-    { to: "/settings", label: t("nav.settings"), icon: Settings },
-    { to: "/how-to-use", label: t("nav.howto"), icon: BookOpen },
+    { to: "/dashboard", label: t("nav.dashboard") },
+    { to: "/monitors", label: t("nav.monitors") },
+    { to: "/incidents", label: t("nav.incidents") },
+    { to: "/notifications", label: t("nav.notifications") },
+    { to: "/settings", label: t("nav.settings") },
+    { to: "/how-to-use", label: t("nav.howto") },
   ]
 
   return (
-    <header className="sticky top-0 z-30 border-b-[3px] border-signal bg-panel">
-      <div className="mx-auto flex max-w-[1400px] items-center gap-4 px-4 py-2.5 sm:px-8">
+    <header className="sticky top-0 z-30 border-b border-line bg-ground/85 backdrop-blur-md">
+      <div className="mx-auto flex max-w-[1440px] items-center gap-4 px-4 py-2.5 sm:px-8">
         <NavLink to="/dashboard" className="flex items-center gap-2.5" aria-label="Cronko">
           <CronkoLogo className="h-6 w-6 text-signal-text" />
-          <span className="text-lg font-bold uppercase tracking-[0.14em] text-ink">
+          <span className="text-lg font-semibold tracking-tight text-ink">
             {instanceName ?? "Cronko"}
           </span>
         </NavLink>
 
         <span className="flex-1" />
 
-        <BoardClock />
+        <Masthead />
         {email && (
           <span className="hidden max-w-48 truncate text-sm text-dim lg:block" title={email}>
             {email}
@@ -122,21 +112,18 @@ export function TopBar({ instanceName, email }: { instanceName?: string; email?:
         </div>
       </div>
 
-      <nav aria-label="Principal" className="border-t border-line">
-        <ul className="mx-auto flex max-w-[1400px] gap-1 overflow-x-auto px-2 sm:px-6">
-          {tabs.map(({ to, label, icon: Icon }) => (
+      <nav aria-label="Principal">
+        <ul className="mx-auto flex max-w-[1440px] gap-1 overflow-x-auto px-3 pb-2 sm:px-7">
+          {tabs.map(({ to, label }) => (
             <li key={to}>
               <NavLink
                 to={to}
                 className={({ isActive }) =>
-                  `relative flex items-center gap-2 whitespace-nowrap px-3 py-2.5 text-sm font-medium transition-colors after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 ${
-                    isActive
-                      ? "text-ink after:bg-signal"
-                      : "text-dim after:bg-transparent hover:text-ink"
+                  `flex items-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                    isActive ? "bg-raised text-ink" : "text-dim hover:bg-raised/60 hover:text-ink"
                   }`
                 }
               >
-                <Icon className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
                 {label}
               </NavLink>
             </li>

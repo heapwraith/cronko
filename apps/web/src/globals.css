@@ -11,7 +11,7 @@
   }
   body {
     font-feature-settings:
-      "tnum" 1,
+      "cv11" 1,
       "ss01" 1;
     -webkit-font-smoothing: antialiased;
   }
@@ -22,7 +22,7 @@
   :focus-visible {
     outline: 2px solid var(--signal-text);
     outline-offset: 2px;
-    border-radius: 2px;
+    border-radius: 6px;
   }
   .dark :focus-visible {
     outline-color: var(--signal);
@@ -35,6 +35,11 @@
   select,
   textarea {
     caret-color: var(--signal-text);
+  }
+  h1,
+  h2 {
+    font-weight: 600;
+    letter-spacing: -0.02em;
   }
   .tnum {
     font-variant-numeric: tabular-nums;
@@ -226,18 +231,6 @@ main {
 }
 .compact .gap-2 {
   gap: 0.25rem;
-}
-
-/* Focus rings */
-:focus-visible {
-  outline: none;
-}
-a:focus-visible,
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  @apply ring-2 ring-emerald-500/50 ring-offset-2 ring-offset-zinc-950 dark:ring-offset-zinc-950;
 }
 
 /* Skip to content */

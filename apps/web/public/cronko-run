@@ -1,0 +1,88 @@
+#!/bin/sh
+# cronko-run: run a job and report it to Cronko in one step.
+#
+#   cronko-run https://cronko.example.com/ping/<token> -- /usr/local/bin/backup.sh --full
+#
+# Runs the command and measures how long it took. Its output still goes to
+# stdout, so cron mails and logs keep working (stderr is merged into stdout).
+# Afterwards it pings Cronko with the duration, the exit code and the last
+# 10 KB of output. A non-zero exit is reported as a failure. The script exits
+# with the job's own exit code, so it can be chained like the job itself.
+#
+# Install:  curl -fsSL https://<your-cronko>/cronko-run -o /usr/local/bin/cronko-run
+#           chmod +x /usr/local/bin/cronko-run
+# Needs:    POSIX sh, curl.
+# Env:      CRONKO_MAX_OUTPUT  bytes of output to send (default 10000, max 10000)
+#           CRONKO_TIMEOUT     seconds per ping request (default 10)
+
+set -u
+
+usage() {
+  echo "usage: cronko-run <ping-url> [--] <command> [args...]" >&2
+  exit 64
+}
+
+[ $# -ge 2 ] || usage
+url=${1%/}
+shift
+[ "$1" = "--" ] && shift
+[ $# -ge 1 ] || usage
+
+case $url in
+  http://*/ping/* | https://*/ping/*) ;;
+  *)
+    echo "cronko-run: the first argument must be a Cronko ping URL (…/ping/<token>)" >&2
+    exit 64
+    ;;
+esac
+
+command -v curl >/dev/null 2>&1 || {
+  echo "cronko-run: curl is required" >&2
+  exit 69
+}
+
+max_output=${CRONKO_MAX_OUTPUT:-10000}
+[ "$max_output" -gt 10000 ] 2>/dev/null && max_output=10000
+timeout=${CRONKO_TIMEOUT:-10}
+
+# Milliseconds since the epoch; falls back to whole seconds where date lacks %N.
+now_ms() {
+  t=$(date +%s%3N 2>/dev/null)
+  case $t in
+    *N* | '') echo $(($(date +%s) * 1000)) ;;
+    *) echo "$t" ;;
+  esac
+}
+
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/cronko-run.XXXXXX") || exit 70
+trap 'rm -rf "$tmp"' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+start=$(now_ms)
+# POSIX sh has no pipefail: the job writes its own exit code to a file.
+{
+  "$@" 2>&1
+  echo $? >"$tmp/status"
+} | tee "$tmp/output"
+end=$(now_ms)
+
+code=$(cat "$tmp/status" 2>/dev/null || echo 127)
+ms=$((end - start))
+# The wall clock can step backwards (NTP/WSL resync); never report a negative duration.
+[ "$ms" -lt 0 ] && ms=0
+
+if [ "$code" -eq 0 ]; then
+  target="$url?d=$ms&exit=0"
+else
+  target="$url/fail?d=$ms&exit=$code"
+fi
+
+tail -c "$max_output" "$tmp/output" >"$tmp/tail"
+set -- -fsS -m "$timeout" --retry 2 -o /dev/null -X POST
+[ -s "$tmp/tail" ] && set -- "$@" -H "Content-Type: text/plain" --data-binary "@$tmp/tail"
+
+# The URL carries the monitor token, so it is never printed.
+curl "$@" "$target" 2>/dev/null || echo "cronko-run: could not report to Cronko" >&2
+
+exit "$code"

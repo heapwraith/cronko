@@ -1,20 +1,26 @@
-import { t } from "@cronko/shared/translations"
+import type { MonitorStatus } from "@cronko/shared/types"
 import { formatDuration, formatRelativeTime } from "@cronko/shared/utils"
 import { useQuery } from "@tanstack/react-query"
-import { AlertTriangle, CheckCircle2, Pencil } from "lucide-react"
-import { Link, useParams } from "react-router"
-import { Sparkline } from "@/components/dashboard/Sparkline"
-import { HeartbeatHistory } from "@/components/monitors/HeartbeatHistory"
+import { OctagonX } from "lucide-react"
+import type { ReactNode } from "react"
+import { useParams } from "react-router"
+import { DurationBars } from "@/components/monitors/DurationBars"
 import { MonitorActions } from "@/components/monitors/MonitorActions"
+import { MuteControl, MutedBadge } from "@/components/monitors/MuteControl"
 import { NextPingCountdown } from "@/components/monitors/NextPingCountdown"
+import { RunHistory, runOutput } from "@/components/monitors/RunHistory"
 import { Breadcrumb } from "@/components/shared/Breadcrumb"
-import { Card, CardBody, CardHeader, CardTitle } from "@/components/shared/Card"
+import { Button } from "@/components/shared/Button"
 import { CopyButton } from "@/components/shared/CopyButton"
 import { StatusBadge } from "@/components/shared/StatusBadge"
 import { api } from "@/lib/api"
-import { statusKey } from "@/lib/status"
+import { formatInterval, formatRunDuration } from "@/lib/format"
+import { useT } from "@/lib/i18n"
 import NotFound from "@/pages/NotFound"
 import MonitorDetailSkeleton from "@/pages/skeletons/MonitorDetailSkeleton"
+
+type Monitor = Awaited<ReturnType<typeof api.monitors.get>>
+type Incident = Awaited<ReturnType<typeof api.monitors.incidents>>[number]
 
 export default function MonitorDetailPage() {
   const { id = "" } = useParams()
@@ -32,357 +38,236 @@ export default function MonitorDetailPage() {
   return <MonitorDetailView monitor={data.monitor} incidents={data.incidents} />
 }
 
-function MonitorDetailView({
-  monitor,
-  incidents,
-}: {
-  monitor: Awaited<ReturnType<typeof api.monitors.get>>
-  incidents: Awaited<ReturnType<typeof api.monitors.incidents>>
-}) {
-  const pingUrl = `${window.location.origin}/ping/${monitor.token}`
-  const latestHeartbeat = monitor.recentHeartbeats[0]
-
-  const durationData = monitor.recentHeartbeats
-    .filter((hb) => hb.durationMs !== null && hb.durationMs !== undefined && hb.durationMs > 0)
-    .reverse()
-    .slice(-30)
-    .flatMap((hb) => (hb.durationMs === null ? [] : [hb.durationMs]))
-
-  const formatMs = (ms: number) => {
-    if (ms < 1000) return `${Math.round(ms)}ms`
-    if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`
-    return `${(ms / 60000).toFixed(1)}min`
-  }
-
-  let avg = 0,
-    p50 = 0,
-    p95 = 0
-  if (durationData.length > 0) {
-    avg = durationData.reduce((s, v) => s + v, 0) / durationData.length
-    const sorted = [...durationData].sort((a, b) => a - b)
-    p50 = sorted[Math.floor(sorted.length * 0.5)] ?? 0
-    p95 = sorted[Math.floor(sorted.length * 0.95)] ?? sorted[sorted.length - 1] ?? 0
-  }
-
-  const hbsWithExit = monitor.recentHeartbeats.filter(
-    (hb) => hb.exitCode !== null && hb.exitCode !== undefined,
+function Panel({ title, children, id }: { title: string; children: ReactNode; id: string }) {
+  return (
+    <section
+      aria-labelledby={id}
+      className="rounded-xl border border-line bg-panel p-5 shadow-[var(--shadow-card)]"
+    >
+      <h2 id={id} className="mb-3 text-base font-semibold text-ink">
+        {title}
+      </h2>
+      {children}
+    </section>
   )
-  const successCount = hbsWithExit.filter((hb) => hb.exitCode === 0).length
-  const failCount = hbsWithExit.length - successCount
+}
 
-  const statusLabel = monitor.paused
-    ? t("pt-BR", "monitor.paused")
-    : t("pt-BR", statusKey(monitor.status))
+function Fact({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div>
+      <dt className="text-xs font-semibold uppercase tracking-wider text-dim">{label}</dt>
+      <dd className="mt-0.5 font-mono text-sm tnum">{children}</dd>
+    </div>
+  )
+}
 
-  const createdAgo = formatDuration(Date.now() - new Date(monitor.createdAt).getTime())
-  const statusDuration = formatDuration(Date.now() - new Date(monitor.updatedAt).getTime())
+function MonitorDetailView({ monitor, incidents }: { monitor: Monitor; incidents: Incident[] }) {
+  const { t, locale } = useT()
+  const status = monitor.status as MonitorStatus
+  const runs = monitor.recentHeartbeats
+  const last = runs[0]
+  const lastOutput = last ? runOutput(last) : null
+  const lastFailed = last?.exitCode != null && last.exitCode !== 0
 
-  const last5 = monitor.recentHeartbeats.slice(0, 5)
+  const pingUrl = `${window.location.origin}/ping/${monitor.token}`
+  const csvUrl = `/api/monitors/${monitor.id}/heartbeats?limit=1000&format=csv`
+
+  const points = [...runs]
+    .reverse()
+    .filter((r) => r.durationMs != null && r.durationMs > 0)
+    .slice(-40)
+    .map((r) => ({
+      id: r.id,
+      durationMs: r.durationMs as number,
+      failed: r.exitCode != null && r.exitCode !== 0,
+      label: new Date(r.receivedAt).toLocaleString(locale),
+    }))
+
+  const incident = monitor.openIncident
+  const cause =
+    status === "failed"
+      ? t("monitor.monitorFailed")
+      : status === "down"
+        ? t("monitor.monitorIsDown")
+        : status === "missed"
+          ? t("monitor.monitorMissedPing")
+          : t("monitor.awaitingRecovery")
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <Breadcrumb
         items={[
-          { label: t("pt-BR", "nav.dashboard"), href: "/dashboard" },
-          { label: t("pt-BR", "nav.monitors"), href: "/monitors" },
+          { label: t("nav.dashboard"), href: "/dashboard" },
+          { label: t("nav.monitors"), href: "/monitors" },
           { label: monitor.name },
         ]}
       />
 
-      {monitor.openIncident && (
-        <div className="rounded-xl border border-amber-200 dark:border-amber-800/50 bg-amber-50/50 dark:bg-amber-950/20 px-4 py-3 flex items-center gap-3">
-          <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-amber-700 dark:text-amber-300">
-              {t("pt-BR", "monitor.incidentInProgress")}
-            </p>
-            <p className="text-xs text-amber-600 dark:text-amber-400">
-              {t("pt-BR", "monitor.incidentStarted")}{" "}
-              {formatRelativeTime(new Date(monitor.openIncident.startedAt))} —{" "}
-              {monitor.status === "failed"
-                ? t("pt-BR", "monitor.monitorFailed")
-                : monitor.status === "down"
-                  ? t("pt-BR", "monitor.monitorIsDown")
-                  : monitor.status === "missed"
-                    ? t("pt-BR", "monitor.monitorMissedPing")
-                    : t("pt-BR", "monitor.awaitingRecovery")}
-            </p>
-          </div>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-3xl leading-tight">{monitor.name}</h1>
+          <StatusBadge status={status} />
+          <MutedBadge mutedUntil={monitor.mutedUntil} />
         </div>
-      )}
-
-      {!monitor.openIncident && monitor.status === "healthy" && monitor.updatedAt && (
-        <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/50 dark:bg-emerald-950/20 px-4 py-3 flex items-center gap-3">
-          <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
-              {t("pt-BR", "monitor.allOperational")}
-            </p>
-            <p className="text-xs text-emerald-600 dark:text-emerald-400">
-              {t("pt-BR", "monitor.healthyFor", { status: statusLabel, duration: statusDuration })}
-            </p>
-          </div>
-        </div>
-      )}
-
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h1 className="text-lg font-semibold text-[#1a1f36] dark:text-zinc-100">
-            {monitor.name}
-          </h1>
-          <StatusBadge status={monitor.status as import("@cronko/shared/types").MonitorStatus} />
-        </div>
-        <div className="flex items-center gap-2">
-          <a
-            href={`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"}/api/monitors/${monitor.id}/heartbeats?limit=1000&format=csv`}
-            className="inline-flex items-center gap-1 rounded-lg border border-[#e8eaed] dark:border-zinc-700 px-3 py-1.5 text-xs font-medium text-[#697386] dark:text-zinc-400 hover:bg-[#f6f8fa] dark:hover:bg-zinc-800 transition-colors"
-          >
-            {t("pt-BR", "monitor.csv")}
-          </a>
-          <MonitorActions monitorId={monitor.id} status={monitor.status} />
+        <div className="flex flex-wrap items-center gap-2">
+          <Button href={csvUrl} variant="ghost" size="sm" target="_blank" rel="noreferrer">
+            {t("detail.exportCsv")}
+          </Button>
+          <MuteControl monitorId={monitor.id} mutedUntil={monitor.mutedUntil} />
+          <MonitorActions monitorId={monitor.id} name={monitor.name} status={monitor.status} />
         </div>
       </div>
 
-      <Card status={monitor.status as import("@cronko/shared/types").MonitorStatus}>
-        <CardHeader>
-          <CardTitle>{t("pt-BR", "monitor.overview")}</CardTitle>
-          <div className="flex items-center gap-3 text-xs text-[#8e99a8] dark:text-zinc-500">
-            <span>
-              {t("pt-BR", "monitor.created")} {createdAgo} {t("pt-BR", "common.ago")}
-            </span>
-            <Link
-              to={`/monitors/${monitor.id}/edit`}
-              className="inline-flex items-center gap-1 text-[#697386] dark:text-zinc-500 hover:text-[#5e6ad2] dark:hover:text-emerald-400 transition-colors"
-            >
-              <Pencil className="h-3 w-3" />
-              {t("pt-BR", "monitors.edit")}
-            </Link>
+      {incident && (
+        <div
+          role="status"
+          className="flex items-start gap-3 rounded-lg border border-line-strong bg-[color-mix(in_srgb,var(--st-down)_14%,var(--panel))] p-4"
+        >
+          <OctagonX className="mt-0.5 h-5 w-5 shrink-0 text-down" aria-hidden="true" />
+          <div>
+            <p className="text-sm font-semibold">{t("monitor.incidentInProgress")}</p>
+            <p className="text-sm text-dim">
+              {t("monitor.incidentStarted")}{" "}
+              {formatRelativeTime(new Date(incident.startedAt), locale)} — {cause}
+            </p>
           </div>
-        </CardHeader>
-        <CardBody className="space-y-3">
-          <div className="flex items-center justify-between gap-2">
-            <code className="text-sm text-[#1a1f36] dark:text-zinc-300 truncate">{pingUrl}</code>
-            <CopyButton text={pingUrl} />
-          </div>
-          <div className="grid grid-cols-4 gap-3">
-            <div>
-              <p className="text-xs text-[#697386] dark:text-zinc-500">
-                {t("pt-BR", "monitor.lastPing")}
-              </p>
-              <p className="text-sm font-medium text-[#1a1f36] dark:text-zinc-100">
-                {latestHeartbeat
-                  ? formatRelativeTime(new Date(latestHeartbeat.receivedAt))
-                  : t("pt-BR", "monitor.never")}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-[#697386] dark:text-zinc-500">
-                {t("pt-BR", "monitor.nextPing")}
-              </p>
-              <p className="text-sm font-medium text-[#1a1f36] dark:text-zinc-100">
-                <NextPingCountdown
-                  lastPingIso={latestHeartbeat?.receivedAt ?? null}
-                  intervalSeconds={monitor.expectedIntervalSeconds}
-                />
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-[#697386] dark:text-zinc-500">
-                {t("pt-BR", "monitor.grace")}
-              </p>
-              <p className="text-sm font-medium text-[#1a1f36] dark:text-zinc-100">
-                {monitor.gracePeriodSeconds}s
-              </p>
-            </div>
-            {hbsWithExit.length > 0 && (
-              <div>
-                <p className="text-xs text-[#697386] dark:text-zinc-500">
-                  {t("pt-BR", "monitor.exitCode")}
-                </p>
-                <p className="text-sm font-medium text-[#1a1f36] dark:text-zinc-100">
-                  <span className="text-emerald-500">{successCount}</span>
-                  <span className="text-[#8e99a8]">/</span>
-                  <span className="text-red-400">{failCount > 0 ? failCount : "0"}</span>
-                  <span className="text-xs text-[#8e99a8] ml-1">
-                    {t("pt-BR", "monitor.okFail")}
-                  </span>
-                </p>
-              </div>
-            )}
-          </div>
-        </CardBody>
-      </Card>
+        </div>
+      )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("pt-BR", "monitor.responseTime")}</CardTitle>
-          </CardHeader>
-          <CardBody>
-            {durationData.length < 2 ? (
-              <p className="text-xs text-[#8e99a8] dark:text-zinc-500">
-                {t("pt-BR", "monitor.notEnoughData")}
-              </p>
-            ) : (
+      <div className="grid gap-4 lg:grid-cols-5">
+        <div className="lg:col-span-3">
+          <Panel id="last-run" title={t("detail.lastRun")}>
+            {last ? (
               <>
-                <Sparkline data={durationData} color="rgb(52 211 153)" height={48} />
-                <div className="grid grid-cols-3 gap-2 mt-3">
-                  <div className="text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-[#8e99a8] dark:text-zinc-500">
-                      {t("pt-BR", "monitor.avg")}
-                    </p>
-                    <p className="text-sm font-semibold text-[#1a1f36] dark:text-zinc-100">
-                      {formatMs(avg)}
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-[#8e99a8] dark:text-zinc-500">
-                      P50
-                    </p>
-                    <p className="text-sm font-semibold text-[#1a1f36] dark:text-zinc-100">
-                      {formatMs(p50)}
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-[#8e99a8] dark:text-zinc-500">
-                      P95
-                    </p>
-                    <p className="text-sm font-semibold text-[#1a1f36] dark:text-zinc-100">
-                      {formatMs(p95)}
-                    </p>
-                  </div>
-                </div>
+                <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                  <Fact label={t("detail.when")}>
+                    {formatRelativeTime(new Date(last.receivedAt), locale)}
+                  </Fact>
+                  <Fact label={t("board.duration")}>{formatRunDuration(last.durationMs)}</Fact>
+                  <Fact label={t("board.exit")}>
+                    <span className="inline-flex items-center gap-1.5">
+                      {last.exitCode == null ? (
+                        "—"
+                      ) : lastFailed ? (
+                        <span className="font-semibold text-failed">
+                          {last.exitCode} · {t("detail.exitFail")}
+                        </span>
+                      ) : (
+                        <>
+                          {last.exitCode} · {t("detail.exitOk")}
+                        </>
+                      )}
+                    </span>
+                  </Fact>
+                  <Fact label={t("detail.source")}>{last.sourceIp ?? "—"}</Fact>
+                </dl>
+                <h3 className="mb-1.5 mt-5 text-xs font-semibold uppercase tracking-wider text-dim">
+                  {t("detail.output")}
+                </h3>
+                {lastOutput ? (
+                  <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-words rounded-md bg-ground p-3 font-mono text-xs">
+                    {lastOutput}
+                  </pre>
+                ) : (
+                  <p className="text-sm text-dim">{t("detail.noOutput")}</p>
+                )}
               </>
+            ) : (
+              <p className="text-sm text-dim">{t("detail.neverRan")}</p>
             )}
-          </CardBody>
-        </Card>
+          </Panel>
+        </div>
 
-        <HeartbeatHistory heartbeats={monitor.recentHeartbeats} />
+        <div className="lg:col-span-2">
+          <Panel id="schedule" title={t("detail.schedule")}>
+            <dl className="grid grid-cols-2 gap-4">
+              {monitor.scheduleCron ? (
+                <Fact label={t("form.cron")}>
+                  {monitor.scheduleCron}
+                  <span className="block text-xs text-dim">{monitor.timezone ?? "UTC"}</span>
+                </Fact>
+              ) : (
+                <Fact label={t("detail.interval")}>
+                  {formatInterval(monitor.expectedIntervalSeconds)}
+                </Fact>
+              )}
+              <Fact label={t("detail.grace")}>{formatInterval(monitor.gracePeriodSeconds)}</Fact>
+              <Fact label={t("detail.nextExpected")}>
+                <NextPingCountdown dueIso={monitor.paused ? null : monitor.nextExpectedAt} />
+              </Fact>
+              <Fact label={t("detail.maxDuration")}>
+                {monitor.maxDurationMs ? formatDuration(monitor.maxDurationMs) : "—"}
+              </Fact>
+            </dl>
+          </Panel>
+        </div>
       </div>
 
-      {last5.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("pt-BR", "monitor.recentPings")}</CardTitle>
-            <span className="text-xs text-[#8e99a8] dark:text-zinc-500">
-              {t("pt-BR", "monitor.lastPings", { count: last5.length })}
-            </span>
-          </CardHeader>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-[#e8eaed] dark:border-zinc-800/80 text-left">
-                  <th className="px-4 py-2 text-xs font-medium text-[#697386] dark:text-zinc-500">
-                    {t("pt-BR", "monitor.time")}
-                  </th>
-                  <th className="px-4 py-2 text-xs font-medium text-[#697386] dark:text-zinc-500">
-                    {t("pt-BR", "monitor.duration")}
-                  </th>
-                  <th className="px-4 py-2 text-xs font-medium text-[#697386] dark:text-zinc-500">
-                    {t("pt-BR", "monitor.exit")}
-                  </th>
-                  <th className="px-4 py-2 text-xs font-medium text-[#697386] dark:text-zinc-500">
-                    {t("pt-BR", "monitor.log")}
-                  </th>
-                  <th className="px-4 py-2 text-xs font-medium text-[#697386] dark:text-zinc-500">
-                    {t("pt-BR", "monitor.source")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {last5.map((hb) => (
-                  <tr key={hb.id} className="border-b border-[#e8eaed] dark:border-zinc-800/50">
-                    <td className="px-4 py-2 text-sm text-[#697386] dark:text-zinc-400">
-                      {new Date(hb.receivedAt).toLocaleString()}
-                    </td>
-                    <td className="px-4 py-2 text-sm text-[#1a1f36] dark:text-zinc-100">
-                      {hb.durationMs !== null && hb.durationMs !== undefined
-                        ? formatMs(hb.durationMs)
-                        : "—"}
-                    </td>
-                    <td className="px-4 py-2 text-sm">
-                      {hb.exitCode === null || hb.exitCode === undefined ? (
-                        <span className="text-[#8e99a8]">—</span>
-                      ) : hb.exitCode === 0 ? (
-                        <span className="text-emerald-500 font-mono text-xs">{hb.exitCode}</span>
-                      ) : (
-                        <span className="text-red-400 font-mono text-xs">{hb.exitCode}</span>
-                      )}
-                    </td>
-                    <td
-                      className="px-4 py-2 text-sm text-[#697386] dark:text-zinc-400 truncate max-w-48"
-                      title={hb.body ?? undefined}
-                    >
-                      {hb.body?.length
-                        ? hb.body.slice(0, 40) + (hb.body.length > 40 ? "..." : "")
-                        : "—"}
-                    </td>
-                    <td className="px-4 py-2 text-sm text-[#697386] dark:text-zinc-400 truncate max-w-32">
-                      {hb.sourceIp ?? "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
+      <Panel id="ping-url" title={t("detail.pingUrl")}>
+        <div className="flex flex-wrap items-center gap-3">
+          <code className="min-w-0 flex-1 select-all overflow-x-auto whitespace-nowrap rounded-md bg-ground px-3 py-2 font-mono text-sm">
+            {pingUrl}
+          </code>
+          <CopyButton text={pingUrl} />
+        </div>
+        <p className="mt-2 font-mono text-xs text-dim">
+          {pingUrl}/start · {pingUrl}/fail
+        </p>
+      </Panel>
+
+      {points.length > 0 && (
+        <Panel id="durations" title={t("detail.durations")}>
+          <DurationBars points={points} />
+        </Panel>
       )}
 
-      {incidents.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("pt-BR", "monitor.incidents")}</CardTitle>
-          </CardHeader>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-[#e8eaed] dark:border-zinc-800/80 text-left">
-                  <th className="px-4 py-2 text-xs font-medium text-[#697386] dark:text-zinc-500">
-                    {t("pt-BR", "monitor.started")}
-                  </th>
-                  <th className="px-4 py-2 text-xs font-medium text-[#697386] dark:text-zinc-500">
-                    {t("pt-BR", "monitor.resolved")}
-                  </th>
-                  <th className="px-4 py-2 text-xs font-medium text-[#697386] dark:text-zinc-500">
-                    {t("pt-BR", "incidents.duration")}
-                  </th>
-                  <th className="px-4 py-2 text-xs font-medium text-[#697386] dark:text-zinc-500">
-                    {t("pt-BR", "incidents.status")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {incidents.map((inc) => {
-                  const started = new Date(inc.startedAt)
-                  const resolved = inc.resolvedAt ? new Date(inc.resolvedAt) : null
-                  return (
-                    <tr key={inc.id} className="border-b border-[#e8eaed] dark:border-zinc-800/50">
-                      <td className="px-4 py-2.5 text-sm text-[#697386] dark:text-zinc-400">
-                        {started.toLocaleString()}
-                      </td>
-                      <td className="px-4 py-2.5 text-sm text-[#697386] dark:text-zinc-400">
-                        {resolved ? resolved.toLocaleString() : "—"}
-                      </td>
-                      <td className="px-4 py-2.5 text-sm text-[#697386] dark:text-zinc-400">
-                        {resolved
-                          ? formatDuration(resolved.getTime() - started.getTime())
-                          : t("pt-BR", "monitor.ongoing")}
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${inc.status === "open" ? "bg-red-500/10 text-red-600 dark:text-red-400" : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"}`}
-                        >
-                          {inc.status}
-                        </span>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      )}
+      <section
+        aria-labelledby="history"
+        className="space-y-3 rounded-xl border border-line bg-panel p-5 shadow-[var(--shadow-card)]"
+      >
+        <h2 id="history" className="text-base font-semibold">
+          {t("detail.history")}
+        </h2>
+        {runs.length > 0 ? (
+          <RunHistory runs={runs} caption={t("detail.history")} monitorId={monitor.id} />
+        ) : (
+          <p className="text-sm text-dim">{t("detail.neverRan")}</p>
+        )}
+      </section>
+
+      <section
+        aria-labelledby="incidents"
+        className="space-y-3 rounded-xl border border-line bg-panel p-5 shadow-[var(--shadow-card)]"
+      >
+        <h2 id="incidents" className="text-base font-semibold">
+          {t("detail.incidents")}
+        </h2>
+        {incidents.length === 0 ? (
+          <p className="text-sm text-dim">{t("detail.noIncidents")}</p>
+        ) : (
+          <ul className="divide-y divide-line border-y border-line">
+            {incidents.map((i) => (
+              <li
+                key={i.id}
+                className="flex flex-wrap items-center justify-between gap-2 py-3 text-sm"
+              >
+                <span className="font-mono text-xs tnum">
+                  {new Date(i.startedAt).toLocaleString(locale)}
+                </span>
+                <span className={i.resolvedAt ? "text-dim" : "font-semibold text-down"}>
+                  {i.resolvedAt
+                    ? t("detail.resolvedAfter", {
+                        time: formatDuration(
+                          new Date(i.resolvedAt).getTime() - new Date(i.startedAt).getTime(),
+                        ),
+                      })
+                    : t("detail.open")}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   )
 }

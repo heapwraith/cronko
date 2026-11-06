@@ -56,3 +56,5 @@ sbom.json
 # Misc
 .cache/
 *.tgz
+# Playwright e2e scratch
+.e2e/
