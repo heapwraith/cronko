@@ -4,6 +4,7 @@ import { CopyButton } from "@/components/shared/CopyButton"
 import { StatusBadge } from "@/components/shared/StatusBadge"
 import { api } from "@/lib/api"
 import { useT } from "@/lib/i18n"
+import { useInboundEmailDomain } from "@/lib/useInboundEmail"
 
 function CodeBlock({ children }: { children: string }) {
   return (
@@ -47,6 +48,7 @@ export default function HowToUsePage() {
   })
   const token = monitors[0]?.token ?? "SEU_TOKEN"
   const ping = `${baseUrl}/ping/${token}`
+  const inboundDomain = useInboundEmailDomain()
 
   const steps = [1, 2, 3, 4] as const
 
@@ -124,6 +126,17 @@ curl -fsS "${ping}?d=\${MS}&exit=\${EXIT}"`}</CodeBlock>
 ./meu-job-longo.sh
 curl -fsS -X POST "${ping}/finish?exit=$?"`}</CodeBlock>
       </Section>
+
+      {inboundDomain && (
+        <Section title={t("howto.email.title")}>
+          <P>{t("howto.email.p1")}</P>
+          <Sub>{t("howto.email.success")}</Sub>
+          <CodeBlock>{`${token}@${inboundDomain}`}</CodeBlock>
+          <Sub>{t("howto.email.fail")}</Sub>
+          <CodeBlock>{`${token}+fail@${inboundDomain}`}</CodeBlock>
+          <P>{t("howto.email.keywords")}</P>
+        </Section>
+      )}
 
       <Section title={t("howto.status.title")}>
         <P>{t("howto.status.p1")}</P>

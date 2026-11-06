@@ -14,6 +14,7 @@ with it is the entry ticket and the differentiators below are the reason to swit
 | Max-duration alert                                 | yes               | partial         | no                       |
 | Cron expression + timezone schedule                | yes               | yes             | no                       |
 | Explicit `/fail` signal                            | yes               | yes             | no                       |
+| Ping by e-mail                                     | yes               | yes             | no                       |
 | Per-check event log with output                    | yes               | yes             | partial                  |
 | Notification channels                              | 9                 | many            | many                     |
 | Public status pages                                | yes (per tag)     | badges          | yes                      |

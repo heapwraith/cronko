@@ -87,7 +87,7 @@ const spec = {
     },
     "/ping/{token}/start": {
       post: {
-        summary: "Pulse start — begin a long-running job",
+        summary: "Pulse start — begin a long-running job (GET is also accepted)",
         parameters: [{ name: "token", in: "path", required: true, schema: { type: "string" } }],
         responses: { "200": { description: "ok" }, "404": { description: "Monitor not found" } },
       },
@@ -111,12 +111,14 @@ const spec = {
     "/ping/{token}/finish": {
       post: {
         summary: "Pulse finish — complete a long-running job with duration",
+        description:
+          "Closes the open `/start`. Without `d`, the duration is the time since that `/start`. With no open `/start`, it is stored as a plain run. GET is also accepted.",
         parameters: [
           { name: "token", in: "path", required: true, schema: { type: "string" } },
           {
             name: "d",
             in: "query",
-            schema: { type: "integer", description: "Duration in seconds" },
+            schema: { type: "integer", description: "Duration in ms (optional)" },
           },
           { name: "exit", in: "query", schema: { type: "integer", description: "Exit code" } },
         ],
@@ -207,12 +209,26 @@ const spec = {
             "application/json": {
               schema: {
                 type: "object",
-                required: ["name", "expectedIntervalSeconds"],
+                description: "Give expectedIntervalSeconds or scheduleCron (with timezone).",
+                required: ["name"],
                 properties: {
                   name: { type: "string", minLength: 1, maxLength: 100 },
                   expectedIntervalSeconds: { type: "integer", minimum: 10, maximum: 31536000 },
+                  scheduleCron: {
+                    type: "string",
+                    description: "5-field cron expression or @nickname",
+                  },
+                  timezone: { type: "string", description: "IANA timezone for scheduleCron" },
                   gracePeriodSeconds: { type: "integer", default: 120 },
                   maxDurationMs: { type: "integer" },
+                  tags: { type: "array", items: { type: "string" }, maxItems: 10 },
+                  alertOnAnomalies: { type: "boolean", default: false },
+                  emailFailureKeywords: {
+                    type: "array",
+                    items: { type: "string", maxLength: 40 },
+                    maxItems: 10,
+                    description: "Ping by e-mail: subject words that mark a failure",
+                  },
                 },
               },
             },
@@ -235,7 +251,7 @@ const spec = {
         },
       },
       patch: {
-        summary: "Update a monitor",
+        summary: "Update a monitor (same fields as create, all optional)",
         security: [{ bearerAuth: [] }, { csrf: [] }],
         parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
         responses: { "200": { description: "Monitor updated" } },
@@ -461,9 +477,54 @@ const spec = {
         responses: { "200": { description: "Settings object" } },
       },
       post: {
-        summary: "Update settings",
+        summary: "Update settings (includes digestFrequency off|daily|weekly and digestHour)",
         security: [{ bearerAuth: [] }, { csrf: [] }],
         responses: { "200": { description: "Settings updated" } },
+      },
+    },
+    "/api/settings/digest/test": {
+      post: {
+        summary: "Queue a digest for the last period on every enabled channel",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        responses: {
+          "200": { description: "Number of deliveries queued" },
+          "400": { description: "No enabled notification channel" },
+        },
+      },
+    },
+    "/api/maintenance-windows": {
+      get: {
+        summary: "List maintenance windows, with whether each is running now",
+        security: [{ bearerAuth: [] }],
+        responses: { "200": { description: "Array of windows" } },
+      },
+      post: {
+        summary: "Create a recurring maintenance window",
+        description:
+          "Body: name, schedule (cron start), timezone, durationMinutes (up to 7 days), target (all | tag | monitor), targetValue, enabled.",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        responses: { "201": { description: "Created" }, "400": { description: "Invalid" } },
+      },
+    },
+    "/api/maintenance-windows/{id}": {
+      patch: {
+        summary: "Update a maintenance window",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        responses: { "200": { description: "Updated" }, "404": { description: "Not found" } },
+      },
+      delete: {
+        summary: "Delete a maintenance window",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        responses: { "200": { description: "Deleted" }, "404": { description: "Not found" } },
+      },
+    },
+    "/api/notifications/deliveries": {
+      get: {
+        summary: "Delivery log: recent alert deliveries with status, attempts and last error",
+        security: [{ bearerAuth: [] }],
+        responses: { "200": { description: "Array of deliveries" } },
       },
     },
     "/api/audit": {

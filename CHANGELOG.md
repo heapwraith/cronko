@@ -20,6 +20,14 @@ Upgrading from 0.2 only needs a new image; migration `0016` is applied on boot.
 ### Changed
 
 - `POST /api/settings` now rejects an unknown `timezone`.
+- `TELEGRAM_BOT_TOKEN` is gone from the environment and `.env.example`: it was never read (Telegram is set per channel in the UI). Leaving it set is harmless.
+
+### Fixed
+
+- `/finish` without `d` now takes its duration from the open `/start`, as the docs said. Before, the run had no duration and the `/start` stayed open, so the next run could be flagged as overlapping.
+- A `/finish` with no open `/start` is kept as a plain run instead of being dropped. A duration is never attached to an earlier plain ping.
+- OpenAPI: `d` on `/finish` is in milliseconds (it said seconds). The spec now documents the cron, tags, anomaly and e-mail fields on monitors, maintenance windows, the delivery log and the digest test.
+- README, `.env.example` and the in-app guide: the `/start` + `/finish` example, `AUTO_MIGRATE` defaults, `pnpm e2e`, alert events, the monitor form steps, and ping by e-mail.
 
 ## [0.2.0] - 2026-11-06
 

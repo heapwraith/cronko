@@ -14,7 +14,6 @@ const envSchema = z
     SMTP_USER: z.string().optional(),
     SMTP_PASS: z.string().optional(),
     SMTP_FROM: z.email().optional(),
-    TELEGRAM_BOT_TOKEN: z.string().optional(),
     // Ping by e-mail: an SMTP listener that turns mail to <token>@INBOUND_EMAIL_DOMAIN
     // into pings. Off unless a port is set; point the domain's MX record here.
     INBOUND_SMTP_PORT: z.coerce.number().int().min(1).max(65_535).optional(),

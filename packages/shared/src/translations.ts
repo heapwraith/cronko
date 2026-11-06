@@ -603,15 +603,17 @@ export const translations = {
     "howto.create.p1":
       "Cada monitor representa um job ou tarefa que você quer acompanhar. Siga os passos:",
     "howto.create.step1name": "Acesse Monitores → Novo Monitor",
-    "howto.create.step1desc": "Preencha nome e intervalo esperado (ex: 3600 segundos = 1 hora).",
+    "howto.create.step1desc":
+      "Dê um nome e diga como o job roda: a cada intervalo (ex.: 1 hora) ou por expressão cron com fuso horário.",
     "howto.create.step2name": "Defina o período de tolerância (grace period)",
     "howto.create.step2desc":
-      "Tempo extra antes de marcar como 'missed'. Ex: 300s = tolerância de 5 minutos.",
+      "Tempo extra, em minutos, antes de marcar como atrasado. Ex.: 5 minutos.",
     "howto.create.step3name": "Opcional: defina duração máxima",
     "howto.create.step3desc":
       "Se o job demorar mais que isso, um incidente é gerado automaticamente.",
-    "howto.create.step4name": "Copie o token gerado",
-    "howto.create.step4desc": "O token é único para cada monitor. Use-o nos exemplos abaixo.",
+    "howto.create.step4name": "Copie a URL de ping",
+    "howto.create.step4desc":
+      "Ela aparece na página do monitor e contém um token secreto, único por monitor. Os exemplos abaixo já usam a do seu primeiro monitor.",
     "howto.ping.title": "Enviando Pings",
     "howto.ping.p1":
       "Seu job deve fazer uma requisição HTTP para o Cronko ao finalizar. Use os exemplos abaixo com seu token:",
@@ -631,6 +633,13 @@ export const translations = {
     "howto.pulse.title": "Pulse — Medindo Duração (Start/Finish)",
     "howto.pulse.p1":
       "Para jobs longos, use o padrão pulse: envie /start antes de começar e /finish ao terminar. A duração é calculada automaticamente.",
+    "howto.email.title": "Ping por e-mail",
+    "howto.email.p1":
+      "Para equipamentos que só sabem mandar e-mail (NAS, softwares de backup, roteadores). Cada mensagem recebida conta como um ping; o remetente, o assunto e o texto viram a saída da execução.",
+    "howto.email.success": "Sucesso",
+    "howto.email.fail": "Falha",
+    "howto.email.keywords":
+      "Você também pode definir, no formulário do monitor, palavras de falha: um assunto que contenha alguma delas conta como falha.",
     "howto.status.title": "Ciclo de Status",
     "howto.status.p1": "Entenda o ciclo de vida de um monitor:",
     "howto.badge.title": "Badge de Status Público",
@@ -640,7 +649,7 @@ export const translations = {
     "howto.badge.markdown": "Embed no README (Markdown)",
     "howto.notifications.title": "Notificações",
     "howto.notifications.p1":
-      "Configure canais de notificação na aba Notificações. Alertas são enviados quando um monitor muda para missed, down ou recovered.",
+      "Configure canais na aba Notificações. Há alertas quando um monitor atrasa, cai, falha, passa da duração máxima e quando volta ao normal. Lá também ficam as janelas de manutenção e o histórico de entregas; o resumo diário ou semanal fica em Configurações.",
     "howto.notifications.discord": "Webhook do Discord — receba alertas em qualquer canal.",
     "howto.notifications.telegram": "Bot do Telegram — envie alertas para um chat.",
     "howto.notifications.email": "Email SMTP — alertas por email.",
@@ -1276,15 +1285,16 @@ export const translations = {
     "howto.create.p1":
       "Each monitor represents a job or task you want to track. Follow these steps:",
     "howto.create.step1name": "Go to Monitors → New Monitor",
-    "howto.create.step1desc": "Fill in name and expected interval (e.g., 3600 seconds = 1 hour).",
+    "howto.create.step1desc":
+      "Name it and say how the job runs: every interval (e.g. 1 hour) or on a cron expression with a timezone.",
     "howto.create.step2name": "Set the grace period",
-    "howto.create.step2desc":
-      "Extra time before marking as 'missed'. E.g., 300s = 5 minutes tolerance.",
+    "howto.create.step2desc": "Extra time, in minutes, before it is marked late. E.g. 5 minutes.",
     "howto.create.step3name": "Optional: set max duration",
     "howto.create.step3desc":
       "If the job takes longer than this, an incident is automatically generated.",
-    "howto.create.step4name": "Copy the generated token",
-    "howto.create.step4desc": "The token is unique for each monitor. Use it in the examples below.",
+    "howto.create.step4name": "Copy the ping URL",
+    "howto.create.step4desc":
+      "It is on the monitor page and holds a secret token, unique per monitor. The examples below already use your first monitor's.",
     "howto.ping.title": "Sending Pings",
     "howto.ping.p1":
       "Your job should make an HTTP request to Cronko when it finishes. Use the examples below with your token:",
@@ -1304,6 +1314,13 @@ export const translations = {
     "howto.pulse.title": "Pulse — Measuring Duration (Start/Finish)",
     "howto.pulse.p1":
       "For long-running jobs, use the pulse pattern: send /start before starting and /finish when done. Duration is calculated automatically.",
+    "howto.email.title": "Ping by e-mail",
+    "howto.email.p1":
+      "For devices that can only send e-mail (NAS, backup software, routers). Every message received counts as a ping; the sender, subject and text become the run output.",
+    "howto.email.success": "Success",
+    "howto.email.fail": "Failure",
+    "howto.email.keywords":
+      "You can also set failure words in the monitor form: a subject containing one counts as a failure.",
     "howto.status.title": "Status Cycle",
     "howto.status.p1": "Understand a monitor's lifecycle:",
     "howto.badge.title": "Public Status Badge",
@@ -1313,7 +1330,7 @@ export const translations = {
     "howto.badge.markdown": "Embed in README (Markdown)",
     "howto.notifications.title": "Notifications",
     "howto.notifications.p1":
-      "Configure notification channels in the Notifications tab. Alerts are sent when a monitor changes to missed, down, or recovered.",
+      "Set up channels on the Notifications page. Alerts go out when a monitor is late, goes down, fails, exceeds its max duration, and when it recovers. Maintenance windows and the delivery log live there too; the daily or weekly digest is under Settings.",
     "howto.notifications.discord": "Discord Webhook — receive alerts in any channel.",
     "howto.notifications.telegram": "Telegram Bot — send alerts to a chat.",
     "howto.notifications.email": "SMTP Email — email alerts.",
