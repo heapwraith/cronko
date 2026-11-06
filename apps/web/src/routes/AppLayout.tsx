@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { Navigate, Outlet, useLocation } from "react-router"
 import { NProgress } from "@/components/shared/NProgress"
-import { Sidebar } from "@/components/shared/Sidebar"
+import { TopBar } from "@/components/shared/TopBar"
 import { ApiError, api } from "@/lib/api"
 
 /** Authenticated shell: checks the session, then renders the sidebar + page. */
@@ -28,13 +28,16 @@ export function AppLayout() {
   const instanceName = settings.data?.instanceName
 
   return (
-    <div className="flex h-screen">
+    <div className="flex min-h-screen flex-col">
       <a href="#main-content" className="skip-link">
         Skip to content
       </a>
       <NProgress />
-      <Sidebar {...(instanceName !== undefined ? { instanceName } : {})} />
-      <main id="main-content" className="flex-1 overflow-auto p-6">
+      <TopBar
+        {...(instanceName !== undefined && { instanceName })}
+        {...(session.data?.email !== undefined && { email: session.data.email })}
+      />
+      <main id="main-content" className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-6 sm:px-8">
         <Outlet />
       </main>
     </div>

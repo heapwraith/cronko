@@ -6,7 +6,7 @@ import {
 import { transitionMonitorStatus } from "@cronko/database/queries/monitors"
 import { sendNotification } from "./notifier"
 
-export type MonitorStatus = "healthy" | "missed" | "down" | "paused" | "pending"
+export type MonitorStatus = "healthy" | "missed" | "down" | "failed" | "paused" | "pending"
 
 export interface MonitorSnapshot {
   id: string
@@ -30,7 +30,8 @@ export function evaluateMonitor(
   lastPingAt: Date | undefined,
   now: number,
 ): "missed" | "down" | null {
-  if (monitor.status === "paused") return null
+  // A failed run was already reported; it stays failed until a good ping arrives.
+  if (monitor.status === "paused" || monitor.status === "failed") return null
 
   const base = (lastPingAt ?? monitor.createdAt).getTime()
   const missedAt = base + (monitor.expectedIntervalSeconds + monitor.gracePeriodSeconds) * 1000
@@ -67,6 +68,30 @@ export async function markOverdue(
   return true
 }
 
+/**
+ * The job ran and reported failure (explicit /fail, or a non-zero exit code).
+ * Alerts immediately instead of waiting for the deadline; repeated failures
+ * while already failed do not re-alert.
+ */
+export async function markFailed(
+  monitor: Pick<MonitorSnapshot, "id" | "name" | "status">,
+  exitCode?: number,
+  now = new Date(),
+): Promise<boolean> {
+  if (monitor.status === "failed" || monitor.status === "paused") return false
+
+  const won = await transitionMonitorStatus(monitor.id, monitor.status, "failed")
+  if (!won) return false
+
+  await openIncidentOnce(monitor.id, now)
+  await sendNotification(
+    { name: monitor.name },
+    "failed",
+    exitCode !== undefined ? `exit code ${exitCode}` : undefined,
+  )
+  return true
+}
+
 /** A job ran longer than its configured max duration. */
 export async function markSlow(
   monitor: Pick<MonitorSnapshot, "id" | "name" | "status">,
@@ -91,9 +116,8 @@ export async function recoverOnPing(
   monitor: Pick<MonitorSnapshot, "id" | "name" | "status">,
   now = new Date(),
 ): Promise<boolean> {
-  if (monitor.status !== "missed" && monitor.status !== "down" && monitor.status !== "pending") {
-    return false
-  }
+  const recoverable = ["missed", "down", "failed", "pending"]
+  if (!recoverable.includes(monitor.status)) return false
 
   const won = await transitionMonitorStatus(monitor.id, monitor.status, "healthy")
   if (!won) return false

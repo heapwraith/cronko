@@ -9,11 +9,12 @@ import {
 import { logger } from "../lib/logger"
 import { type ChannelRow, DeliveryError, deliver } from "./channels"
 
-export type NotificationEvent = "missed" | "down" | "recovered" | "slow"
+export type NotificationEvent = "missed" | "down" | "failed" | "recovered" | "slow"
 
 const messages: Record<NotificationEvent, (name: string) => string> = {
   missed: (name) => `⚠️ ${name} não executou no tempo esperado`,
   down: (name) => `🔴 ${name} está down`,
+  failed: (name) => `❌ ${name} falhou`,
   recovered: (name) => `✅ ${name} voltou a executar normalmente`,
   slow: (name) => `🐢 ${name} excedeu a duração máxima configurada`,
 }
@@ -27,7 +28,11 @@ export const MAX_ATTEMPTS = RETRY_DELAYS_MS.length + 1
  * its retries) happens in the outbox worker, so a slow or failing channel can
  * never stall the scheduler, and queued alerts survive a restart.
  */
-export async function sendNotification(monitor: { name: string }, event: NotificationEvent) {
+export async function sendNotification(
+  monitor: { name: string },
+  event: NotificationEvent,
+  detail?: string,
+) {
   const channels = await findEnabledNotificationChannels()
   if (channels.length === 0) return
 
@@ -38,7 +43,7 @@ export async function sendNotification(monitor: { name: string }, event: Notific
       channelId: channel.id,
       monitorName: monitor.name,
       event,
-      message: messages[event](monitor.name),
+      message: messages[event](monitor.name) + (detail ? ` (${detail})` : ""),
     })),
     now,
   )

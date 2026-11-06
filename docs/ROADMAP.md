@@ -31,6 +31,8 @@ making product claims.
 - Atomic monitor state machine: no duplicate alerts, recovery alerts now sent.
 - Fetch-metadata CSRF, strict CSP, trustworthy client IP, no CORS.
 - Tests against a real migrated SQLite; Biome; CI with a Docker smoke test.
+- Notification outbox with retry/backoff and a delivery log API.
+- `/fail` signal and a distinct `failed` state with an immediate alert.
 
 ## P0 - reliability (a lost alert is fatal)
 
@@ -43,10 +45,9 @@ making product claims.
 ## P1 - parity with Healthchecks
 
 1. Cron expression + timezone schedules, with next-expected-run.
-2. `/ping/:token/fail` and a distinct `failed` state.
-3. Per-check event log with captured output (size-limited).
-4. More channels: generic webhook, ntfy, Pushover, PagerDuty, Teams.
-5. Ping by e-mail; mute per check.
+2. Per-check event log with captured output (size-limited).
+3. More channels: generic webhook, ntfy, Pushover, PagerDuty, Teams.
+4. Ping by e-mail; mute per check.
 
 ## P2 - differentiators
 

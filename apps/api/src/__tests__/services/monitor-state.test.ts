@@ -7,10 +7,10 @@ import type * as StateModule from "../../services/monitor-state"
 import type * as SchedulerModule from "../../services/scheduler"
 import { setupTestDb } from "../helpers/testDb"
 
-const sent: Array<{ name: string; event: string }> = []
+const sent: Array<{ name: string; event: string; detail?: string }> = []
 vi.mock("../../services/notifier", () => ({
-  sendNotification: async (monitor: { name: string }, event: string) => {
-    sent.push({ name: monitor.name, event })
+  sendNotification: async (monitor: { name: string }, event: string, detail?: string) => {
+    sent.push({ name: monitor.name, event, ...(detail !== undefined && { detail }) })
   },
   // The outbox worker has its own tests (notifier.test.ts); stub it here.
   processDueDeliveries: async () => 0,
@@ -214,6 +214,74 @@ describe("monitor lifecycle (real SQLite)", () => {
     await processHeartbeat(m.token, { durationMs: 200 })
     expect((await q.findMonitorById(m.id))?.status).toBe("healthy")
     expect(events()).toEqual(["slow", "recovered"])
+  })
+
+  describe("failure signal", () => {
+    it("explicit /fail alerts immediately with the exit code, once", async () => {
+      const m = await newMonitor()
+      await processHeartbeat(m.token, { failed: true, exitCode: 2 })
+      await processHeartbeat(m.token, { failed: true, exitCode: 2 })
+
+      expect((await q.findMonitorById(m.id))?.status).toBe("failed")
+      expect(sent).toEqual([{ name: "backup", event: "failed", detail: "exit code 2" }])
+      expect(await q.findIncidents({ limit: 10, offset: 0 })).toHaveLength(1)
+    })
+
+    it("a non-zero exit code on a normal ping is a failure", async () => {
+      const m = await newMonitor()
+      await processHeartbeat(m.token, { exitCode: 1 })
+      expect((await q.findMonitorById(m.id))?.status).toBe("failed")
+      expect(events()).toEqual(["failed"])
+    })
+
+    it("exit code 0 is a success and does not alert", async () => {
+      const m = await newMonitor()
+      await processHeartbeat(m.token, { exitCode: 0 })
+      expect((await q.findMonitorById(m.id))?.status).toBe("healthy")
+      expect(events()).toEqual([])
+    })
+
+    it("a good ping recovers a failed monitor and closes the incident", async () => {
+      const m = await newMonitor()
+      await processHeartbeat(m.token, { failed: true })
+      await processHeartbeat(m.token, { exitCode: 0 })
+
+      expect((await q.findMonitorById(m.id))?.status).toBe("healthy")
+      expect(events()).toEqual(["failed", "recovered"])
+      expect(await q.findOpenIncident(m.id)).toBeUndefined()
+    })
+
+    it("the scheduler does not escalate an already-reported failure to down", async () => {
+      const m = await newMonitor()
+      await processHeartbeat(m.token, { failed: true })
+      sent.length = 0
+
+      await runTick(Date.now() + 365 * 24 * 60 * MIN)
+      expect((await q.findMonitorById(m.id))?.status).toBe("failed")
+      expect(events()).toEqual([])
+    })
+
+    it("a failure on a pending monitor is reported", async () => {
+      const m = await newMonitor("pending")
+      await processHeartbeat(m.token, { failed: true })
+      expect((await q.findMonitorById(m.id))?.status).toBe("failed")
+    })
+
+    it("a start pulse neither recovers nor fails the monitor", async () => {
+      const m = await newMonitor()
+      await processHeartbeat(m.token, { failed: true })
+      sent.length = 0
+
+      await processHeartbeat(m.token, { pulseType: "start" })
+      expect((await q.findMonitorById(m.id))?.status).toBe("failed")
+      expect(events()).toEqual([])
+    })
+
+    it("failure beats slow when both apply", async () => {
+      const m = await newMonitor("healthy", 1000)
+      await processHeartbeat(m.token, { exitCode: 1, durationMs: 5000 })
+      expect(events()).toEqual(["failed"])
+    })
   })
 
   it("paused monitors are ignored", async () => {

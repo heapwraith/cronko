@@ -22,10 +22,14 @@ silent for another interval it becomes **down**. A ping brings it back to
 # crontab: ping only if the backup succeeded
 0 2 * * * /usr/local/bin/backup.sh && curl -fsS https://cronko.example.com/ping/TOKEN
 
-# measure duration and report the exit code
+# measure duration; a non-zero exit code alerts immediately
 curl -fsS https://cronko.example.com/ping/TOKEN/start
 ./long-job.sh; code=$?
 curl -fsS "https://cronko.example.com/ping/TOKEN/finish?d=$SECONDS&exit=$code"
+
+# or report a failure explicitly, with the job output as the body (up to 10 KB)
+./job.sh 2>&1 | tail -c 5000 | curl -fsS --data-binary @- -H 'content-type: text/plain' \
+  "https://cronko.example.com/ping/TOKEN/fail?exit=1"
 ```
 
 Cronko is not an observability platform and does not run active checks
@@ -55,6 +59,7 @@ pnpm --filter @cronko/web dev     # web on :3000, proxies the API
 
 - Heartbeat monitoring with grace periods and a missed → down → recovered lifecycle
 - Pulse (`/start` + `/finish`) with duration, exit code and optional output
+- Explicit `/fail` signal and non-zero exit codes: a distinct `failed` state with an immediate alert
 - Max-duration alerts, incident history, audit log
 - Alerts to Discord, Telegram, e-mail (SMTP) and Slack
 - Public SVG status badge (`/badge/:token`), CSV export of heartbeats

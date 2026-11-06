@@ -115,6 +115,7 @@ export const api = {
         healthyCount: number
         downCount: number
         missedCount: number
+        failedCount: number
         pausedCount: number
         totalHeartbeats: number
         uptimePercent: number
@@ -138,6 +139,7 @@ export const api = {
           latestHeartbeat: {
             receivedAt: string
             durationMs: number | null
+            exitCode: number | null
           } | null
         }>
       >("/api/monitors"),
@@ -253,6 +255,20 @@ export const api = {
           createdAt: string
         }>
       >("/api/notifications"),
+    deliveries: (limit = 50) =>
+      get<
+        Array<{
+          id: string
+          channelId: string
+          channelName: string
+          monitorName: string
+          event: string
+          status: "pending" | "sent" | "failed"
+          attempts: number
+          lastError: string | null
+          createdAt: string
+        }>
+      >(`/api/notifications/deliveries?limit=${limit}`),
     create: (body: { name: string; type: string; config: unknown }) =>
       post<{ id: string; name: string }>("/api/notifications", body),
     delete: (id: string) => del<{ ok: boolean }>(`/api/notifications/${id}`),

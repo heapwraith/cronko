@@ -56,6 +56,7 @@ monitorsRoute.get("/", async (c) => {
         ? {
             receivedAt: hb.receivedAt.toISOString(),
             durationMs: hb.durationMs,
+            exitCode: hb.exitCode,
           }
         : null,
     }
