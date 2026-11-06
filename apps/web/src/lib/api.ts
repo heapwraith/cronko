@@ -1,5 +1,17 @@
 import type { DigestFrequency } from "@cronko/shared/digest"
 import type { DurationStats } from "@cronko/shared/run-stats"
+export type ApiTokenInfo = {
+  id: string
+  name: string
+  prefix: string
+  scope: "read" | "write"
+  expiresAt: string | null
+  lastUsedAt: string | null
+  revokedAt: string | null
+  createdAt: string
+  status: "active" | "revoked" | "expired"
+}
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -429,5 +441,11 @@ export const api = {
         digestHour: number
       }>("/api/settings", body),
     sendTestDigest: () => post<{ queued: number }>("/api/settings/digest/test", {}),
+    tokens: {
+      list: () => get<ApiTokenInfo[]>("/api/settings/tokens"),
+      create: (body: { name: string; scope: "read" | "write"; expiresInDays?: number }) =>
+        post<ApiTokenInfo & { token: string }>("/api/settings/tokens", body),
+      revoke: (id: string) => del<{ id: string }>(`/api/settings/tokens/${id}`),
+    },
   },
 }
