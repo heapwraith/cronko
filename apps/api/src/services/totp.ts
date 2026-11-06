@@ -183,3 +183,27 @@ export function findRecoveryCodeMatch<T extends { codeHash: string }>(
   }
   return hit
 }
+
+/**
+ * Check a second factor for a user with 2FA on: a 6-digit TOTP code (each time
+ * step usable once) or a recovery code (deleted when spent). Both are claimed
+ * atomically in the database, so two concurrent requests cannot both succeed.
+ */
+export async function verifySecondFactor(
+  user: { id: string; totpSecret: string | null },
+  code: string,
+): Promise<"totp" | "recovery" | null> {
+  const { claimTotpStep, consumeRecoveryCode, listRecoveryCodes } = await import(
+    "@cronko/database/queries/users"
+  )
+  if (/^\d{3}\s?\d{3}$/.test(code.trim())) {
+    const secret = user.totpSecret ? decryptTotpSecret(user.totpSecret) : null
+    if (!secret) return null
+    const step = verifyTotp(secret, code)
+    if (step === null) return null
+    return (await claimTotpStep(user.id, step)) ? "totp" : null
+  }
+  const hit = findRecoveryCodeMatch(code, await listRecoveryCodes(user.id))
+  if (!hit) return null
+  return (await consumeRecoveryCode(hit.id)) ? "recovery" : null
+}
