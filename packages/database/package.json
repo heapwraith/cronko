@@ -14,7 +14,8 @@
     "./queries/settings": "./src/queries/settings.ts",
     "./queries/users": "./src/queries/users.ts",
     "./queries/status-pages": "./src/queries/status-pages.ts",
-    "./queries/maintenance": "./src/queries/maintenance.ts"
+    "./queries/maintenance": "./src/queries/maintenance.ts",
+    "./queries/metrics": "./src/queries/metrics.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
