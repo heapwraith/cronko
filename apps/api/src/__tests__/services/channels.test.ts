@@ -147,4 +147,12 @@ describe("webhook and ntfy channels", () => {
     })
     expect(pagerDutyEvent(key, "failed", "x", "b")).not.toHaveProperty("links")
   })
+
+  it("pagerduty ignores informative analytics events (nothing to page or resolve)", async () => {
+    const fetch = stubFetch()
+    const pd = channel("pagerduty", { routingKey: "R".repeat(32) })
+    await deliver(pd, "unusual", "🐌 etl demorou bem mais que o normal", "etl")
+    await deliver(pd, "overlap", "⚠️ etl começou antes", "etl")
+    expect(fetch).not.toHaveBeenCalled()
+  })
 })

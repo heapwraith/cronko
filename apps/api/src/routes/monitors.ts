@@ -68,6 +68,7 @@ const createMonitorSchema = z
     timezone: timezoneSchema.optional(),
     gracePeriodSeconds: z.number().int().min(0).max(86_400).default(DEFAULT_GRACE_PERIOD_SECONDS),
     maxDurationMs: z.number().int().min(0).max(86_400_000).optional(),
+    alertOnAnomalies: z.boolean().optional(),
   })
   .superRefine((v, ctx) => {
     if (v.expectedIntervalSeconds === undefined && !v.scheduleCron) {
@@ -89,6 +90,7 @@ const updateMonitorSchema = z
     timezone: timezoneSchema.nullable().optional(),
     gracePeriodSeconds: z.number().int().min(0).max(86_400).optional(),
     maxDurationMs: z.number().int().min(0).max(86_400_000).optional(),
+    alertOnAnomalies: z.boolean().optional(),
   })
   .superRefine(checkSchedule)
 
@@ -152,6 +154,7 @@ monitorsRoute.post("/", zValidator("json", createMonitorSchema), async (c) => {
       : (body.expectedIntervalSeconds as number),
     gracePeriodSeconds: body.gracePeriodSeconds,
     ...(body.maxDurationMs !== undefined && { maxDurationMs: body.maxDurationMs }),
+    ...(body.alertOnAnomalies !== undefined && { alertOnAnomalies: body.alertOnAnomalies }),
     ...(body.scheduleCron && {
       scheduleCron: body.scheduleCron,
       timezone: body.timezone ?? "UTC",
@@ -236,6 +239,7 @@ monitorsRoute.patch("/:id", zValidator("json", updateMonitorSchema), async (c) =
       gracePeriodSeconds: body.gracePeriodSeconds,
     }),
     ...(body.maxDurationMs !== undefined && { maxDurationMs: body.maxDurationMs }),
+    ...(body.alertOnAnomalies !== undefined && { alertOnAnomalies: body.alertOnAnomalies }),
     now,
   })
 

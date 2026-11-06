@@ -122,6 +122,11 @@ export const translations = {
     "analytics.typicalValue": "mediana {p50} · p95 {p95}",
     "analytics.basedOn": "{count} execuções anteriores",
     "analytics.noBaseline": "poucos dados",
+    "form.alertOnAnomalies": "Avisar sobre execuções incomuns",
+    "form.alertOnAnomaliesHint":
+      "Envia um aviso quando uma execução demora bem mais que o normal ou começa antes da anterior terminar. Não muda o estado nem abre incidente. O PagerDuty não recebe esses avisos.",
+    "notifications.event.unusual": "Incomum",
+    "notifications.event.overlap": "Sobreposta",
     "run.title": "Execução",
     "run.back": "Voltar ao monitor",
     "run.previous": "Anterior",
@@ -676,6 +681,11 @@ export const translations = {
     "analytics.typicalValue": "median {p50} · p95 {p95}",
     "analytics.basedOn": "{count} earlier runs",
     "analytics.noBaseline": "not enough data",
+    "form.alertOnAnomalies": "Alert on unusual runs",
+    "form.alertOnAnomaliesHint":
+      "Sends a heads-up when a run takes much longer than usual or starts before the previous one finished. It does not change the state or open an incident. PagerDuty does not receive these.",
+    "notifications.event.unusual": "Unusual",
+    "notifications.event.overlap": "Overlapped",
     "run.title": "Run",
     "run.back": "Back to monitor",
     "run.previous": "Previous",

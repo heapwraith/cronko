@@ -26,7 +26,8 @@ type Incident = Awaited<ReturnType<typeof api.monitors.incidents>>[number]
 export default function MonitorDetailPage() {
   const { id = "" } = useParams()
   const { data, error, isPending } = useQuery({
-    queryKey: ["monitor", id],
+    // Its own key: the edit page caches the plain monitor under ["monitor", id].
+    queryKey: ["monitor", id, "detail"],
     queryFn: async () => ({
       monitor: await api.monitors.get(id),
       incidents: await api.monitors.incidents(id, { limit: 20 }),

@@ -1,6 +1,7 @@
 import { isValidSchedule, nextRuns } from "@cronko/shared/schedule"
 import { useId, useMemo, useState } from "react"
 import { Button } from "@/components/shared/Button"
+import { Toggle } from "@/components/shared/Toggle"
 import type { MonitorInput } from "@/lib/api"
 import { useT } from "@/lib/i18n"
 
@@ -17,6 +18,7 @@ export interface MonitorFormValues {
   maxDurationMs?: number | null
   scheduleCron?: string | null
   timezone?: string | null
+  alertOnAnomalies?: boolean
 }
 
 /** Largest unit that divides the value evenly, so 7200 s reads as "2 hours". */
@@ -86,6 +88,7 @@ export function MonitorForm({
   const [maxMin, setMaxMin] = useState(
     initial?.maxDurationMs ? String(Math.round(initial.maxDurationMs / 60_000)) : "",
   )
+  const [anomalies, setAnomalies] = useState(initial?.alertOnAnomalies ?? false)
   const [touched, setTouched] = useState(false)
 
   const intervalSeconds = Math.round(Number(amount) * UNIT_SECONDS[unit])
@@ -120,6 +123,7 @@ export function MonitorForm({
       name: name.trim(),
       gracePeriodSeconds: graceSeconds,
       ...(maxMs !== undefined && { maxDurationMs: maxMs }),
+      alertOnAnomalies: anomalies,
       ...(mode === "cron"
         ? { scheduleCron: cron.trim(), timezone }
         : {
@@ -316,6 +320,13 @@ export function MonitorForm({
           <p className={hint}>{t("form.maxDurationHint")}</p>
         </div>
       </div>
+
+      <Toggle
+        label={t("form.alertOnAnomalies")}
+        hint={t("form.alertOnAnomaliesHint")}
+        checked={anomalies}
+        onChange={setAnomalies}
+      />
 
       {error && (
         <p

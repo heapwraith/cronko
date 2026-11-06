@@ -135,14 +135,26 @@ export function teamsCard(text: string, link?: string) {
 }
 
 /** ntfy priorities: 5 urgent, 4 high, 3 default. */
-const NTFY_PRIORITY: Record<string, string> = { down: "5", failed: "4", missed: "4", slow: "3" }
+const NTFY_PRIORITY: Record<string, string> = {
+  down: "5",
+  failed: "4",
+  missed: "4",
+  slow: "3",
+  unusual: "3",
+  overlap: "3",
+}
 const NTFY_TAGS: Record<string, string> = {
   down: "red_circle",
   failed: "x",
   missed: "warning",
   slow: "turtle",
   recovered: "white_check_mark",
+  unusual: "snail",
+  overlap: "warning",
 }
+
+/** Informative analytics events; they never open or close anything. */
+export const ANALYTICS_EVENTS = new Set(["unusual", "overlap"])
 
 /** HTTP headers are Latin-1 only; ntfy accepts RFC 2047 for anything else (emoji, CJK). */
 export function headerText(value: string): string {
@@ -197,6 +209,8 @@ export async function deliver(
       )
     }
     case "pagerduty":
+      // A PagerDuty incident pages someone and would never auto-resolve for these.
+      if (ANALYTICS_EVENTS.has(event)) return
       return postJson(
         "https://events.pagerduty.com/v2/enqueue",
         pagerDutyEvent((channel.config as PagerDutyConfig).routingKey, event, text, monitorName),

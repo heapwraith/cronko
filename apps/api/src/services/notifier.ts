@@ -11,7 +11,15 @@ import { env } from "../env"
 import { logger } from "../lib/logger"
 import { type ChannelRow, DeliveryError, deliver } from "./channels"
 
-export type NotificationEvent = "missed" | "down" | "failed" | "recovered" | "slow"
+export type NotificationEvent =
+  | "missed"
+  | "down"
+  | "failed"
+  | "recovered"
+  | "slow"
+  // Opt-in analytics alerts: informative, they change neither state nor incidents.
+  | "unusual"
+  | "overlap"
 
 const messages: Record<NotificationEvent, (name: string) => string> = {
   missed: (name) => `⚠️ ${name} não executou no tempo esperado`,
@@ -19,6 +27,8 @@ const messages: Record<NotificationEvent, (name: string) => string> = {
   failed: (name) => `❌ ${name} falhou`,
   recovered: (name) => `✅ ${name} voltou a executar normalmente`,
   slow: (name) => `🐢 ${name} excedeu a duração máxima configurada`,
+  unusual: (name) => `🐌 ${name} demorou bem mais que o normal`,
+  overlap: (name) => `⚠️ ${name} começou antes da execução anterior terminar`,
 }
 
 /** Delay before retry N (1-based): 30s, 1m, 2m, 5m, 10m — then give up. */

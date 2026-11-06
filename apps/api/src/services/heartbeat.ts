@@ -5,6 +5,7 @@ import {
 } from "@cronko/database/queries/heartbeats"
 import { findMonitorByToken } from "@cronko/database/queries/monitors"
 import { logger } from "../lib/logger"
+import { alertOnRunAnomalies } from "./anomaly-alerts"
 import { markFailed, markSlow, recoverOnPing } from "./monitor-state"
 
 export async function processHeartbeat(
@@ -62,6 +63,7 @@ export async function processHeartbeat(
         durationMs: options.durationMs,
         ...(options.exitCode !== undefined && { exitCode: options.exitCode }),
         body: options.body ?? "pulse:finish",
+        receivedAt: now,
         kind: "finish",
         // The finish row is what the UI shows for the run, so it carries the flag too.
         overlapped: prevPulse.overlapped,
@@ -77,6 +79,7 @@ export async function processHeartbeat(
       ...(options.durationMs !== undefined && { durationMs: options.durationMs }),
       ...(options.exitCode !== undefined && { exitCode: options.exitCode }),
       ...(options.body !== undefined && { body: options.body }),
+      receivedAt: now,
       ...(options.pulseType === "start" && { kind: "start" as const }),
       ...(overlapped && { overlapped: true }),
     })
@@ -100,6 +103,26 @@ export async function processHeartbeat(
     } else {
       await recoverOnPing(monitor)
     }
+
+    if (stored) {
+      await alertOnRunAnomalies(monitor, {
+        id: heartbeatId,
+        kind: options.pulseType === "finish" ? "finish" : null,
+        durationMs: options.durationMs ?? null,
+        receivedAt: now,
+        overlapped: false,
+        alreadyAlerted: failed || exceededMax,
+      })
+    }
+  } else if (stored) {
+    await alertOnRunAnomalies(monitor, {
+      id: heartbeatId,
+      kind: "start",
+      durationMs: null,
+      receivedAt: now,
+      overlapped,
+      alreadyAlerted: false,
+    })
   }
 
   return {

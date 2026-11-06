@@ -19,6 +19,8 @@ export const monitors = sqliteTable("monitors", {
   // When set, deadlines come from the next scheduled run, not from the last ping.
   scheduleCron: text("schedule_cron"),
   timezone: text("timezone"),
+  // Opt-in: also alert on runs much slower than usual and on overlapping runs.
+  alertOnAnomalies: integer("alert_on_anomalies", { mode: "boolean" }).notNull().default(false),
   // Alerts are silenced until this moment; state and incidents are still tracked.
   mutedUntil: integer("muted_until", { mode: "timestamp" }),
   displayOrder: integer("display_order").notNull().default(0),
@@ -96,7 +98,9 @@ export const notificationDeliveries = sqliteTable(
       .notNull()
       .references(() => notificationChannels.id, { onDelete: "cascade" }),
     monitorName: text("monitor_name").notNull(),
-    event: text("event", { enum: ["missed", "down", "failed", "recovered", "slow"] }).notNull(),
+    event: text("event", {
+      enum: ["missed", "down", "failed", "recovered", "slow", "unusual", "overlap"],
+    }).notNull(),
     message: text("message").notNull(),
     status: text("status", { enum: ["pending", "sent", "failed"] })
       .notNull()
