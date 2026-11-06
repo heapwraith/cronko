@@ -41,13 +41,20 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm test -- --reporter=default --reporter=junit --outputFile.junit=test-results.xml
+      # Per-package coverage thresholds live in each vitest.config.mts; a miss fails this step.
+      - run: pnpm -r --no-bail run test:coverage --reporter=default --reporter=junit --outputFile.junit=test-results.xml
       - uses: dorny/test-reporter@v2
         if: ${{ !cancelled() }}
         with:
           name: Test Results
           path: "**/test-results.xml"
           reporter: java-junit
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: coverage
+          path: "**/coverage/lcov.info"
+          retention-days: 7
 
   e2e:
     name: E2E smoke (Playwright)
