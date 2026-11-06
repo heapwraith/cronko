@@ -326,9 +326,101 @@ const spec = {
           },
         },
         responses: {
-          "200": { description: "token + email + expiresAt" },
+          "200": {
+            description:
+              "token + email + expiresAt (cookies set), or { twoFactorRequired: true, challenge } when the account has 2FA: no cookies are issued until /auth/login/2fa succeeds",
+          },
           "401": { description: "Invalid credentials" },
           "429": { description: "Too many login attempts" },
+        },
+      },
+    },
+    "/auth/login/2fa": {
+      post: {
+        summary: "Second login step: challenge from /auth/login plus a TOTP or recovery code",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["challenge", "code"],
+                properties: {
+                  challenge: { type: "string", description: "Valid for 5 minutes" },
+                  code: { type: "string", description: "6-digit TOTP code or a recovery code" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "token + email + expiresAt (cookies set)" },
+          "401": { description: "Invalid code or expired challenge" },
+          "429": { description: "Too many attempts (shared with the password step)" },
+        },
+      },
+    },
+    "/auth/2fa": {
+      get: {
+        summary:
+          "Two-factor status: { enabled, recoveryCodesRemaining } (sessions only, not API tokens)",
+        security: [{ bearerAuth: [] }],
+        responses: { "200": { description: "status" }, "403": { description: "API token used" } },
+      },
+    },
+    "/auth/2fa/setup": {
+      post: {
+        summary: "Start enrollment: returns { secret, otpauthUri }; inactive until /enable",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        responses: {
+          "200": { description: "secret and otpauth URI" },
+          "409": { description: "Already enabled" },
+        },
+      },
+    },
+    "/auth/2fa/enable": {
+      post: {
+        summary: "Confirm with a code from the app; returns the 10 recovery codes once",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["code"],
+                properties: { code: { type: "string" } },
+              },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "{ recoveryCodes: string[] }" },
+          "400": { description: "Wrong code or setup not started" },
+          "429": { description: "Too many attempts" },
+        },
+      },
+    },
+    "/auth/2fa/disable": {
+      post: {
+        summary: "Disable 2FA: requires the password and a TOTP or recovery code",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["password", "code"],
+                properties: { password: { type: "string" }, code: { type: "string" } },
+              },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "ok" },
+          "401": { description: "Wrong password or code" },
+          "429": { description: "Too many attempts" },
         },
       },
     },
@@ -343,8 +435,7 @@ const spec = {
     },
     "/auth/logout": {
       post: {
-        summary: "Logout — clear all auth cookies",
-        security: [{ bearerAuth: [] }],
+        summary: "Logout — clear the cookies and revoke the access and refresh tokens server-side",
         responses: { "200": { description: "ok" } },
       },
     },
