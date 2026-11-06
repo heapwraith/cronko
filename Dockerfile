@@ -14,12 +14,15 @@ COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
 COPY packages/database/package.json packages/database/
 COPY packages/shared/package.json packages/shared/
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+# --ignore-scripts: the root `prepare` runs lefthook, which needs git (absent here).
+# Only the native module needs its install script.
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile --ignore-scripts && pnpm rebuild better-sqlite3
 
 COPY . .
 RUN pnpm --filter @cronko/web build && pnpm --filter @cronko/api build
 # Production-only node_modules for the API (native better-sqlite3 included).
-RUN pnpm --filter @cronko/api deploy --prod /prod/api
+RUN pnpm --filter @cronko/api deploy --prod --ignore-scripts /prod/api && cd /prod/api/node_modules/better-sqlite3 && npx --yes node-gyp rebuild --release
 
 # ---- runtime: one process serves the API and the web app --------------------
 FROM node:24-alpine AS runner
