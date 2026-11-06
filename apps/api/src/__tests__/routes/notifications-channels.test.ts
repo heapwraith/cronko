@@ -56,4 +56,22 @@ describe("notification channel validation (HTTP, real SQLite)", () => {
     expect((await create({ name: "x", type: "ntfy", config: { topic: "a b" } })).status).toBe(400)
     expect((await create({ name: "x", type: "ntfy", config: { topic: "a/b" } })).status).toBe(400)
   })
+
+  it("validates Pushover keys and Teams webhook URLs", async () => {
+    const ok = "A1".repeat(15)
+    expect(
+      (await create({ name: "p", type: "pushover", config: { appToken: ok, userKey: ok } })).status,
+    ).toBe(201)
+    expect(
+      (await create({ name: "p", type: "pushover", config: { appToken: "short", userKey: ok } }))
+        .status,
+    ).toBe(400)
+    expect(
+      (await create({ name: "t", type: "teams", config: { webhookUrl: "https://x.example/y" } }))
+        .status,
+    ).toBe(201)
+    expect(
+      (await create({ name: "t", type: "teams", config: { webhookUrl: "nope" } })).status,
+    ).toBe(400)
+  })
 })

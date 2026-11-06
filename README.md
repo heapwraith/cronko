@@ -8,7 +8,7 @@ backups and ETLs: one container, one SQLite file.
 
 > **Resumo em português:** o Cronko avisa quando um cron job, backup ou ETL deixa de
 > rodar. Cada monitor ganha uma URL de ping; se ela não for chamada no prazo, você é
-> alertado (Discord, Telegram, e-mail, Slack, ntfy, webhook). Instalação: veja _Quick start_ abaixo
+> alertado (Discord, Telegram, e-mail, Slack, Teams, ntfy, Pushover, webhook). Instalação: veja _Quick start_ abaixo
 > (`docker compose up -d`) e abra `http://localhost:3000`. A interface tem pt-BR e en.
 
 ## How it works
@@ -75,7 +75,7 @@ pnpm --filter @cronko/web dev     # web on :3000, proxies the API
 - Pulse (`/start` + `/finish`) with duration, exit code and optional output
 - Explicit `/fail` signal and non-zero exit codes: a distinct `failed` state with an immediate alert
 - Max-duration alerts, incident history, audit log
-- Alerts to Discord, Telegram, e-mail (SMTP), Slack, ntfy and any webhook
+- Alerts to Discord, Telegram, e-mail (SMTP), Slack, Microsoft Teams, ntfy, Pushover and any webhook
 - Mute a monitor's alerts for maintenance (1 h to 7 days); state and incidents are still tracked
 - Public SVG status badge (`/badge/:token`), CSV export of heartbeats
 - Dashboard, dark/light theme, English and pt-BR, installable PWA
@@ -102,7 +102,10 @@ Notification channels are configured in the UI: Discord/Slack take a
 `webhookUrl`, Telegram a `botToken` and `chatId`, e-mail a recipient `to`.
 ntfy takes a `topic` (plus optional `serverUrl` for a self-hosted server and an
 access `token`). A generic webhook takes a `url` and receives
-`{ "event", "monitor", "message", "sentAt" }` as JSON.
+`{ "event", "monitor", "message", "sentAt" }` as JSON. Pushover takes a `userKey`
+and an `appToken`. Microsoft Teams takes the `webhookUrl` of a Workflows flow
+("Post to a channel when a webhook request is received"), since Office 365
+connectors are retired.
 
 ## Security
 

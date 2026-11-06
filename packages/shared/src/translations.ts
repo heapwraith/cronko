@@ -331,6 +331,9 @@ export const translations = {
       "Crie um canal Discord, Telegram ou Email para receber alertas quando monitores ficarem fora do ar.",
     "notifications.type": "Tipo",
     "notifications.name": "Nome",
+    "notifications.userKey": "User key",
+    "notifications.appToken": "Token da aplicação",
+    "notifications.err.invalidKey": "Deve ter 30 letras ou números.",
     "notifications.url": "URL",
     "notifications.topic": "Tópico",
     "notifications.serverUrl": "Servidor",
@@ -511,6 +514,10 @@ export const translations = {
     "howto.notifications.webhook":
       "Webhook genérico — recebe um JSON com evento, monitor e mensagem.",
     "howto.notifications.ntfy": "ntfy — push no celular via ntfy.sh ou servidor próprio.",
+    "howto.notifications.pushover":
+      "Pushover — push no celular; falhas e quedas furam o horário de silêncio.",
+    "howto.notifications.teams":
+      'Microsoft Teams — webhook de um fluxo do Workflows ("Post to a channel when a webhook request is received").',
 
     // UI
     "ui.compactMode": "Modo compacto",
@@ -861,6 +868,9 @@ export const translations = {
       "Create a Discord, Telegram, or Email channel to receive alerts when monitors go down.",
     "notifications.type": "Type",
     "notifications.name": "Name",
+    "notifications.userKey": "User key",
+    "notifications.appToken": "Application token",
+    "notifications.err.invalidKey": "Must be 30 letters or digits.",
     "notifications.url": "URL",
     "notifications.topic": "Topic",
     "notifications.serverUrl": "Server",
@@ -1042,6 +1052,10 @@ export const translations = {
     "howto.notifications.webhook":
       "Generic webhook — receives JSON with event, monitor and message.",
     "howto.notifications.ntfy": "ntfy — phone push via ntfy.sh or your own server.",
+    "howto.notifications.pushover":
+      "Pushover — phone push; failures and outages break through quiet hours.",
+    "howto.notifications.teams":
+      'Microsoft Teams — webhook from a Workflows flow ("Post to a channel when a webhook request is received").',
 
     // UI
     "ui.compactMode": "Compact mode",

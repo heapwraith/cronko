@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { type ChannelRow, DeliveryError, deliver, headerText } from "../../services/channels"
+import {
+  type ChannelRow,
+  DeliveryError,
+  deliver,
+  headerText,
+  teamsCard,
+} from "../../services/channels"
 
 const channel = (type: string, config: Record<string, unknown>) =>
   ({ id: "c", name: "n", type, enabled: true, config, createdAt: new Date() }) as ChannelRow
@@ -66,5 +72,48 @@ describe("webhook and ntfy channels", () => {
     expect(err).toBeInstanceOf(DeliveryError)
     expect(err.retryable).toBe(false)
     expect(err.message).toBe("ntfy: HTTP 404")
+  })
+
+  it("pushover sends token, user, priority and the run link as url", async () => {
+    const fetch = stubFetch()
+    const key = "a".repeat(30)
+    await deliver(
+      channel("pushover", { appToken: key, userKey: "u".repeat(30) }),
+      "failed",
+      "❌ etl falhou (exit code 2)\nhttps://cronko.example.com/monitors/m/runs/r",
+      "etl",
+    )
+    const [url, init] = fetch.mock.calls[0] ?? []
+    expect(url).toBe("https://api.pushover.net/1/messages.json")
+    expect(JSON.parse(String(init?.body))).toEqual({
+      token: key,
+      user: "u".repeat(30),
+      title: "Cronko: etl",
+      message: "❌ etl falhou (exit code 2)",
+      priority: 1,
+      url: "https://cronko.example.com/monitors/m/runs/r",
+      url_title: "Open in Cronko",
+    })
+  })
+
+  it("teams posts an Adaptive Card with an Open in Cronko action", async () => {
+    const fetch = stubFetch()
+    await deliver(
+      channel("teams", { webhookUrl: "https://prod.workflows.example/x" }),
+      "down",
+      "🔴 backup está down\nhttps://cronko.example.com/monitors/m1",
+      "backup",
+    )
+    const body = JSON.parse(String(fetch.mock.calls[0]?.[1]?.body))
+    const card = body.attachments[0]
+    expect(body.type).toBe("message")
+    expect(card.contentType).toBe("application/vnd.microsoft.card.adaptive")
+    expect(card.content.body[0]).toMatchObject({ text: "🔴 backup está down", weight: "Bolder" })
+    expect(card.content.body).toHaveLength(1)
+    expect(card.content.actions[0]).toMatchObject({
+      type: "Action.OpenUrl",
+      url: "https://cronko.example.com/monitors/m1",
+    })
+    expect(teamsCard("plain").attachments[0]?.content).not.toHaveProperty("actions")
   })
 })

@@ -9,6 +9,8 @@ export type NotificationChannelType =
   | "slack"
   | "webhook"
   | "ntfy"
+  | "pushover"
+  | "teams"
 
 export type IncidentStatus = "open" | "resolved"
 
@@ -48,7 +50,14 @@ export interface NotificationChannel {
   name: string
   type: NotificationChannelType
   enabled: boolean
-  config: DiscordConfig | TelegramConfig | EmailConfig | WebhookConfig | NtfyConfig
+  config:
+    | DiscordConfig
+    | TelegramConfig
+    | EmailConfig
+    | WebhookConfig
+    | NtfyConfig
+    | PushoverConfig
+    | TeamsConfig
   createdAt: Date
 }
 
@@ -75,4 +84,15 @@ export interface NtfyConfig {
   topic: string
   serverUrl?: string | undefined
   token?: string | undefined
+}
+
+/** Pushover: an application token and the user (or group) key to notify. */
+export interface PushoverConfig {
+  appToken: string
+  userKey: string
+}
+
+/** Microsoft Teams "Workflows" webhook (the successor of Office 365 connectors). */
+export interface TeamsConfig {
+  webhookUrl: string
 }

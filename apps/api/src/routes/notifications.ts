@@ -22,6 +22,10 @@ const ntfyConfig = z.object({
   token: z.string().optional(),
 })
 
+// Pushover tokens and user keys are 30 alphanumeric characters.
+const pushoverKey = z.string().regex(/^[A-Za-z0-9]{30}$/, "Expected 30 letters or digits")
+const pushoverConfig = z.object({ appToken: pushoverKey, userKey: pushoverKey })
+
 const createNotificationSchema = z.discriminatedUnion("type", [
   z.object({
     name: z.string().min(1),
@@ -53,6 +57,16 @@ const createNotificationSchema = z.discriminatedUnion("type", [
     type: z.literal("ntfy"),
     config: ntfyConfig,
   }),
+  z.object({
+    name: z.string().min(1),
+    type: z.literal("pushover"),
+    config: pushoverConfig,
+  }),
+  z.object({
+    name: z.string().min(1),
+    type: z.literal("teams"),
+    config: z.object({ webhookUrl: z.url() }),
+  }),
 ])
 
 const updateNotificationSchema = z.object({
@@ -65,6 +79,7 @@ const updateNotificationSchema = z.object({
       z.object({ to: z.email() }),
       webhookConfig,
       ntfyConfig,
+      pushoverConfig,
     ])
     .optional(),
 })
