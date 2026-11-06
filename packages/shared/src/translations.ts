@@ -231,6 +231,9 @@ export const translations = {
 
     // Incidents
     "incidents.title": "Incidentes",
+    "incidents.statusOpen": "Aberto",
+    "incidents.statusResolved": "Resolvido",
+    "incidents.failedLoad": "Falha ao carregar incidentes",
     "incidents.all": "Todos",
     "incidents.open": "Abertos",
     "incidents.resolved": "Resolvidos",
@@ -247,7 +250,7 @@ export const translations = {
     "incidents.noIncidentsFound": "Nenhum incidente encontrado",
     "incidents.previous": "Anterior",
     "incidents.next": "Próximo",
-    "incidents.openCount": "{count} abertos",
+    "incidents.openCount": "Abertos: {count}",
     "incidents.resolvedCount": "{count} resolvidos",
 
     // Notifications
@@ -397,6 +400,19 @@ export const translations = {
 
     // How to Use
     "howto.title": "Como Usar",
+    "howto.flow.ping": "O job envia um ping",
+    "howto.flow.wait": "O Cronko espera o intervalo e a tolerância",
+    "howto.flow.alert": "Se não chegar, abre um incidente e alerta",
+    "howto.fail.title": "Avisando uma falha",
+    "howto.fail.p1":
+      "Se o job termina com erro, chame /fail: o alerta sai na hora, sem esperar o intervalo acabar. Sem exit code, o Cronko registra 1.",
+    "howto.status.pending": "Criado, ainda sem nenhum ping.",
+    "howto.status.healthy": "O último ping chegou dentro do prazo.",
+    "howto.status.missed": "Atrasado: passou do intervalo, ainda dentro da tolerância.",
+    "howto.status.down": "Silêncio além da tolerância. Um incidente foi aberto.",
+    "howto.status.failed": "O job executou e reportou falha.",
+    "howto.status.paused": "Pausado: sem alertas.",
+    "howto.badge.alt": "Badge de status",
     "howto.subtitle": "Aprenda a integrar o Cronko com seus jobs, scripts e cron tabs em minutos.",
     "howto.whatIs.title": "O que é o Cronko?",
     "howto.whatIs.p1":
@@ -423,7 +439,7 @@ export const translations = {
     "howto.ping.withLog": "Com log (últimas 50 linhas)",
     "howto.crontab.title": "Integração com Crontab",
     "howto.crontab.p1":
-      "Exemplo prático de integração com crontab. O && garante que o ping só é enviado se o job terminar com sucesso.",
+      "Exemplo prático de integração com crontab. Sucesso chama o ping normal; erro chama /fail.",
     "howto.crontab.bashOnly": "Script Bash com medição de duração",
     "howto.pulse.title": "Pulse — Medindo Duração (Start/Finish)",
     "howto.pulse.p1":
@@ -694,6 +710,9 @@ export const translations = {
 
     // Incidents
     "incidents.title": "Incidents",
+    "incidents.statusOpen": "Open",
+    "incidents.statusResolved": "Resolved",
+    "incidents.failedLoad": "Failed to load incidents",
     "incidents.all": "All",
     "incidents.open": "Open",
     "incidents.resolved": "Resolved",
@@ -710,7 +729,7 @@ export const translations = {
     "incidents.noIncidentsFound": "No incidents found",
     "incidents.previous": "Previous",
     "incidents.next": "Next",
-    "incidents.openCount": "{count} open",
+    "incidents.openCount": "Open: {count}",
     "incidents.resolvedCount": "{count} resolved",
 
     // Notifications
@@ -859,6 +878,19 @@ export const translations = {
 
     // How to Use
     "howto.title": "How to Use",
+    "howto.flow.ping": "The job sends a ping",
+    "howto.flow.wait": "Cronko waits for the interval plus grace",
+    "howto.flow.alert": "If none arrives, it opens an incident and alerts",
+    "howto.fail.title": "Reporting a failure",
+    "howto.fail.p1":
+      "When the job exits with an error, call /fail: the alert goes out immediately instead of waiting for the interval to run out. Without an exit code, Cronko records 1.",
+    "howto.status.pending": "Created, no ping yet.",
+    "howto.status.healthy": "The last ping arrived on time.",
+    "howto.status.missed": "Late: past the interval, still inside the grace period.",
+    "howto.status.down": "Silent past the grace period. An incident was opened.",
+    "howto.status.failed": "The job ran and reported a failure.",
+    "howto.status.paused": "Paused: no alerts.",
+    "howto.badge.alt": "Status badge",
     "howto.subtitle":
       "Learn how to integrate Cronko with your jobs, scripts and cron tabs in minutes.",
     "howto.whatIs.title": "What is Cronko?",
@@ -886,7 +918,7 @@ export const translations = {
     "howto.ping.withLog": "With log (last 50 lines)",
     "howto.crontab.title": "Crontab Integration",
     "howto.crontab.p1":
-      "Practical crontab integration example. The && ensures the ping is only sent if the job succeeds.",
+      "Practical crontab integration example. Success calls the normal ping; an error calls /fail.",
     "howto.crontab.bashOnly": "Bash script with duration measurement",
     "howto.pulse.title": "Pulse — Measuring Duration (Start/Finish)",
     "howto.pulse.p1":
