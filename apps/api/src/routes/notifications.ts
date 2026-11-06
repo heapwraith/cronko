@@ -14,6 +14,14 @@ import { sendTestNotification } from "../services/notifier"
 
 export const notificationsRoute = new Hono()
 
+const httpUrl = z.url({ protocol: /^https?$/ })
+const webhookConfig = z.object({ url: httpUrl })
+const ntfyConfig = z.object({
+  topic: z.string().regex(/^[\w-]{1,64}$/, "Use letters, digits, - or _"),
+  serverUrl: z.union([httpUrl, z.literal("")]).optional(),
+  token: z.string().optional(),
+})
+
 const createNotificationSchema = z.discriminatedUnion("type", [
   z.object({
     name: z.string().min(1),
@@ -35,6 +43,16 @@ const createNotificationSchema = z.discriminatedUnion("type", [
     type: z.literal("slack"),
     config: z.object({ webhookUrl: z.url() }),
   }),
+  z.object({
+    name: z.string().min(1),
+    type: z.literal("webhook"),
+    config: webhookConfig,
+  }),
+  z.object({
+    name: z.string().min(1),
+    type: z.literal("ntfy"),
+    config: ntfyConfig,
+  }),
 ])
 
 const updateNotificationSchema = z.object({
@@ -45,6 +63,8 @@ const updateNotificationSchema = z.object({
       z.object({ webhookUrl: z.url() }),
       z.object({ botToken: z.string().min(1), chatId: z.string().min(1) }),
       z.object({ to: z.email() }),
+      webhookConfig,
+      ntfyConfig,
     ])
     .optional(),
 })

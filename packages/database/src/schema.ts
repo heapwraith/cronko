@@ -60,7 +60,9 @@ export const incidents = sqliteTable(
 export const notificationChannels = sqliteTable("notification_channels", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
-  type: text("type", { enum: ["discord", "telegram", "email", "slack"] }).notNull(),
+  type: text("type", {
+    enum: ["discord", "telegram", "email", "slack", "webhook", "ntfy"],
+  }).notNull(),
   enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
   config: text("config", { mode: "json" }).notNull(),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),

@@ -143,7 +143,7 @@ curl -fsS -X POST "${ping}/finish?exit=$?"`}</CodeBlock>
       <Section title={t("howto.notifications.title")}>
         <P>{t("howto.notifications.p1")}</P>
         <ul className="max-w-[70ch] list-disc space-y-1.5 pl-5 text-sm marker:text-dim">
-          {(["discord", "telegram", "email", "slack"] as const).map((k) => (
+          {(["discord", "telegram", "email", "slack", "webhook", "ntfy"] as const).map((k) => (
             <li key={k}>
               <strong className="capitalize">{k}</strong>
               <span className="text-dim"> — {t(`howto.notifications.${k}`)}</span>

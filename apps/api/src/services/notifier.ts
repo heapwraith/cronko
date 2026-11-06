@@ -74,7 +74,7 @@ export async function processDueDeliveries(now = new Date()): Promise<number> {
       const attempts = delivery.attempts + 1
       handled++
       try {
-        await deliver(channel, delivery.event, delivery.message)
+        await deliver(channel, delivery.event, delivery.message, delivery.monitorName)
         await markDeliverySent(delivery.id, attempts, new Date())
       } catch (err) {
         const retryable = err instanceof DeliveryError ? err.retryable : true
@@ -109,7 +109,12 @@ export async function sendTestNotification(
   channel: ChannelRow,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
-    await deliver(channel, "recovered", messages.recovered("Test Notification"))
+    await deliver(
+      channel,
+      "recovered",
+      messages.recovered("Test Notification"),
+      "Test Notification",
+    )
     return { ok: true }
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "delivery failed" }

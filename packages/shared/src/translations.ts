@@ -318,6 +318,12 @@ export const translations = {
       "Crie um canal Discord, Telegram ou Email para receber alertas quando monitores ficarem fora do ar.",
     "notifications.type": "Tipo",
     "notifications.name": "Nome",
+    "notifications.url": "URL",
+    "notifications.topic": "Tópico",
+    "notifications.serverUrl": "Servidor",
+    "notifications.token": "Token de acesso",
+    "notifications.optional": "opcional",
+    "notifications.err.invalidTopic": "Use letras, números, - ou _ (até 64).",
     "notifications.webhookUrl": "URL do Webhook",
     "notifications.botToken": "Token do Bot",
     "notifications.chatId": "ID do Chat",
@@ -484,6 +490,9 @@ export const translations = {
     "howto.notifications.telegram": "Bot do Telegram — envie alertas para um chat.",
     "howto.notifications.email": "Email SMTP — alertas por email.",
     "howto.notifications.slack": "Webhook do Slack — integração com canais Slack.",
+    "howto.notifications.webhook":
+      "Webhook genérico — recebe um JSON com evento, monitor e mensagem.",
+    "howto.notifications.ntfy": "ntfy — push no celular via ntfy.sh ou servidor próprio.",
 
     // UI
     "ui.compactMode": "Modo compacto",
@@ -822,6 +831,12 @@ export const translations = {
       "Create a Discord, Telegram, or Email channel to receive alerts when monitors go down.",
     "notifications.type": "Type",
     "notifications.name": "Name",
+    "notifications.url": "URL",
+    "notifications.topic": "Topic",
+    "notifications.serverUrl": "Server",
+    "notifications.token": "Access token",
+    "notifications.optional": "optional",
+    "notifications.err.invalidTopic": "Use letters, digits, - or _ (up to 64).",
     "notifications.webhookUrl": "Webhook URL",
     "notifications.botToken": "Bot Token",
     "notifications.chatId": "Chat ID",
@@ -989,6 +1004,9 @@ export const translations = {
     "howto.notifications.telegram": "Telegram Bot — send alerts to a chat.",
     "howto.notifications.email": "SMTP Email — email alerts.",
     "howto.notifications.slack": "Slack Webhook — integration with Slack channels.",
+    "howto.notifications.webhook":
+      "Generic webhook — receives JSON with event, monitor and message.",
+    "howto.notifications.ntfy": "ntfy — phone push via ntfy.sh or your own server.",
 
     // UI
     "ui.compactMode": "Compact mode",

@@ -15,7 +15,7 @@ with it is the entry ticket and the differentiators below are the reason to swit
 | Cron expression + timezone schedule                | yes               | yes             | no                       |
 | Explicit `/fail` signal                            | yes               | yes             | no                       |
 | Per-check event log with output                    | basic             | yes             | partial                  |
-| Notification channels                              | 4                 | many            | many                     |
+| Notification channels                              | 6                 | many            | many                     |
 | Public status pages                                | badge only        | badges          | yes                      |
 | Active HTTP/TCP checks                             | no (out of scope) | no              | yes                      |
 | Single container, one SQLite file                  | yes               | no              | yes                      |
@@ -48,7 +48,7 @@ making product claims.
 
 1. ~~Cron expression + timezone schedules, with next-expected-run.~~ Done.
 2. Per-check event log with captured output (size-limited).
-3. More channels: generic webhook, ntfy, Pushover, PagerDuty, Teams.
+3. More channels: generic webhook and ntfy are done; Pushover, PagerDuty, Teams remain.
 4. Ping by e-mail; mute per check.
 
 ## P2 - differentiators

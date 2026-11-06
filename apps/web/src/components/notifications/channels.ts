@@ -1,6 +1,6 @@
-import { Mail, MessageSquare, Send } from "lucide-react"
+import { Bell, Mail, MessageSquare, Send, Webhook } from "lucide-react"
 
-export type ChannelType = "discord" | "telegram" | "email" | "slack"
+export type ChannelType = "discord" | "telegram" | "email" | "slack" | "webhook" | "ntfy"
 
 export type Channel = {
   id: string
@@ -17,10 +17,16 @@ export type FieldSpec = {
   placeholder: string
   type?: "text" | "email" | "url"
   autoComplete?: string
-  validate: (value: string) => "required" | "invalidUrl" | "invalidEmail" | null
+  optional?: boolean
+  validate: (value: string) => "required" | "invalidUrl" | "invalidEmail" | "invalidTopic" | null
 }
 
 const url = (v: string) => (!v.trim() ? "required" : v.startsWith("https://") ? null : "invalidUrl")
+const httpUrl = (v: string) =>
+  !v.trim() ? "required" : /^https?:\/\/\S+$/.test(v.trim()) ? null : "invalidUrl"
+const optionalHttpUrl = (v: string) => (v.trim() ? httpUrl(v) : null)
+const topic = (v: string) =>
+  !v.trim() ? "required" : /^[\w-]{1,64}$/.test(v.trim()) ? null : "invalidTopic"
 const required = (v: string) => (v.trim() ? null : "required")
 const email = (v: string) => (!v.trim() ? "required" : v.includes("@") ? null : "invalidEmail")
 
@@ -65,6 +71,46 @@ export const CHANNELS: Record<
       },
     ],
   },
+  webhook: {
+    label: "Webhook",
+    icon: Webhook,
+    fields: [
+      {
+        key: "url",
+        labelKey: "notifications.url",
+        placeholder: "https://example.com/hooks/cronko",
+        type: "url",
+        validate: httpUrl,
+      },
+    ],
+  },
+  ntfy: {
+    label: "ntfy",
+    icon: Bell,
+    fields: [
+      {
+        key: "topic",
+        labelKey: "notifications.topic",
+        placeholder: "cronko-alerts",
+        validate: topic,
+      },
+      {
+        key: "serverUrl",
+        labelKey: "notifications.serverUrl",
+        placeholder: "https://ntfy.sh",
+        type: "url",
+        optional: true,
+        validate: optionalHttpUrl,
+      },
+      {
+        key: "token",
+        labelKey: "notifications.token",
+        placeholder: "tk_…",
+        optional: true,
+        validate: () => null,
+      },
+    ],
+  },
   email: {
     label: "Email",
     icon: Mail,
@@ -88,7 +134,7 @@ export function channelMeta(type: string) {
 }
 
 export function validateConfig(type: string, values: Record<string, string>) {
-  const errors: Record<string, "required" | "invalidUrl" | "invalidEmail"> = {}
+  const errors: Record<string, "required" | "invalidUrl" | "invalidEmail" | "invalidTopic"> = {}
   for (const f of channelMeta(type).fields) {
     const err = f.validate(values[f.key] ?? "")
     if (err) errors[f.key] = err

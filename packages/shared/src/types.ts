@@ -2,7 +2,13 @@ import type { MONITOR_STATUS } from "./constants"
 
 export type MonitorStatus = (typeof MONITOR_STATUS)[keyof typeof MONITOR_STATUS]
 
-export type NotificationChannelType = "discord" | "telegram" | "email" | "slack"
+export type NotificationChannelType =
+  | "discord"
+  | "telegram"
+  | "email"
+  | "slack"
+  | "webhook"
+  | "ntfy"
 
 export type IncidentStatus = "open" | "resolved"
 
@@ -42,7 +48,7 @@ export interface NotificationChannel {
   name: string
   type: NotificationChannelType
   enabled: boolean
-  config: DiscordConfig | TelegramConfig | EmailConfig
+  config: DiscordConfig | TelegramConfig | EmailConfig | WebhookConfig | NtfyConfig
   createdAt: Date
 }
 
@@ -57,4 +63,16 @@ export interface TelegramConfig {
 
 export interface EmailConfig {
   to: string
+}
+
+/** Generic webhook: Cronko POSTs a JSON body ({ event, monitor, message, sentAt }). */
+export interface WebhookConfig {
+  url: string
+}
+
+/** ntfy.sh or a self-hosted ntfy server. */
+export interface NtfyConfig {
+  topic: string
+  serverUrl?: string | undefined
+  token?: string | undefined
 }

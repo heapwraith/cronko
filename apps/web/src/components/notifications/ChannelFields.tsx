@@ -59,6 +59,9 @@ export function ChannelFields({
           <div key={f.key}>
             <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-ink">
               {t(f.labelKey)}
+              {f.optional && (
+                <span className="ml-1.5 font-normal text-dim">({t("notifications.optional")})</span>
+              )}
             </label>
             <input
               id={id}
