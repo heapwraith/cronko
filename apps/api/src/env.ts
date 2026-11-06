@@ -32,6 +32,8 @@ const envSchema = z
     // carry a link straight to the failing run or monitor.
     PUBLIC_URL: z.url().optional(),
     SELF_HEARTBEAT_INTERVAL_SECONDS: z.coerce.number().int().min(10).default(300),
+    // Bearer token that enables GET /metrics (Prometheus). Unset = the endpoint is off (404).
+    METRICS_TOKEN: z.string().min(16).optional(),
     // Extra origins allowed to make state-changing requests (reverse proxy / custom domain)
     // Honour X-Forwarded-For / X-Real-IP (only behind a reverse proxy you control)
     TRUST_PROXY: z.enum(["true", "false"]).default("false"),

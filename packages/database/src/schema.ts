@@ -1,5 +1,5 @@
 import { relations, sql } from "drizzle-orm"
-import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
 
 export const monitors = sqliteTable("monitors", {
   id: text("id").primaryKey(),
@@ -142,6 +142,29 @@ export const users = sqliteTable("users", {
   password: text("password").notNull(),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 })
+
+/**
+ * User-created API tokens for scripts and CI. Only the SHA-256 of the token is
+ * stored; `prefix` (first characters) lets the owner recognise it in the list.
+ */
+export const apiTokens = sqliteTable(
+  "api_tokens",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    name: text("name").notNull(),
+    prefix: text("prefix").notNull(),
+    tokenHash: text("token_hash").notNull(),
+    scope: text("scope", { enum: ["read", "write"] }).notNull(),
+    expiresAt: integer("expires_at", { mode: "timestamp" }),
+    lastUsedAt: integer("last_used_at", { mode: "timestamp" }),
+    revokedAt: integer("revoked_at", { mode: "timestamp" }),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => [uniqueIndex("api_tokens_token_hash_unique").on(t.tokenHash)],
+)
 
 export const settings = sqliteTable("settings", {
   key: text("key").primaryKey(),

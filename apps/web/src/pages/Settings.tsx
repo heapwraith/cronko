@@ -3,6 +3,7 @@ import type { Locale } from "@cronko/shared/translations"
 import { formatDuration } from "@cronko/shared/utils"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { cloneElement, type ReactElement, useEffect, useId, useState } from "react"
+import { ApiTokens } from "@/components/settings/ApiTokens"
 import { Button } from "@/components/shared/Button"
 import { ConfirmModal } from "@/components/shared/ConfirmModal"
 import { Skeleton } from "@/components/shared/Skeleton"
@@ -400,6 +401,8 @@ export default function SettingsPage() {
               <span className="text-xs text-dim">{t("settings.digestSendTestHint")}</span>
             </div>
           </Group>
+
+          <ApiTokens />
 
           <Group title={t("settings.history")}>
             <Field

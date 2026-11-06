@@ -45,6 +45,18 @@ const spec = {
         responses: { "200": { description: "uptime, scheduler stats, memory" } },
       },
     },
+    "/metrics": {
+      get: {
+        summary: "Prometheus metrics (opt-in)",
+        description:
+          "Text exposition format: per-monitor status, last ping, last duration, open incidents, and notification outbox counts. Disabled (404) unless METRICS_TOKEN is set; send it as `Authorization: Bearer <token>`.",
+        responses: {
+          "200": { description: "Prometheus text format", content: { "text/plain": {} } },
+          "401": { description: "Missing or wrong token" },
+          "404": { description: "METRICS_TOKEN is not set" },
+        },
+      },
+    },
     "/ping/{token}": {
       get: {
         summary: "Send a heartbeat (GET)",
@@ -367,6 +379,48 @@ const spec = {
         },
       },
     },
+    "/api/import/healthchecks": {
+      post: {
+        summary: "Import monitors from Healthchecks (saved API response or live Management API)",
+        description:
+          'Body: the saved response of GET /api/v3/checks/ ({"checks": [...]}), or {"apiKey", "baseUrl"?} to fetch it (baseUrl defaults to https://healthchecks.io). Names that already exist are skipped. Returns what was created and skipped, with warnings for fields that have no equivalent.',
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        parameters: [
+          {
+            name: "dryRun",
+            in: "query",
+            schema: { type: "boolean" },
+            description: "Report what would happen without creating anything",
+          },
+        ],
+        responses: {
+          "200": { description: "{ dryRun, created[], skipped[] }" },
+          "400": { description: "Unrecognised body" },
+          "401": { description: "Healthchecks rejected the API key" },
+          "502": { description: "Healthchecks unreachable or failed" },
+        },
+      },
+    },
+    "/api/import/kuma": {
+      post: {
+        summary: "Import push monitors from an Uptime Kuma backup JSON",
+        description:
+          "Body: the backup file ({version, monitorList}). Only push monitors are imported; other types are reported as skipped. Names that already exist are skipped.",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        parameters: [
+          {
+            name: "dryRun",
+            in: "query",
+            schema: { type: "boolean" },
+            description: "Report what would happen without creating anything",
+          },
+        ],
+        responses: {
+          "200": { description: "{ dryRun, created[], skipped[] }" },
+          "400": { description: "Not a Kuma backup" },
+        },
+      },
+    },
     "/api/monitors/{id}/runs/{runId}": {
       get: {
         summary: "Get one run with the previous run and the last successful run before it",
@@ -480,6 +534,27 @@ const spec = {
         summary: "Update settings (includes digestFrequency off|daily|weekly and digestHour)",
         security: [{ bearerAuth: [] }, { csrf: [] }],
         responses: { "200": { description: "Settings updated" } },
+      },
+    },
+    "/api/settings/tokens": {
+      get: {
+        summary: "List API tokens (never the secret). Session only, not usable with an API token",
+        security: [{ bearerAuth: [] }],
+        responses: { "200": { description: "Array of tokens with scope, status and last use" } },
+      },
+      post: {
+        summary:
+          "Create an API token (scope read|write, optional expiresInDays). The secret is returned once. Use it as Authorization: Bearer crk_...",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        responses: { "201": { description: "Token and its one-time secret" } },
+      },
+    },
+    "/api/settings/tokens/{id}": {
+      delete: {
+        summary: "Revoke an API token",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        responses: { "200": { description: "Revoked" }, "404": { description: "Not found" } },
       },
     },
     "/api/settings/digest/test": {
