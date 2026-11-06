@@ -1,3 +1,5 @@
+// biome-ignore-all assist/source/organizeImports: ./load-env must run before any workspace import
+import "./load-env"
 import { existsSync } from "node:fs"
 import { resolve } from "node:path"
 import { db, sqliteClient } from "@cronko/database"

@@ -1,10 +1,5 @@
+import "./load-env"
 import { z } from "zod"
-
-try {
-  process.loadEnvFile("../../.env")
-} catch {
-  // .env file not found — using process.env as-is (e.g. in CI or tests)
-}
 
 const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
