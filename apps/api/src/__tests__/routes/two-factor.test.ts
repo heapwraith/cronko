@@ -5,7 +5,6 @@ import { setupTestDb } from "../helpers/testDb"
 const EMAIL = "ops@example.com"
 const PASSWORD = "pw-12345678"
 
-// biome-ignore lint/suspicious/noExplicitAny: test helper over untyped JSON bodies
 type Res = Omit<Response, "json"> & { json(): Promise<any> }
 
 function cookieValue(res: Res, name: string): string | undefined {

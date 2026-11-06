@@ -17,6 +17,12 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  // Set once the password was accepted and the account needs a second factor.
+  const [challenge, setChallenge] = useState<string | null>(null)
+  const [code, setCode] = useState("")
+  const [recovery, setRecovery] = useState(false)
+  const codeRef = useRef<HTMLInputElement>(null)
+  const codeId = useId()
   const emailRef = useRef<HTMLInputElement>(null)
   const emailId = useId()
   const passwordId = useId()
@@ -40,13 +46,30 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      await api.auth.login({ email, password })
+      if (challenge) {
+        await api.auth.loginTwoFactor({ challenge, code: code.trim() })
+      } else {
+        const res = await api.auth.login({ email, password })
+        if (res.twoFactorRequired) {
+          setChallenge(res.challenge)
+          setPassword("")
+          setTimeout(() => codeRef.current?.focus(), 0)
+          return
+        }
+      }
       startTransition(() => navigate("/dashboard"))
     } catch (err) {
       if (err instanceof ApiError && err.status === 429) {
         setError(t("auth.tooManyAttempts"))
       } else if (err instanceof ApiError && err.status === 401) {
-        setError(t("auth.invalidCredentials"))
+        if (challenge && (err.body as { code?: string } | null)?.code === "UNAUTHORIZED") {
+          // The challenge itself expired: start over from the password.
+          setChallenge(null)
+          setCode("")
+          setError(t("auth.invalidCredentials"))
+        } else {
+          setError(challenge ? t("auth.invalidCode") : t("auth.invalidCredentials"))
+        }
       } else {
         setError(t("auth.cannotReachServer"))
       }
@@ -76,52 +99,108 @@ export default function LoginPage() {
           className="space-y-4 rounded-xl border border-line bg-panel p-6 shadow-[var(--shadow-card)]"
           noValidate
         >
-          <div>
-            <label htmlFor={emailId} className="mb-1.5 block text-sm font-semibold">
-              {t("auth.email")}
-            </label>
-            <input
-              ref={emailRef}
-              id={emailId}
-              type="email"
-              autoComplete="username"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={loading}
-              aria-describedby={error ? errorId : undefined}
-              aria-invalid={error ? true : undefined}
-              className={field}
-            />
-          </div>
-
-          <div>
-            <label htmlFor={passwordId} className="mb-1.5 block text-sm font-semibold">
-              {t("auth.password")}
-            </label>
-            <div className="relative">
-              <input
-                id={passwordId}
-                type={showPassword ? "text" : "password"}
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
-                aria-describedby={error ? errorId : undefined}
-                aria-invalid={error ? true : undefined}
-                className={`${field} pr-11`}
-              />
-              <IconButton
-                label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
-                onClick={() => setShowPassword((v) => !v)}
-                aria-pressed={showPassword}
-                className="absolute right-1 top-1/2 -translate-y-1/2"
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </IconButton>
+          {challenge ? (
+            <div className="space-y-3">
+              <p className="text-base font-semibold">{t("auth.codeTitle")}</p>
+              <p className="text-sm text-dim">
+                {recovery ? t("auth.recoveryHint") : t("auth.codeHint")}
+              </p>
+              <div>
+                <label htmlFor={codeId} className="mb-1.5 block text-sm font-semibold">
+                  {t("auth.code")}
+                </label>
+                <input
+                  ref={codeRef}
+                  id={codeId}
+                  type="text"
+                  inputMode={recovery ? "text" : "numeric"}
+                  autoComplete="one-time-code"
+                  required
+                  maxLength={recovery ? 32 : 7}
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  disabled={loading}
+                  aria-describedby={error ? errorId : undefined}
+                  aria-invalid={error ? true : undefined}
+                  className={`${field} font-mono`}
+                />
+              </div>
+              <div className="flex flex-wrap justify-between gap-2 text-sm">
+                <button
+                  type="button"
+                  className="text-signal-text underline underline-offset-2"
+                  onClick={() => {
+                    setRecovery((v) => !v)
+                    setCode("")
+                    setError(null)
+                  }}
+                >
+                  {recovery ? t("auth.useAuthenticator") : t("auth.useRecovery")}
+                </button>
+                <button
+                  type="button"
+                  className="text-dim underline underline-offset-2"
+                  onClick={() => {
+                    setChallenge(null)
+                    setCode("")
+                    setRecovery(false)
+                    setError(null)
+                  }}
+                >
+                  {t("auth.back")}
+                </button>
+              </div>
             </div>
-          </div>
+          ) : (
+            <>
+              <div>
+                <label htmlFor={emailId} className="mb-1.5 block text-sm font-semibold">
+                  {t("auth.email")}
+                </label>
+                <input
+                  ref={emailRef}
+                  id={emailId}
+                  type="email"
+                  autoComplete="username"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                  aria-describedby={error ? errorId : undefined}
+                  aria-invalid={error ? true : undefined}
+                  className={field}
+                />
+              </div>
+
+              <div>
+                <label htmlFor={passwordId} className="mb-1.5 block text-sm font-semibold">
+                  {t("auth.password")}
+                </label>
+                <div className="relative">
+                  <input
+                    id={passwordId}
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={loading}
+                    aria-describedby={error ? errorId : undefined}
+                    aria-invalid={error ? true : undefined}
+                    className={`${field} pr-11`}
+                  />
+                  <IconButton
+                    label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-pressed={showPassword}
+                    className="absolute right-1 top-1/2 -translate-y-1/2"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </IconButton>
+                </div>
+              </div>
+            </>
+          )}
 
           {error && (
             <p
@@ -141,6 +220,8 @@ export default function LoginPage() {
               </>
             ) : isPending ? (
               t("auth.redirecting")
+            ) : challenge ? (
+              t("auth.verify")
             ) : (
               t("auth.signIn")
             )}
