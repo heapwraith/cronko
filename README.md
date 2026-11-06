@@ -8,7 +8,7 @@ backups and ETLs: one container, one SQLite file.
 
 > **Resumo em português:** o Cronko avisa quando um cron job, backup ou ETL deixa de
 > rodar. Cada monitor ganha uma URL de ping; se ela não for chamada no prazo, você é
-> alertado (Discord, Telegram, e-mail, Slack, Teams, ntfy, Pushover, webhook). Instalação: veja _Quick start_ abaixo
+> alertado (Discord, Telegram, e-mail, Slack, Teams, ntfy, Pushover, PagerDuty, webhook). Instalação: veja _Quick start_ abaixo
 > (`docker compose up -d`) e abra `http://localhost:3000`. A interface tem pt-BR e en.
 
 ## How it works
@@ -78,7 +78,7 @@ pnpm --filter @cronko/web dev     # web on :3000, proxies the API
 - Pulse (`/start` + `/finish`) with duration, exit code and optional output
 - Explicit `/fail` signal and non-zero exit codes: a distinct `failed` state with an immediate alert
 - Max-duration alerts, incident history, audit log
-- Alerts to Discord, Telegram, e-mail (SMTP), Slack, Microsoft Teams, ntfy, Pushover and any webhook
+- Alerts to Discord, Telegram, e-mail (SMTP), Slack, Microsoft Teams, ntfy, Pushover, PagerDuty and any webhook
 - Mute a monitor's alerts for maintenance (1 h to 7 days); state and incidents are still tracked
 - Public SVG status badge (`/badge/:token`), CSV export of heartbeats
 - Dashboard, dark/light theme, English and pt-BR, installable PWA
@@ -108,7 +108,8 @@ access `token`). A generic webhook takes a `url` and receives
 `{ "event", "monitor", "message", "sentAt" }` as JSON. Pushover takes a `userKey`
 and an `appToken`. Microsoft Teams takes the `webhookUrl` of a Workflows flow
 ("Post to a channel when a webhook request is received"), since Office 365
-connectors are retired.
+connectors are retired. PagerDuty takes the `routingKey` of an Events API v2
+integration: problems trigger an incident (one per monitor) and recovery resolves it.
 
 ## Security
 

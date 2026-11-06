@@ -161,6 +161,7 @@ curl -fsS -X POST "${ping}/finish?exit=$?"`}</CodeBlock>
               "webhook",
               "ntfy",
               "pushover",
+              "pagerduty",
               "teams",
             ] as const
           ).map((k) => (

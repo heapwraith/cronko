@@ -26,6 +26,11 @@ const ntfyConfig = z.object({
 const pushoverKey = z.string().regex(/^[A-Za-z0-9]{30}$/, "Expected 30 letters or digits")
 const pushoverConfig = z.object({ appToken: pushoverKey, userKey: pushoverKey })
 
+// Events API v2 integration keys are 32 hex-like characters.
+const pagerDutyConfig = z.object({
+  routingKey: z.string().regex(/^[A-Za-z0-9]{32}$/, "Expected 32 letters or digits"),
+})
+
 const createNotificationSchema = z.discriminatedUnion("type", [
   z.object({
     name: z.string().min(1),
@@ -64,6 +69,11 @@ const createNotificationSchema = z.discriminatedUnion("type", [
   }),
   z.object({
     name: z.string().min(1),
+    type: z.literal("pagerduty"),
+    config: pagerDutyConfig,
+  }),
+  z.object({
+    name: z.string().min(1),
     type: z.literal("teams"),
     config: z.object({ webhookUrl: z.url() }),
   }),
@@ -80,6 +90,7 @@ const updateNotificationSchema = z.object({
       webhookConfig,
       ntfyConfig,
       pushoverConfig,
+      pagerDutyConfig,
     ])
     .optional(),
 })

@@ -1,4 +1,4 @@
-import { Bell, BellRing, Mail, MessageSquare, Send, Users, Webhook } from "lucide-react"
+import { Bell, BellRing, Mail, MessageSquare, Send, Siren, Users, Webhook } from "lucide-react"
 
 export type ChannelType =
   | "discord"
@@ -9,6 +9,7 @@ export type ChannelType =
   | "ntfy"
   | "pushover"
   | "teams"
+  | "pagerduty"
 
 export type Channel = {
   id: string
@@ -29,7 +30,13 @@ export type FieldSpec = {
   validate: (value: string) => FieldError | null
 }
 
-export type FieldError = "required" | "invalidUrl" | "invalidEmail" | "invalidTopic" | "invalidKey"
+export type FieldError =
+  | "required"
+  | "invalidUrl"
+  | "invalidEmail"
+  | "invalidTopic"
+  | "invalidKey"
+  | "invalidRoutingKey"
 
 const url = (v: string) => (!v.trim() ? "required" : v.startsWith("https://") ? null : "invalidUrl")
 const httpUrl = (v: string) =>
@@ -39,6 +46,8 @@ const topic = (v: string) =>
   !v.trim() ? "required" : /^[\w-]{1,64}$/.test(v.trim()) ? null : "invalidTopic"
 const pushoverKey = (v: string) =>
   !v.trim() ? "required" : /^[A-Za-z0-9]{30}$/.test(v.trim()) ? null : "invalidKey"
+const routingKey = (v: string) =>
+  !v.trim() ? "required" : /^[A-Za-z0-9]{32}$/.test(v.trim()) ? null : "invalidRoutingKey"
 const required = (v: string) => (v.trim() ? null : "required")
 const email = (v: string) => (!v.trim() ? "required" : v.includes("@") ? null : "invalidEmail")
 
@@ -138,6 +147,18 @@ export const CHANNELS: Record<
         labelKey: "notifications.appToken",
         placeholder: "azGDORePK8…",
         validate: pushoverKey,
+      },
+    ],
+  },
+  pagerduty: {
+    label: "PagerDuty",
+    icon: Siren,
+    fields: [
+      {
+        key: "routingKey",
+        labelKey: "notifications.routingKey",
+        placeholder: "e93facc04764012d7bfb…",
+        validate: routingKey,
       },
     ],
   },
