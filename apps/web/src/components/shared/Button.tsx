@@ -59,7 +59,6 @@ export function Button(props: ButtonProps) {
     ...rest
   } = props
   return (
-    // biome-ignore lint/a11y/useButtonType: type defaults to "button" and is overridable
     <button {...rest} type={type} className={classes}>
       {children}
     </button>

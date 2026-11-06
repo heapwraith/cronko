@@ -31,8 +31,8 @@ export function DeleteMonitorButton({ monitorId }: { monitorId: string }) {
         expectedIntervalSeconds: monitor.expectedIntervalSeconds,
         gracePeriodSeconds: monitor.gracePeriodSeconds,
       }
-    } catch (e) {
-      console.error("Failed to save monitor data for undo:", e)
+    } catch {
+      // Undo data is best-effort; deletion must still go ahead.
     }
 
     try {

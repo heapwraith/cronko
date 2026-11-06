@@ -1,5 +1,6 @@
 import { AlertCircle, AlertTriangle, CheckCircle, Info, X } from "lucide-react"
 import { createContext, type ReactNode, useCallback, useContext, useState } from "react"
+import { useT } from "@/lib/i18n"
 
 type ToastType = "success" | "error" | "warning" | "info"
 
@@ -23,65 +24,64 @@ const icons: Record<ToastType, React.ComponentType<{ className?: string }>> = {
   info: Info,
 }
 
+// Solid chips from the state palette; the icon and the text carry the meaning too.
 const colors: Record<ToastType, string> = {
-  success: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400",
-  error: "border-red-500/30 bg-red-500/10 text-red-400",
-  warning: "border-amber-500/30 bg-amber-500/10 text-amber-400",
-  info: "border-blue-500/30 bg-blue-500/10 text-blue-400",
+  success: "bg-[var(--chip-healthy-bg)] text-[var(--chip-healthy-fg)]",
+  error: "bg-[var(--chip-down-bg)] text-[var(--chip-down-fg)]",
+  warning: "bg-[var(--chip-missed-bg)] text-[var(--chip-missed-fg)]",
+  info: "bg-[var(--chip-pending-bg)] text-[var(--chip-pending-fg)]",
 }
 
 export function ToastProvider({ children }: { children: ReactNode }) {
+  const { t } = useT()
   const [toasts, setToasts] = useState<Toast[]>([])
 
-  const addToast = useCallback((message: string, type: ToastType = "info") => {
-    const id = Math.random().toString(36).slice(2)
-    setToasts((prev) => [...prev, { id, type, message }])
-
-    setTimeout(() => {
-      setToasts((prev) => prev.map((t) => (t.id === id ? { ...t, exiting: true } : t)))
-      setTimeout(() => {
-        setToasts((prev) => prev.filter((t) => t.id !== id))
-      }, 300)
-    }, 4000)
+  const dismiss = useCallback((id: string) => {
+    setToasts((prev) => prev.map((x) => (x.id === id ? { ...x, exiting: true } : x)))
+    setTimeout(() => setToasts((prev) => prev.filter((x) => x.id !== id)), 300)
   }, [])
+
+  const addToast = useCallback(
+    (message: string, type: ToastType = "info") => {
+      const id = Math.random().toString(36).slice(2)
+      setToasts((prev) => [...prev, { id, type, message }])
+
+      setTimeout(() => dismiss(id), 4000)
+    },
+    [dismiss],
+  )
 
   return (
     <ToastContext.Provider value={{ toast: addToast }}>
       {children}
-      <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
-        {toasts.map((t) => {
-          const Icon = icons[t.type]
+      <section
+        aria-label={t("toast.region")}
+        className="pointer-events-none fixed bottom-4 right-4 z-[100] flex flex-col gap-2"
+      >
+        {toasts.map((item) => {
+          const Icon = icons[item.type]
           return (
             <div
-              key={t.id}
-              className={`pointer-events-auto flex items-center gap-3 rounded-lg border px-4 py-3 shadow-lg backdrop-blur-sm transition-all duration-300 max-w-sm ${
-                colors[t.type]
-              } ${t.exiting ? "opacity-0 translate-x-4" : "opacity-100 translate-x-0"}`}
+              key={item.id}
+              role={item.type === "error" ? "alert" : "status"}
+              className={`pointer-events-auto flex max-w-sm items-center gap-3 rounded-[6px] border border-line-strong px-4 py-3 shadow-[0_8px_24px_-8px_rgb(0_0_0/0.5)] transition-[opacity,transform] duration-300 ${
+                colors[item.type]
+              } ${item.exiting ? "translate-x-4 opacity-0" : "translate-x-0 opacity-100"}`}
             >
-              <Icon className="h-4 w-4 shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm">{t.message}</p>
-                <div className="mt-1 h-0.5 rounded-full bg-white/20 overflow-hidden">
-                  <div className="h-full bg-white/40 rounded-full animate-toast-progress" />
-                </div>
-              </div>
+              <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <p className="min-w-0 flex-1 text-sm font-medium">{item.message}</p>
               <button
-                onClick={() => {
-                  setToasts((prev) =>
-                    prev.map((to) => (to.id === t.id ? { ...to, exiting: true } : to)),
-                  )
-                  setTimeout(() => {
-                    setToasts((prev) => prev.filter((to) => to.id !== t.id))
-                  }, 300)
-                }}
-                className="shrink-0 hover:opacity-70"
+                type="button"
+                aria-label={t("common.close")}
+                onClick={() => dismiss(item.id)}
+                className="shrink-0 rounded-[4px] p-1 hover:bg-black/10"
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="h-3.5 w-3.5" aria-hidden="true" />
               </button>
             </div>
           )
         })}
-      </div>
+      </section>
     </ToastContext.Provider>
   )
 }

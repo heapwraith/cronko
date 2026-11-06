@@ -141,11 +141,9 @@ function MonitorDetailView({ monitor, incidents }: { monitor: Monitor; incidents
                       {last.exitCode == null ? (
                         "—"
                       ) : lastFailed ? (
-                        <>
-                          <span className="font-semibold text-failed">
-                            {last.exitCode} · {t("detail.exitFail")}
-                          </span>
-                        </>
+                        <span className="font-semibold text-failed">
+                          {last.exitCode} · {t("detail.exitFail")}
+                        </span>
                       ) : (
                         <>
                           {last.exitCode} · {t("detail.exitOk")}

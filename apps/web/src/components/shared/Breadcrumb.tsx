@@ -1,41 +1,41 @@
 import { ChevronRight } from "lucide-react"
 import { Link } from "react-router"
+import { useT } from "@/lib/i18n"
 
 interface Crumb {
   label: string
   href?: string
 }
 
-interface BreadcrumbProps {
-  items: Crumb[]
-}
-
-export function Breadcrumb({ items }: BreadcrumbProps) {
+export function Breadcrumb({ items }: { items: Crumb[] }) {
+  const { t } = useT()
   return (
-    <nav
-      aria-label="Breadcrumb"
-      className="flex items-center gap-1 text-xs text-[#697386] dark:text-zinc-500"
-    >
-      {items.map((item, i) => {
-        const isLast = i === items.length - 1
-        return (
-          <span key={i} className="flex items-center gap-1">
-            {i > 0 && <ChevronRight className="h-3 w-3 text-[#8e99a8] dark:text-zinc-600" />}
-            {item.href && !isLast ? (
-              <Link
-                to={item.href}
-                className="hover:text-[#1a1f36] dark:hover:text-zinc-300 transition-colors"
-              >
-                {item.label}
-              </Link>
-            ) : (
-              <span className={isLast ? "text-[#1a1f36] dark:text-zinc-400" : ""}>
-                {item.label}
-              </span>
-            )}
-          </span>
-        )
-      })}
+    <nav aria-label={t("breadcrumb.label")}>
+      <ol className="flex flex-wrap items-center gap-1 text-sm text-dim">
+        {items.map((item, i) => {
+          const isLast = i === items.length - 1
+          return (
+            <li key={item.label} className="flex items-center gap-1">
+              {i > 0 && <ChevronRight className="h-3 w-3" aria-hidden="true" />}
+              {item.href && !isLast ? (
+                <Link
+                  to={item.href}
+                  className="underline-offset-4 hover:text-ink hover:underline focus-visible:underline"
+                >
+                  {item.label}
+                </Link>
+              ) : (
+                <span
+                  aria-current={isLast ? "page" : undefined}
+                  className={isLast ? "text-ink" : ""}
+                >
+                  {item.label}
+                </span>
+              )}
+            </li>
+          )
+        })}
+      </ol>
     </nav>
   )
 }

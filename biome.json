@@ -98,18 +98,48 @@
       "linter": {
         "rules": {
           "a11y": {
-            "useButtonType": "warn",
-            "noLabelWithoutControl": "warn",
-            "noStaticElementInteractions": "warn",
-            "useKeyWithClickEvents": "warn",
-            "noSvgWithoutTitle": "warn",
-            "useSemanticElements": "warn",
-            "useAriaPropsSupportedByRole": "warn",
-            "useFocusableInteractive": "warn",
-            "noAutofocus": "warn"
-          },
+            "useButtonType": "error",
+            "noLabelWithoutControl": "error",
+            "noStaticElementInteractions": "error",
+            "useKeyWithClickEvents": "error",
+            "noSvgWithoutTitle": "error",
+            "useSemanticElements": "error",
+            "useAriaPropsSupportedByRole": "error",
+            "useFocusableInteractive": "error",
+            "noAutofocus": "error"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "apps/web/src/components/shared/Skeleton.tsx",
+        "apps/web/src/pages/skeletons/**"
+      ],
+      "linter": {
+        "rules": {
           "suspicious": {
-            "noArrayIndexKey": "warn"
+            "noArrayIndexKey": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/web/src/globals.css"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noImportantStyles": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/web/public/**"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noSvgWithoutTitle": "off"
           }
         }
       }

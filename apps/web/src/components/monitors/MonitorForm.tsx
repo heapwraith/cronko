@@ -231,11 +231,8 @@ export function MonitorForm({
               <p id={`${ids.cron}-help`} className={hint}>
                 {t("form.cronHint")}
               </p>
-              <div
-                className="mt-2 flex flex-wrap gap-2"
-                role="group"
-                aria-label={t("form.presets")}
-              >
+              <fieldset className="mt-2 flex min-w-0 flex-wrap gap-2 border-0 p-0">
+                <legend className="sr-only">{t("form.presets")}</legend>
                 {PRESETS.map((p) => (
                   <button
                     key={p.cron}
@@ -246,7 +243,7 @@ export function MonitorForm({
                     {t(p.key)}
                   </button>
                 ))}
-              </div>
+              </fieldset>
             </div>
 
             <div>
