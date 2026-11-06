@@ -39,7 +39,7 @@ making product claims.
 ## P0 - reliability (a lost alert is fatal)
 
 1. Notification delivery: retry with backoff, per-attempt log, visible failures in the UI.
-2. "Monitor the monitor": optional outbound heartbeat so you learn if Cronko itself stops.
+2. ~~"Monitor the monitor": optional outbound heartbeat.~~ Done (`SELF_HEARTBEAT_URL`).
 3. Tests for the notifier, remaining routes (monitors, incidents, settings, stats) and an e2e smoke (Playwright).
 4. Verify the Docker image on amd64 and arm64 (CI builds it; not yet run on a real host).
 5. Accessibility pass on the legacy UI (labels, button types, keyboard handlers); the lint rules are warnings today.

@@ -69,17 +69,18 @@ pnpm --filter @cronko/web dev     # web on :3000, proxies the API
 
 ## Configuration
 
-| Variable                                                        | Required | Description                                                              |
-| --------------------------------------------------------------- | -------- | ------------------------------------------------------------------------ |
-| `JWT_SECRET`                                                    | yes      | Signing key, at least 32 characters                                      |
-| `DATABASE_URL`                                                  | yes      | SQLite file, e.g. `file:./data/cronko.db` (set in the image)             |
-| `ADMIN_EMAIL`, `ADMIN_PASSWORD`                                 | no       | Admin account created on first boot                                      |
-| `API_PORT`, `API_HOST`                                          | no       | Default `3001` / `0.0.0.0` (the image uses `3000`)                       |
-| `TRUST_PROXY`                                                   | no       | `true` to trust `X-Forwarded-For` / `X-Real-IP` (only behind your proxy) |
-| `TRUSTED_ORIGINS`                                               | no       | Extra public origins allowed to make changes, comma-separated            |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | no       | E-mail alerts                                                            |
-| `AUTO_MIGRATE`                                                  | no       | Apply migrations on boot (default `true`)                                |
-| `WEB_DIST`                                                      | no       | Path of the built web app (auto-detected)                                |
+| Variable                                                        | Required | Description                                                                                                                                                       |
+| --------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `JWT_SECRET`                                                    | yes      | Signing key, at least 32 characters                                                                                                                               |
+| `DATABASE_URL`                                                  | yes      | SQLite file, e.g. `file:./data/cronko.db` (set in the image)                                                                                                      |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD`                                 | no       | Admin account created on first boot                                                                                                                               |
+| `API_PORT`, `API_HOST`                                          | no       | Default `3001` / `0.0.0.0` (the image uses `3000`)                                                                                                                |
+| `TRUST_PROXY`                                                   | no       | `true` to trust `X-Forwarded-For` / `X-Real-IP` (only behind your proxy)                                                                                          |
+| `TRUSTED_ORIGINS`                                               | no       | Extra public origins allowed to make changes, comma-separated                                                                                                     |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | no       | E-mail alerts                                                                                                                                                     |
+| `SELF_HEARTBEAT_URL`, `SELF_HEARTBEAT_INTERVAL_SECONDS`         | no       | Monitor the monitor: Cronko pings this URL (default every 300 s) only while its database and scheduler are healthy; point it at another Cronko or Healthchecks.io |
+| `AUTO_MIGRATE`                                                  | no       | Apply migrations on boot (default `true`)                                                                                                                         |
+| `WEB_DIST`                                                      | no       | Path of the built web app (auto-detected)                                                                                                                         |
 
 Notification channels are configured in the UI: Discord/Slack take a
 `webhookUrl`, Telegram a `botToken` and `chatId`, e-mail a recipient `to`.

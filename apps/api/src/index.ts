@@ -11,6 +11,7 @@ import { env } from "./env"
 import { logger } from "./lib/logger"
 import { hashPassword } from "./services/auth"
 import { schedulerMetrics, startScheduler, stopScheduler } from "./services/scheduler"
+import { startSelfHeartbeat, stopSelfHeartbeat } from "./services/self-heartbeat"
 import { registerWeb } from "./web"
 
 // Migrations ship next to the code: ./packages/database/src/migrations in the
@@ -89,6 +90,7 @@ async function bootstrap() {
 
   // 3. Start scheduler and HTTP server
   startScheduler()
+  startSelfHeartbeat(env.SELF_HEARTBEAT_URL, env.SELF_HEARTBEAT_INTERVAL_SECONDS)
 
   const server = serve({ fetch: app.fetch, port: env.API_PORT, hostname: env.API_HOST })
 
@@ -100,6 +102,7 @@ async function bootstrap() {
     logger.info({ signal }, "shutting down gracefully")
 
     stopScheduler()
+    stopSelfHeartbeat()
 
     // Close HTTP server — allow in-flight requests to finish
     server.close(() => {

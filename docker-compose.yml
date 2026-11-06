@@ -11,6 +11,8 @@ services:
       # Behind a reverse proxy (Caddy, nginx, Traefik) set these:
       # TRUST_PROXY: "true"
       # TRUSTED_ORIGINS: https://cronko.example.com
+      SELF_HEARTBEAT_URL: ${SELF_HEARTBEAT_URL:-}
+      SELF_HEARTBEAT_INTERVAL_SECONDS: ${SELF_HEARTBEAT_INTERVAL_SECONDS:-}
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-}
       SMTP_USER: ${SMTP_USER:-}
