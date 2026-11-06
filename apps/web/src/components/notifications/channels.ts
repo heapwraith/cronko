@@ -25,6 +25,9 @@ export type FieldSpec = {
   labelKey: string
   placeholder: string
   type?: "text" | "email" | "url"
+  /** Render a textarea (headers, body template). */
+  multiline?: boolean
+  hintKey?: string
   autoComplete?: string
   optional?: boolean
   validate: (value: string) => FieldError | null
@@ -102,6 +105,24 @@ export const CHANNELS: Record<
         placeholder: "https://example.com/hooks/cronko",
         type: "url",
         validate: httpUrl,
+      },
+      {
+        key: "headers",
+        labelKey: "notifications.headers",
+        hintKey: "notifications.headersHint",
+        placeholder: "Authorization: Bearer …",
+        multiline: true,
+        optional: true,
+        validate: () => null,
+      },
+      {
+        key: "bodyTemplate",
+        labelKey: "notifications.bodyTemplate",
+        hintKey: "notifications.bodyTemplateHint",
+        placeholder: '{"text": "{{monitor.name}} is {{status}}: {{message}}"}',
+        multiline: true,
+        optional: true,
+        validate: () => null,
       },
     ],
   },

@@ -11,11 +11,43 @@ import { Hono } from "hono"
 import { z } from "zod"
 import { logAuditEvent } from "../services/audit"
 import { sendTestNotification } from "../services/notifier"
+import {
+  MAX_TEMPLATE_LENGTH,
+  maskHeaders,
+  parseHeaders,
+  unknownPlaceholders,
+  unmaskHeaders,
+} from "../services/webhook-template"
 
 export const notificationsRoute = new Hono()
 
 const httpUrl = z.url({ protocol: /^https?$/ })
-const webhookConfig = z.object({ url: httpUrl })
+const webhookConfig = z
+  .object({
+    url: httpUrl,
+    headers: z.string().max(4000).optional(),
+    bodyTemplate: z.string().max(MAX_TEMPLATE_LENGTH).optional(),
+  })
+  .superRefine((cfg, ctx) => {
+    const { error } = parseHeaders(cfg.headers)
+    if (error) ctx.addIssue({ code: "custom", path: ["headers"], message: error })
+    const bad = unknownPlaceholders(cfg.bodyTemplate ?? "")
+    if (bad.length) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["bodyTemplate"],
+        message: `Unknown placeholder: ${bad.map((b) => `{{${b}}}`).join(", ")}`,
+      })
+    }
+  })
+
+/** Header values are secrets: responses carry them masked. */
+function redact<T extends { type: string; config: unknown }>(channel: T): T {
+  if (channel.type !== "webhook") return channel
+  const cfg = channel.config as { headers?: string }
+  if (!cfg.headers) return channel
+  return { ...channel, config: { ...cfg, headers: maskHeaders(cfg.headers) } }
+}
 const ntfyConfig = z.object({
   topic: z.string().regex(/^[\w-]{1,64}$/, "Use letters, digits, - or _"),
   serverUrl: z.union([httpUrl, z.literal("")]).optional(),
@@ -102,7 +134,7 @@ notificationsRoute.get("/deliveries", async (c) => {
 
 notificationsRoute.get("/", async (c) => {
   const channels = await findAllNotificationChannels()
-  return c.json({ data: channels })
+  return c.json({ data: channels.map(redact) })
 })
 
 notificationsRoute.post("/", zValidator("json", createNotificationSchema), async (c) => {
@@ -123,24 +155,31 @@ notificationsRoute.post("/", zValidator("json", createNotificationSchema), async
     metadata: { name: body.name, type: body.type },
   }).catch(() => {})
 
-  return c.json({ data: channel }, 201)
+  return c.json({ data: redact(channel) }, 201)
 })
 
 notificationsRoute.patch("/:id", zValidator("json", updateNotificationSchema), async (c) => {
   const id = c.req.param("id") ?? ""
   const body = c.req.valid("json")
 
+  let config = body.config
+  if (config && "headers" in config && config.headers) {
+    const existing = await findNotificationChannelById(id)
+    const stored = (existing?.config as { headers?: string } | undefined)?.headers
+    config = { ...config, headers: unmaskHeaders(config.headers, stored) }
+  }
+
   const updated = await updateNotificationChannel(id, {
     ...(body.name !== undefined && { name: body.name }),
     ...(body.enabled !== undefined && { enabled: body.enabled }),
-    ...(body.config !== undefined && { config: body.config }),
+    ...(config !== undefined && { config }),
   })
 
   if (!updated) {
     return c.json({ error: "Not found", code: "NOT_FOUND" }, 404)
   }
 
-  return c.json({ data: updated })
+  return c.json({ data: redact(updated) })
 })
 
 notificationsRoute.delete("/:id", async (c) => {

@@ -458,6 +458,12 @@ export const translations = {
     "notifications.serverUrl": "Servidor",
     "notifications.token": "Token de acesso",
     "notifications.optional": "opcional",
+    "notifications.headers": "Cabeçalhos HTTP",
+    "notifications.headersHint":
+      "Um por linha, no formato Nome: valor. Os valores são secretos e aparecem mascarados depois de salvos.",
+    "notifications.bodyTemplate": "Modelo do corpo",
+    "notifications.bodyTemplateHint":
+      "Vazio envia o JSON padrão. Variáveis: {{monitor.name}}, {{status}}, {{event}}, {{message}}, {{url}}, {{sentAt}}. Com JSON, os valores são escapados.",
     "notifications.err.invalidTopic": "Use letras, números, - ou _ (até 64).",
     "notifications.webhookUrl": "URL do Webhook",
     "notifications.botToken": "Token do Bot",
@@ -1165,6 +1171,12 @@ export const translations = {
     "notifications.serverUrl": "Server",
     "notifications.token": "Access token",
     "notifications.optional": "optional",
+    "notifications.headers": "HTTP headers",
+    "notifications.headersHint":
+      "One per line, as Name: value. Values are secret and shown masked once saved.",
+    "notifications.bodyTemplate": "Body template",
+    "notifications.bodyTemplateHint":
+      "Empty sends the default JSON. Placeholders: {{monitor.name}}, {{status}}, {{event}}, {{message}}, {{url}}, {{sentAt}}. Values are escaped when sending JSON.",
     "notifications.err.invalidTopic": "Use letters, digits, - or _ (up to 64).",
     "notifications.webhookUrl": "Webhook URL",
     "notifications.botToken": "Bot Token",
