@@ -6,6 +6,7 @@ import {
   markDeliveryAttemptFailed,
   markDeliverySent,
 } from "@cronko/database/queries/notifications"
+import { env } from "../env"
 import { logger } from "../lib/logger"
 import { type ChannelRow, DeliveryError, deliver } from "./channels"
 
@@ -20,6 +21,11 @@ const messages: Record<NotificationEvent, (name: string) => string> = {
 }
 
 /** Delay before retry N (1-based): 30s, 1m, 2m, 5m, 10m — then give up. */
+/** Absolute link into the web app, or undefined when PUBLIC_URL is not configured. */
+export function appLink(path: string): string | undefined {
+  return env.PUBLIC_URL ? `${env.PUBLIC_URL.replace(/\/+$/, "")}${path}` : undefined
+}
+
 export const RETRY_DELAYS_MS = [30_000, 60_000, 120_000, 300_000, 600_000]
 export const MAX_ATTEMPTS = RETRY_DELAYS_MS.length + 1
 
@@ -32,7 +38,11 @@ export async function sendNotification(
   monitor: { name: string },
   event: NotificationEvent,
   detail?: string,
+  path?: string,
 ) {
+  const link = path ? appLink(path) : undefined
+  const message =
+    messages[event](monitor.name) + (detail ? ` (${detail})` : "") + (link ? `\n${link}` : "")
   const channels = await findEnabledNotificationChannels()
   if (channels.length === 0) return
 
@@ -43,7 +53,7 @@ export async function sendNotification(
       channelId: channel.id,
       monitorName: monitor.name,
       event,
-      message: messages[event](monitor.name) + (detail ? ` (${detail})` : ""),
+      message,
     })),
     now,
   )

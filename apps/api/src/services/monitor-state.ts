@@ -110,7 +110,7 @@ export async function markOverdue(
   if (!won) return false
 
   await openIncidentOnce(monitor.id, now)
-  await sendNotification({ name: monitor.name }, target)
+  await sendNotification({ name: monitor.name }, target, undefined, `/monitors/${monitor.id}`)
   return true
 }
 
@@ -123,6 +123,7 @@ export async function markFailed(
   monitor: Pick<MonitorSnapshot, "id" | "name" | "status">,
   exitCode?: number,
   now = new Date(),
+  runId?: string,
 ): Promise<boolean> {
   if (monitor.status === "failed" || monitor.status === "paused") return false
 
@@ -134,6 +135,7 @@ export async function markFailed(
     { name: monitor.name },
     "failed",
     exitCode !== undefined ? `exit code ${exitCode}` : undefined,
+    runId ? `/monitors/${monitor.id}/runs/${runId}` : `/monitors/${monitor.id}`,
   )
   return true
 }
@@ -142,6 +144,7 @@ export async function markFailed(
 export async function markSlow(
   monitor: Pick<MonitorSnapshot, "id" | "name" | "status">,
   now = new Date(),
+  runId?: string,
 ): Promise<boolean> {
   if (monitor.status !== "healthy") return false
 
@@ -149,7 +152,12 @@ export async function markSlow(
   if (!won) return false
 
   await openIncidentOnce(monitor.id, now)
-  await sendNotification({ name: monitor.name }, "slow")
+  await sendNotification(
+    { name: monitor.name },
+    "slow",
+    undefined,
+    runId ? `/monitors/${monitor.id}/runs/${runId}` : `/monitors/${monitor.id}`,
+  )
   return true
 }
 
@@ -172,7 +180,12 @@ export async function recoverOnPing(
   if (open) await resolveIncident(open.id, now)
 
   if (monitor.status !== "pending") {
-    await sendNotification({ name: monitor.name }, "recovered")
+    await sendNotification(
+      { name: monitor.name },
+      "recovered",
+      undefined,
+      `/monitors/${monitor.id}`,
+    )
   }
   return true
 }

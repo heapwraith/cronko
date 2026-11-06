@@ -36,6 +36,28 @@ describe("notification outbox (real SQLite)", () => {
   const deliveries = async () => q.findRecentDeliveries(10)
   const T0 = new Date("2026-11-05T12:00:00Z")
 
+  it("appends a link to the run when PUBLIC_URL is set", async () => {
+    const { env } = await import("../../env")
+    deliver.mockResolvedValue()
+    expect(notifier.appLink("/monitors/m1")).toBeUndefined()
+
+    env.PUBLIC_URL = "https://cronko.example.com/"
+    try {
+      await notifier.sendNotification(
+        { name: "etl" },
+        "failed",
+        "exit code 2",
+        "/monitors/m1/runs/r1",
+      )
+      await notifier.processDueDeliveries()
+      const text = deliver.mock.calls.at(-1)?.[2]
+      expect(text).toContain("etl falhou (exit code 2)")
+      expect(text).toContain("\nhttps://cronko.example.com/monitors/m1/runs/r1")
+    } finally {
+      delete env.PUBLIC_URL
+    }
+  })
+
   it("queues without waiting and sends on the first pass", async () => {
     deliver.mockResolvedValue()
     await notifier.sendNotification({ name: "backup" }, "down")

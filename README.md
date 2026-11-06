@@ -79,6 +79,7 @@ pnpm --filter @cronko/web dev     # web on :3000, proxies the API
 | `TRUSTED_ORIGINS`                                               | no       | Extra public origins allowed to make changes, comma-separated                                                                                                     |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | no       | E-mail alerts                                                                                                                                                     |
 | `SELF_HEARTBEAT_URL`, `SELF_HEARTBEAT_INTERVAL_SECONDS`         | no       | Monitor the monitor: Cronko pings this URL (default every 300 s) only while its database and scheduler are healthy; point it at another Cronko or Healthchecks.io |
+| `PUBLIC_URL`                                                    | no       | Public address of this Cronko (e.g. `https://cronko.example.com`); alerts then include a link to the failing run or monitor                                       |
 | `AUTO_MIGRATE`                                                  | no       | Apply migrations on boot (default `true`)                                                                                                                         |
 | `WEB_DIST`                                                      | no       | Path of the built web app (auto-detected)                                                                                                                         |
 
