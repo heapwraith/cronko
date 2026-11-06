@@ -78,7 +78,7 @@ export function DeparturesTable({
             </th>
             {actions && (
               <th scope="col" className={th}>
-                <span className="sr-only">Ações</span>
+                <span className="sr-only">{t("board.actions")}</span>
               </th>
             )}
           </tr>
