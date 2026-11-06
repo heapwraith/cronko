@@ -11,6 +11,7 @@ export type NotificationChannelType =
   | "ntfy"
   | "pushover"
   | "teams"
+  | "pagerduty"
 
 export type IncidentStatus = "open" | "resolved"
 
@@ -58,6 +59,7 @@ export interface NotificationChannel {
     | NtfyConfig
     | PushoverConfig
     | TeamsConfig
+    | PagerDutyConfig
   createdAt: Date
 }
 
@@ -95,4 +97,9 @@ export interface PushoverConfig {
 /** Microsoft Teams "Workflows" webhook (the successor of Office 365 connectors). */
 export interface TeamsConfig {
   webhookUrl: string
+}
+
+/** PagerDuty Events API v2 integration (routing) key of a service. */
+export interface PagerDutyConfig {
+  routingKey: string
 }
