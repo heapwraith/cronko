@@ -52,8 +52,31 @@ export const heartbeats = sqliteTable(
     kind: text("kind", { enum: ["start", "finish"] }),
     // This run started while the previous one had not reported its finish yet.
     overlapped: integer("overlapped", { mode: "boolean" }).notNull().default(false),
+    // Client-picked UUID (?rid=) that pairs a /start with its /finish or /fail.
+    runId: text("run_id"),
   },
-  (t) => [index("heartbeats_monitor_received_idx").on(t.monitorId, t.receivedAt)],
+  (t) => [
+    index("heartbeats_monitor_received_idx").on(t.monitorId, t.receivedAt),
+    index("heartbeats_monitor_run_idx").on(t.monitorId, t.runId),
+  ],
+)
+
+// Events from /log: output attached to a monitor without being a ping, so they never
+// move its state, schedule, run history or statistics.
+export const pingLogs = sqliteTable(
+  "ping_logs",
+  {
+    id: text("id").primaryKey(),
+    monitorId: text("monitor_id")
+      .notNull()
+      .references(() => monitors.id, { onDelete: "cascade" }),
+    receivedAt: integer("received_at", { mode: "timestamp" }).notNull(),
+    sourceIp: text("source_ip"),
+    userAgent: text("user_agent"),
+    body: text("body"),
+    runId: text("run_id"),
+  },
+  (t) => [index("ping_logs_monitor_received_idx").on(t.monitorId, t.receivedAt)],
 )
 
 export const incidents = sqliteTable(

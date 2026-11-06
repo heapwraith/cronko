@@ -127,6 +127,13 @@
       "when": 1782800000000,
       "tag": "0017_add_api_tokens",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1782900000000,
+      "tag": "0018_add_run_id_and_ping_logs",
+      "breakpoints": true
     }
   ]
 }
