@@ -7,6 +7,10 @@ include breaking changes; they are called out below.
 
 ## [Unreleased]
 
+### Added
+
+- Importers: `POST /api/import/healthchecks` (saved `GET /api/v3/checks/` response, or an API key to fetch it) and `POST /api/import/kuma` (Uptime Kuma backup JSON, push monitors only; other types are reported as skipped). Both take `?dryRun=true`, reuse the monitor validation, skip names that already exist and warn about fields with no equivalent. No migration.
+
 ## [0.3.0] - 2026-11-06
 
 Closes the last gaps against Healthchecks: a periodic digest and ping by e-mail.
