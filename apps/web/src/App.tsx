@@ -55,6 +55,10 @@ const router = createBrowserRouter([
             lazy: () => import("@/pages/MonitorDetail").then((m) => ({ Component: m.default })),
           },
           {
+            path: "monitors/:id/runs/:runId",
+            lazy: () => import("@/pages/RunDetail").then((m) => ({ Component: m.default })),
+          },
+          {
             path: "monitors/:id/edit",
             lazy: () => import("@/pages/MonitorEdit").then((m) => ({ Component: m.default })),
           },

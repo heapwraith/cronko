@@ -1,5 +1,9 @@
 import { db } from "@cronko/database"
-import { findHeartbeatsByMonitor, findLatestHeartbeats } from "@cronko/database/queries/heartbeats"
+import {
+  findHeartbeatsByMonitor,
+  findLatestHeartbeats,
+  findRunContext,
+} from "@cronko/database/queries/heartbeats"
 import { findIncidentsByMonitor, findOpenIncident } from "@cronko/database/queries/incidents"
 import {
   createMonitor,
@@ -280,6 +284,12 @@ monitorsRoute.get("/:id/incidents", async (c) => {
 
   const result = await findIncidentsByMonitor(id, { limit, offset })
   return c.json({ data: result })
+})
+
+monitorsRoute.get("/:id/runs/:runId", async (c) => {
+  const ctx = await findRunContext(c.req.param("id") ?? "", c.req.param("runId") ?? "")
+  if (!ctx) return c.json({ error: "Run not found", code: "NOT_FOUND" }, 404)
+  return c.json({ data: ctx })
 })
 
 monitorsRoute.get("/:id/heartbeats", async (c) => {

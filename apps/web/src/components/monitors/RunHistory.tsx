@@ -1,4 +1,5 @@
 import { formatRelativeTime } from "@cronko/shared/utils"
+import { Link } from "react-router"
 import { formatRunDuration } from "@/lib/format"
 import { useT } from "@/lib/i18n"
 
@@ -20,8 +21,16 @@ export function runOutput(run: Pick<Run, "body">): string | null {
 const th = "px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-dim"
 const td = "px-3 py-2.5 align-top"
 
-/** One row per run; output opens inline, so a failed run explains itself. */
-export function RunHistory({ runs, caption }: { runs: Run[]; caption: string }) {
+/** One row per run; the time opens the run page, output also opens inline. */
+export function RunHistory({
+  runs,
+  caption,
+  monitorId,
+}: {
+  runs: Run[]
+  caption: string
+  monitorId: string
+}) {
   const { t, locale } = useT()
 
   return (
@@ -54,14 +63,19 @@ export function RunHistory({ runs, caption }: { runs: Run[]; caption: string }) 
             return (
               <tr key={run.id} className="border-b border-line last:border-b-0">
                 <td className={td}>
-                  <time dateTime={run.receivedAt} className="font-mono text-xs tnum">
-                    {new Date(run.receivedAt).toLocaleString(locale, {
-                      day: "2-digit",
-                      month: "2-digit",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </time>
+                  <Link
+                    to={`/monitors/${monitorId}/runs/${run.id}`}
+                    className="font-mono text-xs text-signal-text tnum underline-offset-4 hover:underline"
+                  >
+                    <time dateTime={run.receivedAt}>
+                      {new Date(run.receivedAt).toLocaleString(locale, {
+                        day: "2-digit",
+                        month: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </time>
+                  </Link>
                   <span className="ml-2 hidden text-dim sm:inline">
                     {formatRelativeTime(new Date(run.receivedAt), locale)}
                   </span>

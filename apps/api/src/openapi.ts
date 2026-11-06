@@ -267,6 +267,20 @@ const spec = {
         responses: { "200": { description: "Array of incidents" } },
       },
     },
+    "/api/monitors/{id}/runs/{runId}": {
+      get: {
+        summary: "Get one run with the previous run and the last successful run before it",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string" } },
+          { name: "runId", in: "path", required: true, schema: { type: "string" } },
+        ],
+        responses: {
+          "200": { description: "{ run, previous, previousGood, nextId }" },
+          "404": { description: "Run not found" },
+        },
+      },
+    },
     "/api/monitors/{id}/heartbeats": {
       get: {
         summary: "Get heartbeats for a monitor",

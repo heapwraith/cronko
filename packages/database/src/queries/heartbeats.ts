@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, inArray, lt, lte, sql } from "drizzle-orm"
+import { and, asc, desc, eq, gt, gte, inArray, isNull, lt, lte, or, sql } from "drizzle-orm"
 import { db } from "../index"
 import { heartbeats } from "../schema"
 
@@ -108,4 +108,45 @@ export async function findLatestHeartbeatTimes(): Promise<Map<string, Date>> {
 
   // receivedAt is stored as unix seconds (drizzle "timestamp" mode).
   return new Map(rows.map((r) => [r.monitorId, new Date(r.last * 1000)]))
+}
+
+/** One run plus its neighbours: the run before it and the last successful one before it. */
+export async function findRunContext(monitorId: string, runId: string) {
+  const run = db
+    .select()
+    .from(heartbeats)
+    .where(and(eq(heartbeats.monitorId, monitorId), eq(heartbeats.id, runId)))
+    .get()
+  if (!run) return null
+
+  const earlier = and(
+    eq(heartbeats.monitorId, monitorId),
+    lt(heartbeats.receivedAt, run.receivedAt),
+  )
+  const previous =
+    db
+      .select()
+      .from(heartbeats)
+      .where(earlier)
+      .orderBy(desc(heartbeats.receivedAt))
+      .limit(1)
+      .get() ?? null
+  const previousGood =
+    db
+      .select()
+      .from(heartbeats)
+      .where(and(earlier, or(isNull(heartbeats.exitCode), eq(heartbeats.exitCode, 0))))
+      .orderBy(desc(heartbeats.receivedAt))
+      .limit(1)
+      .get() ?? null
+  const next =
+    db
+      .select({ id: heartbeats.id })
+      .from(heartbeats)
+      .where(and(eq(heartbeats.monitorId, monitorId), gt(heartbeats.receivedAt, run.receivedAt)))
+      .orderBy(asc(heartbeats.receivedAt))
+      .limit(1)
+      .get() ?? null
+
+  return { run, previous, previousGood, nextId: next?.id ?? null }
 }

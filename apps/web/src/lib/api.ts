@@ -221,6 +221,20 @@ export const api = {
         }>
       >(`/api/monitors/${id}/heartbeats${qs ? `?${qs}` : ""}`)
     },
+    run: (id: string, runId: string) => {
+      type R = {
+        id: string
+        receivedAt: string
+        sourceIp: string | null
+        userAgent: string | null
+        durationMs: number | null
+        exitCode: number | null
+        body: string | null
+      }
+      return get<{ run: R; previous: R | null; previousGood: R | null; nextId: string | null }>(
+        `/api/monitors/${id}/runs/${runId}`,
+      )
+    },
     incidents: (id: string, query?: { limit?: number; offset?: number }) => {
       const params = new URLSearchParams()
       if (query?.limit) params.set("limit", String(query.limit))

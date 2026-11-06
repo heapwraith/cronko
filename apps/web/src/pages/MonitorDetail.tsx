@@ -226,7 +226,7 @@ function MonitorDetailView({ monitor, incidents }: { monitor: Monitor; incidents
           {t("detail.history")}
         </h2>
         {runs.length > 0 ? (
-          <RunHistory runs={runs} caption={t("detail.history")} />
+          <RunHistory runs={runs} caption={t("detail.history")} monitorId={monitor.id} />
         ) : (
           <p className="text-sm text-dim">{t("detail.neverRan")}</p>
         )}
