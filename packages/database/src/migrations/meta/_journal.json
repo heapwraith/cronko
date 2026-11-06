@@ -71,6 +71,13 @@
       "when": 1782000000000,
       "tag": "0009_add_cron_schedule",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1782100000000,
+      "tag": "0010_add_muted_until",
+      "breakpoints": true
     }
   ]
 }

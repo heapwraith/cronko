@@ -16,6 +16,7 @@ export async function findAllMonitors() {
       maxDurationMs: monitors.maxDurationMs,
       scheduleCron: monitors.scheduleCron,
       timezone: monitors.timezone,
+      mutedUntil: monitors.mutedUntil,
       displayOrder: monitors.displayOrder,
       createdAt: monitors.createdAt,
       updatedAt: monitors.updatedAt,
@@ -112,6 +113,15 @@ export async function pauseMonitor(id: string) {
     .set({ paused: true, status: "paused", updatedAt: new Date() })
     .where(eq(monitors.id, id))
 
+  return findMonitorById(id)
+}
+
+/** Silence alerts until `until` (null unmutes). Returns the updated monitor. */
+export async function setMonitorMutedUntil(id: string, until: Date | null) {
+  await db
+    .update(monitors)
+    .set({ mutedUntil: until, updatedAt: new Date() })
+    .where(eq(monitors.id, id))
   return findMonitorById(id)
 }
 

@@ -1,7 +1,9 @@
 import type { MonitorStatus } from "@cronko/shared/types"
 import { formatDuration, formatRelativeTime } from "@cronko/shared/utils"
+import { BellOff } from "lucide-react"
 import type { ReactNode } from "react"
 import { Link } from "react-router"
+import { isMuted } from "@/components/monitors/MuteControl"
 import { StatusBadge } from "@/components/shared/StatusBadge"
 import type { api } from "@/lib/api"
 import { formatInterval, formatRunDuration, severityRank } from "@/lib/format"
@@ -102,6 +104,15 @@ export function DeparturesTable({
                   >
                     {row.name}
                   </Link>
+                  {isMuted(row.mutedUntil) && (
+                    <span
+                      title={t("mute.muted")}
+                      className="ml-2 inline-flex align-middle text-dim"
+                    >
+                      <BellOff className="h-3.5 w-3.5" aria-hidden="true" />
+                      <span className="sr-only">{t("mute.muted")}</span>
+                    </span>
+                  )}
                   {/* Phones drop the NEXT/DURATION/EXIT columns; keep the data as a second line. */}
                   <span className="mt-0.5 block font-mono text-xs font-normal text-dim tnum md:hidden">
                     {[

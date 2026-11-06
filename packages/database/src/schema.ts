@@ -19,6 +19,8 @@ export const monitors = sqliteTable("monitors", {
   // When set, deadlines come from the next scheduled run, not from the last ping.
   scheduleCron: text("schedule_cron"),
   timezone: text("timezone"),
+  // Alerts are silenced until this moment; state and incidents are still tracked.
+  mutedUntil: integer("muted_until", { mode: "timestamp" }),
   displayOrder: integer("display_order").notNull().default(0),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),

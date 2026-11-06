@@ -1,3 +1,4 @@
+import { findMonitorById } from "@cronko/database/queries/monitors"
 import {
   deleteDeliveriesOlderThan,
   enqueueDeliveries,
@@ -35,11 +36,19 @@ export const MAX_ATTEMPTS = RETRY_DELAYS_MS.length + 1
  * never stall the scheduler, and queued alerts survive a restart.
  */
 export async function sendNotification(
-  monitor: { name: string },
+  monitor: { id?: string; name: string },
   event: NotificationEvent,
   detail?: string,
   path?: string,
 ) {
+  // A muted monitor (maintenance) still changes state and opens incidents, but stays quiet.
+  if (monitor.id) {
+    const mutedUntil = (await findMonitorById(monitor.id))?.mutedUntil
+    if (mutedUntil && mutedUntil.getTime() > Date.now()) {
+      logger.info({ monitor: monitor.name, event }, "alert suppressed: monitor muted")
+      return
+    }
+  }
   const link = path ? appLink(path) : undefined
   const message =
     messages[event](monitor.name) + (detail ? ` (${detail})` : "") + (link ? `\n${link}` : "")

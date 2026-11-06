@@ -6,6 +6,7 @@ import type { ReactNode } from "react"
 import { useParams } from "react-router"
 import { DurationBars } from "@/components/monitors/DurationBars"
 import { MonitorActions } from "@/components/monitors/MonitorActions"
+import { MuteControl, MutedBadge } from "@/components/monitors/MuteControl"
 import { NextPingCountdown } from "@/components/monitors/NextPingCountdown"
 import { RunHistory, runOutput } from "@/components/monitors/RunHistory"
 import { Breadcrumb } from "@/components/shared/Breadcrumb"
@@ -106,11 +107,13 @@ function MonitorDetailView({ monitor, incidents }: { monitor: Monitor; incidents
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-3xl leading-tight">{monitor.name}</h1>
           <StatusBadge status={status} />
+          <MutedBadge mutedUntil={monitor.mutedUntil} />
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button href={csvUrl} variant="ghost" size="sm" target="_blank" rel="noreferrer">
             {t("detail.exportCsv")}
           </Button>
+          <MuteControl monitorId={monitor.id} mutedUntil={monitor.mutedUntil} />
           <MonitorActions monitorId={monitor.id} name={monitor.name} status={monitor.status} />
         </div>
       </div>

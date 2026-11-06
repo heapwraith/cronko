@@ -76,6 +76,7 @@ pnpm --filter @cronko/web dev     # web on :3000, proxies the API
 - Explicit `/fail` signal and non-zero exit codes: a distinct `failed` state with an immediate alert
 - Max-duration alerts, incident history, audit log
 - Alerts to Discord, Telegram, e-mail (SMTP), Slack, ntfy and any webhook
+- Mute a monitor's alerts for maintenance (1 h to 7 days); state and incidents are still tracked
 - Public SVG status badge (`/badge/:token`), CSV export of heartbeats
 - Dashboard, dark/light theme, English and pt-BR, installable PWA
 - OpenAPI docs at `/docs`; health probes at `/health/live` and `/health/ready`

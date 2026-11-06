@@ -147,6 +147,7 @@ export const api = {
           token: string
           scheduleCron: string | null
           timezone: string | null
+          mutedUntil: string | null
           nextExpectedAt: string | null
           createdAt: string
           updatedAt: string
@@ -167,6 +168,7 @@ export const api = {
         maxDurationMs: number | null
         scheduleCron: string | null
         timezone: string | null
+        mutedUntil: string | null
         nextExpectedAt: string | null
         paused: boolean
         slug: string
@@ -204,6 +206,9 @@ export const api = {
     delete: (id: string) => del<{ ok: boolean }>(`/api/monitors/${id}`),
     pause: (id: string) => post<{ id: string; status: string }>(`/api/monitors/${id}/pause`),
     resume: (id: string) => post<{ id: string; status: string }>(`/api/monitors/${id}/resume`),
+    /** Silence alerts for `minutes`; null unmutes. */
+    mute: (id: string, minutes: number | null) =>
+      post<{ id: string; mutedUntil: string | null }>(`/api/monitors/${id}/mute`, { minutes }),
     heartbeats: (id: string, query?: { limit?: number; before?: string }) => {
       const params = new URLSearchParams()
       if (query?.limit) params.set("limit", String(query.limit))

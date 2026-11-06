@@ -110,7 +110,12 @@ export async function markOverdue(
   if (!won) return false
 
   await openIncidentOnce(monitor.id, now)
-  await sendNotification({ name: monitor.name }, target, undefined, `/monitors/${monitor.id}`)
+  await sendNotification(
+    { id: monitor.id, name: monitor.name },
+    target,
+    undefined,
+    `/monitors/${monitor.id}`,
+  )
   return true
 }
 
@@ -132,7 +137,7 @@ export async function markFailed(
 
   await openIncidentOnce(monitor.id, now)
   await sendNotification(
-    { name: monitor.name },
+    { id: monitor.id, name: monitor.name },
     "failed",
     exitCode !== undefined ? `exit code ${exitCode}` : undefined,
     runId ? `/monitors/${monitor.id}/runs/${runId}` : `/monitors/${monitor.id}`,
@@ -153,7 +158,7 @@ export async function markSlow(
 
   await openIncidentOnce(monitor.id, now)
   await sendNotification(
-    { name: monitor.name },
+    { id: monitor.id, name: monitor.name },
     "slow",
     undefined,
     runId ? `/monitors/${monitor.id}/runs/${runId}` : `/monitors/${monitor.id}`,
@@ -181,7 +186,7 @@ export async function recoverOnPing(
 
   if (monitor.status !== "pending") {
     await sendNotification(
-      { name: monitor.name },
+      { id: monitor.id, name: monitor.name },
       "recovered",
       undefined,
       `/monitors/${monitor.id}`,

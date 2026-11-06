@@ -267,6 +267,29 @@ const spec = {
         responses: { "200": { description: "Array of incidents" } },
       },
     },
+    "/api/monitors/{id}/mute": {
+      post: {
+        summary: "Silence alerts for N minutes (max 30 days); minutes: null unmutes",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["minutes"],
+                properties: { minutes: { type: ["integer", "null"], minimum: 1, maximum: 43200 } },
+              },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "Updated monitor" },
+          "404": { description: "Not found" },
+        },
+      },
+    },
     "/api/monitors/{id}/runs/{runId}": {
       get: {
         summary: "Get one run with the previous run and the last successful run before it",

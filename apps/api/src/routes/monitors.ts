@@ -13,6 +13,7 @@ import {
   findMonitorBySlug,
   pauseMonitor,
   resumeMonitor,
+  setMonitorMutedUntil,
   updateMonitor,
 } from "@cronko/database/queries/monitors"
 import { monitors as monitorsTable } from "@cronko/database/schema"
@@ -258,6 +259,39 @@ monitorsRoute.post("/:id/resume", async (c) => {
 
   return c.json({ data: monitor })
 })
+
+/** Silence alerts for a while (maintenance). `minutes: null` unmutes. */
+monitorsRoute.post(
+  "/:id/mute",
+  zValidator(
+    "json",
+    z.object({
+      minutes: z
+        .number()
+        .int()
+        .min(1)
+        .max(60 * 24 * 30)
+        .nullable(),
+    }),
+  ),
+  async (c) => {
+    const id = c.req.param("id") ?? ""
+    const { minutes } = c.req.valid("json")
+    const until = minutes === null ? null : new Date(Date.now() + minutes * 60_000)
+    const monitor = await setMonitorMutedUntil(id, until)
+    if (!monitor) return c.json({ error: "Not found", code: "NOT_FOUND" }, 404)
+
+    logAuditEvent({
+      userId: (c.get("jwtPayload") as { sub: string })?.sub,
+      action: until ? "monitor.muted" : "monitor.unmuted",
+      resourceType: "monitor",
+      resourceId: id,
+      metadata: { until: until?.toISOString() ?? null },
+    }).catch(() => {})
+
+    return c.json({ data: monitor })
+  },
+)
 
 monitorsRoute.post(
   "/reorder",
