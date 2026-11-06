@@ -125,11 +125,36 @@ Notification channels are configured in the UI: Discord/Slack take a
 `webhookUrl`, Telegram a `botToken` and `chatId`, e-mail a recipient `to`.
 ntfy takes a `topic` (plus optional `serverUrl` for a self-hosted server and an
 access `token`). A generic webhook takes a `url` and receives
-`{ "event", "monitor", "message", "sentAt" }` as JSON. Pushover takes a `userKey`
+`{ "event", "monitor", "message", "sentAt" }` as JSON, unless you set a body
+template (see below). Pushover takes a `userKey`
 and an `appToken`. Microsoft Teams takes the `webhookUrl` of a Workflows flow
 ("Post to a channel when a webhook request is received"), since Office 365
 connectors are retired. PagerDuty takes the `routingKey` of an Events API v2
 integration: problems trigger an incident (one per monitor) and recovery resolves it.
+
+### Webhook headers and body template
+
+A generic webhook channel accepts two optional fields. `headers` is one
+`Name: value` per line (for tokens and API keys); values are secrets, so the API
+only returns them masked and keeps the stored value when you save the form
+without changing them. `bodyTemplate` replaces the default JSON body. It supports
+only `{{event}}`, `{{status}}` (`up` or `down`), `{{message}}` (the alert text
+without its link), `{{url}}` (link to Cronko), `{{sentAt}}` and `{{monitor.name}}`.
+Unknown placeholders are rejected when you save. Values are JSON-escaped unless
+you set a non-JSON `Content-Type` header, in which case they are inserted as is.
+
+Slack-compatible endpoint (also Mattermost and Rocket.Chat incoming webhooks):
+
+```text
+body template: {"text": "*{{monitor.name}}* is {{status}}: {{message}} <{{url}}|open>"}
+```
+
+Gotify (`POST /message`, token in a header):
+
+```text
+headers:       X-Gotify-Key: <app token>
+body template: {"title": "Cronko: {{monitor.name}}", "message": "{{message}}", "priority": 5}
+```
 
 ### Ping by e-mail
 
