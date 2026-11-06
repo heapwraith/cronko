@@ -26,7 +26,8 @@ const DOCUMENTED_WITHOUT_ROUTE = new Set<string>([])
 
 const METHODS = ["get", "post", "put", "patch", "delete"]
 
-const toSpecPath = (p: string) => p.replace(/:([A-Za-z0-9_]+)\??/g, "{$1}").replace(/(.)\/$/, "$1")
+const toSpecPath = (p: string) =>
+  p.replace(/:([A-Za-z0-9_]+)(\{[^}]*\})?\??/g, "{$1}").replace(/(.)\/$/, "$1")
 
 async function registeredRoutes(): Promise<Set<string>> {
   const { app } = await import("../../app")

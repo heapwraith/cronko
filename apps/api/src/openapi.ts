@@ -152,8 +152,30 @@ const spec = {
           "413": { description: "Body too large" },
         },
       },
+      get: {
+        summary: "Log an event without changing the monitor (GET is also accepted)",
+        description:
+          "Stores the request body (up to 10 KB) as an event. It is not a ping: status, schedule, runs and statistics stay as they are. Listed by `GET /api/monitors/{id}/logs`.",
+        parameters: [
+          { name: "token", in: "path", required: true, schema: { type: "string" } },
+          {
+            name: "rid",
+            in: "query",
+            required: false,
+            schema: { type: "string", format: "uuid" },
+            description:
+              "Client-picked run id; pairs a start with its finish, fail or success. Invalid values get 400.",
+          },
+        ],
+        responses: {
+          "200": { description: "ok" },
+          "400": { description: "Invalid rid" },
+          "404": { description: "Monitor not found" },
+          "413": { description: "Body too large" },
+        },
+      },
     },
-    "/ping/{token}/{exitStatus}": {
+    "/ping/{token}/{exit}": {
       post: {
         summary: "Report a script's exit status: 0 is a success, any other value a failure",
         description:
@@ -161,7 +183,35 @@ const spec = {
         parameters: [
           { name: "token", in: "path", required: true, schema: { type: "string" } },
           {
-            name: "exitStatus",
+            name: "exit",
+            in: "path",
+            required: true,
+            schema: { type: "integer", minimum: 0, maximum: 255 },
+          },
+          {
+            name: "rid",
+            in: "query",
+            required: false,
+            schema: { type: "string", format: "uuid" },
+            description:
+              "Client-picked run id; pairs a start with its finish, fail or success. Invalid values get 400.",
+          },
+        ],
+        responses: {
+          "200": { description: "ok" },
+          "400": { description: "Invalid exit status or rid" },
+          "404": { description: "Monitor not found" },
+          "413": { description: "Body too large" },
+        },
+      },
+      get: {
+        summary: "Report a script's exit status: 0 is a success, any other value a failure",
+        description:
+          "Same as `/ping/{token}?exit=N`, Healthchecks style. The status is an integer from 0 to 255 (larger values get 400). GET is also accepted.",
+        parameters: [
+          { name: "token", in: "path", required: true, schema: { type: "string" } },
+          {
+            name: "exit",
             in: "path",
             required: true,
             schema: { type: "integer", minimum: 0, maximum: 255 },
