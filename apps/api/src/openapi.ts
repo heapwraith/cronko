@@ -367,6 +367,48 @@ const spec = {
         },
       },
     },
+    "/api/import/healthchecks": {
+      post: {
+        summary: "Import monitors from Healthchecks (saved API response or live Management API)",
+        description:
+          'Body: the saved response of GET /api/v3/checks/ ({"checks": [...]}), or {"apiKey", "baseUrl"?} to fetch it (baseUrl defaults to https://healthchecks.io). Names that already exist are skipped. Returns what was created and skipped, with warnings for fields that have no equivalent.',
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        parameters: [
+          {
+            name: "dryRun",
+            in: "query",
+            schema: { type: "boolean" },
+            description: "Report what would happen without creating anything",
+          },
+        ],
+        responses: {
+          "200": { description: "{ dryRun, created[], skipped[] }" },
+          "400": { description: "Unrecognised body" },
+          "401": { description: "Healthchecks rejected the API key" },
+          "502": { description: "Healthchecks unreachable or failed" },
+        },
+      },
+    },
+    "/api/import/kuma": {
+      post: {
+        summary: "Import push monitors from an Uptime Kuma backup JSON",
+        description:
+          "Body: the backup file ({version, monitorList}). Only push monitors are imported; other types are reported as skipped. Names that already exist are skipped.",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        parameters: [
+          {
+            name: "dryRun",
+            in: "query",
+            schema: { type: "boolean" },
+            description: "Report what would happen without creating anything",
+          },
+        ],
+        responses: {
+          "200": { description: "{ dryRun, created[], skipped[] }" },
+          "400": { description: "Not a Kuma backup" },
+        },
+      },
+    },
     "/api/monitors/{id}/runs/{runId}": {
       get: {
         summary: "Get one run with the previous run and the last successful run before it",
