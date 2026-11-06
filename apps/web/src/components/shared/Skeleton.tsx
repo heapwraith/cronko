@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 
 export function Skeleton({ className = "" }: { className?: string }) {
-  return <div aria-hidden="true" className={`animate-pulse rounded-[2px] bg-raised ${className}`} />
+  return <div aria-hidden="true" className={`animate-pulse rounded-md bg-raised ${className}`} />
 }
 
 export function SkeletonCard({ children }: { children?: ReactNode }) {

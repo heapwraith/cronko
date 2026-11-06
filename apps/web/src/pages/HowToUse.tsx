@@ -7,7 +7,7 @@ import { useT } from "@/lib/i18n"
 
 function CodeBlock({ children }: { children: string }) {
   return (
-    <div className="relative rounded-[2px] border border-line bg-raised">
+    <div className="relative rounded-md border border-line bg-raised">
       <div className="absolute right-2 top-2">
         <CopyButton text={children} />
       </div>
@@ -20,7 +20,7 @@ function CodeBlock({ children }: { children: string }) {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="space-y-4 border-t border-line-strong pt-4">
+    <section className="space-y-4 rounded-xl border border-line bg-panel p-5 shadow-[var(--shadow-card)]">
       <h2 className="text-base font-semibold">{title}</h2>
       {children}
     </section>
@@ -53,7 +53,7 @@ export default function HowToUsePage() {
   return (
     <div className="max-w-3xl space-y-10 pb-16">
       <header className="space-y-2">
-        <h1 className="text-[1.75rem] leading-tight">{t("howto.title")}</h1>
+        <h1 className="text-2xl leading-tight">{t("howto.title")}</h1>
         <P>{t("howto.subtitle")}</P>
       </header>
 

@@ -72,7 +72,7 @@ export default function IncidentsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="text-[1.75rem] leading-tight">{t("incidents.title")}</h1>
+        <h1 className="text-2xl leading-tight">{t("incidents.title")}</h1>
         <p
           className={`text-sm ${openIncidents.length ? "font-semibold text-down" : "text-dim"}`}
           aria-live="polite"
@@ -81,14 +81,17 @@ export default function IncidentsPage() {
         </p>
       </div>
 
-      <nav aria-label={t("incidents.title")} className="flex gap-1 border-b border-line">
+      <nav
+        aria-label={t("incidents.title")}
+        className="inline-flex w-fit max-w-full flex-wrap gap-1 rounded-lg border border-line bg-raised p-1"
+      >
         {tabs.map((tab) => (
           <Link
             key={tab.to}
             to={tab.to}
             aria-current={tab.active ? "page" : undefined}
-            className={`-mb-px border-b-2 px-3 py-2 text-sm font-semibold transition-colors ${
-              tab.active ? "border-ink text-ink" : "border-transparent text-dim hover:text-ink"
+            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+              tab.active ? "bg-panel text-ink shadow-sm" : "text-dim hover:text-ink"
             }`}
           >
             {tab.label}
@@ -106,7 +109,7 @@ export default function IncidentsPage() {
         />
       ) : (
         <div className="space-y-3">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-xl border border-line bg-panel shadow-[var(--shadow-card)]">
             <table className="w-full min-w-[20rem] border-collapse text-sm">
               <caption className="sr-only">{t("incidents.title")}</caption>
               <thead className="border-b border-line-strong bg-raised">

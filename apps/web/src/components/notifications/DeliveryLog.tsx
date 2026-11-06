@@ -74,7 +74,7 @@ export function DeliveryLog() {
           {t("notifications.deliveriesEmpty")}
         </p>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-xl border border-line bg-panel shadow-[var(--shadow-card)]">
           <table className="w-full min-w-[20rem] border-collapse text-sm">
             <caption className="sr-only">{t("notifications.deliveriesCaption")}</caption>
             <thead className="border-b border-line-strong bg-raised">

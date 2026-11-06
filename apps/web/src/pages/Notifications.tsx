@@ -160,7 +160,7 @@ export default function NotificationsPage() {
     <div className="space-y-10">
       <section className="space-y-4">
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <h1 className="text-[1.75rem] leading-tight">{t("notifications.title")}</h1>
+          <h1 className="text-2xl leading-tight">{t("notifications.title")}</h1>
           {!formOpen && (
             <Button onClick={openAdd}>
               <Plus className="h-4 w-4" aria-hidden="true" />
@@ -177,7 +177,7 @@ export default function NotificationsPage() {
             }}
             noValidate
             aria-label={editingId ? t("notifications.edit") : t("notifications.addChannel")}
-            className="space-y-4 border-t border-line-strong pt-4"
+            className="space-y-4 rounded-xl border border-line bg-panel p-5 shadow-[var(--shadow-card)]"
           >
             {editingId === null && (
               <div className="max-w-xs">
@@ -191,7 +191,7 @@ export default function NotificationsPage() {
                     setDraft({ type: e.target.value, name: draft.name, values: {} })
                     setErrors({})
                   }}
-                  className="min-h-10 w-full rounded-[2px] border border-line-strong bg-panel px-3 text-sm text-ink focus-visible:outline-2"
+                  className="min-h-10 w-full rounded-md border border-line-strong bg-ground px-3 text-sm text-ink focus-visible:outline-2"
                 >
                   {CHANNEL_TYPES.map((k) => (
                     <option key={k} value={k}>
@@ -239,7 +239,7 @@ export default function NotificationsPage() {
             />
           )
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-xl border border-line bg-panel shadow-[var(--shadow-card)]">
             <table className="w-full min-w-[20rem] border-collapse text-sm">
               <caption className="sr-only">{t("notifications.channelsCaption")}</caption>
               <thead className="border-b border-line-strong bg-raised">

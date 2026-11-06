@@ -66,7 +66,7 @@ export function KeyboardShortcuts() {
       ref={ref}
       onClose={() => setOpen(false)}
       aria-labelledby="shortcuts-title"
-      className="m-auto w-[min(24rem,calc(100vw-2rem))] rounded-[4px] border border-line-strong bg-panel p-0 text-ink shadow-[0_18px_48px_-12px_rgb(0_0_0/0.6)] backdrop:bg-black/60"
+      className="m-auto w-[min(24rem,calc(100vw-2rem))] rounded-xl border border-line bg-panel p-0 text-ink shadow-[0_18px_48px_-12px_rgb(0_0_0/0.6)] backdrop:bg-black/60"
     >
       <div className="flex items-center justify-between border-b border-line px-4 py-2">
         <h2 id="shortcuts-title" className="text-base font-semibold">
@@ -84,7 +84,7 @@ export function KeyboardShortcuts() {
               {r.keys.map((k) => (
                 <kbd
                   key={k}
-                  className="rounded-[2px] border border-line-strong bg-raised px-2 py-0.5 font-mono text-xs"
+                  className="rounded-md border border-line-strong bg-raised px-2 py-0.5 font-mono text-xs"
                 >
                   {k}
                 </kbd>

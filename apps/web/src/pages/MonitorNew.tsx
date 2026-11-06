@@ -24,7 +24,7 @@ export default function NewMonitorPage() {
           { label: t("monitors.newMonitor") },
         ]}
       />
-      <h1 className="text-[1.75rem] leading-tight">{t("monitors.newMonitor")}</h1>
+      <h1 className="text-2xl leading-tight">{t("monitors.newMonitor")}</h1>
 
       <MonitorForm
         submitLabel={submitting ? t("monitors.creating") : t("monitors.create")}

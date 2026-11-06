@@ -23,13 +23,13 @@ export function Toggle({ label, checked, onChange, disabled, hint, hideLabel }: 
         aria-checked={checked}
         disabled={disabled}
         onClick={() => onChange(!checked)}
-        className={`relative mt-0.5 inline-flex h-5 w-9 shrink-0 items-center rounded-[2px] border transition-colors duration-150 focus-visible:outline-2 ${
+        className={`relative mt-0.5 inline-flex h-5 w-9 shrink-0 items-center rounded-md border transition-colors duration-150 focus-visible:outline-2 ${
           checked ? "border-signal bg-signal" : "border-line-strong bg-raised"
         } ${disabled ? "cursor-not-allowed" : "cursor-pointer"}`}
       >
         <span
           aria-hidden="true"
-          className={`block h-3 w-3 rounded-[2px] transition-transform duration-150 ${
+          className={`block h-3 w-3 rounded-md transition-transform duration-150 ${
             checked ? "translate-x-[1.125rem] bg-signal-fg" : "translate-x-[0.1875rem] bg-dim"
           }`}
         />

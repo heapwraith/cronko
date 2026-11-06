@@ -45,7 +45,7 @@ export function ConfirmModal({
       ref={ref}
       onClose={onCancel}
       aria-labelledby="confirm-title"
-      className="m-auto w-[min(28rem,calc(100vw-2rem))] rounded-[4px] border border-line-strong bg-panel p-0 text-ink shadow-[0_18px_48px_-12px_rgb(0_0_0/0.6)] backdrop:bg-black/60"
+      className="m-auto w-[min(28rem,calc(100vw-2rem))] rounded-xl border border-line bg-panel p-0 text-ink shadow-[0_18px_48px_-12px_rgb(0_0_0/0.6)] backdrop:bg-black/60"
     >
       <div className="p-5">
         <div className="flex items-start gap-3">

@@ -34,11 +34,11 @@ const DEFAULTS: SettingsData = {
 }
 
 const control =
-  "min-h-10 w-full rounded-[2px] border border-line-strong bg-panel px-3 text-sm text-ink placeholder:text-dim focus-visible:outline-2 disabled:opacity-50"
+  "min-h-10 w-full rounded-md border border-line-strong bg-ground px-3 text-sm text-ink placeholder:text-dim focus-visible:outline-2 disabled:opacity-50"
 
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="space-y-4 border-t border-line-strong pt-4">
+    <section className="space-y-4 rounded-xl border border-line bg-panel p-5 shadow-[var(--shadow-card)]">
       <h2 className="text-base font-semibold">{title}</h2>
       {children}
     </section>
@@ -185,12 +185,12 @@ export default function SettingsPage() {
         void persist(settings, t("settings.failedSave"))
       }}
     >
-      <h1 className="text-[1.75rem] leading-tight">{t("settings.title")}</h1>
+      <h1 className="text-2xl leading-tight">{t("settings.title")}</h1>
 
       {error && (
         <p
           role="alert"
-          className="rounded-[2px] bg-[var(--chip-down-bg)] px-3 py-2 text-sm font-medium text-[var(--chip-down-fg)]"
+          className="rounded-md bg-[var(--chip-down-bg)] px-3 py-2 text-sm font-medium text-[var(--chip-down-fg)]"
         >
           {error}
         </p>
@@ -349,7 +349,7 @@ export default function SettingsPage() {
         </div>
       )}
 
-      <section className="space-y-3 border-t border-down pt-4">
+      <section className="space-y-3 rounded-xl border border-down/40 bg-panel p-5">
         <h2 className="text-base font-semibold text-down">{t("settings.dangerZone")}</h2>
         <p className="text-sm text-dim">{t("settings.dangerZoneDesc")}</p>
         <Button variant="danger" onClick={() => setResetOpen(true)} disabled={saving || isPending}>

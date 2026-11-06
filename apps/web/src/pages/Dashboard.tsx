@@ -53,7 +53,7 @@ export default function DashboardPage() {
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-[1.75rem] leading-tight text-ink">{t("dashboard.title")}</h1>
+          <h1 className="text-2xl leading-tight text-ink">{t("dashboard.title")}</h1>
           {!isPending && monitors.length > 0 && (
             <p className="mt-2 text-base text-dim" aria-live="polite">
               <span className={attention > 0 ? "font-semibold text-ink" : "text-ink"}>
@@ -87,7 +87,7 @@ export default function DashboardPage() {
         />
       ) : (
         <>
-          <fieldset className="flex min-w-0 flex-wrap gap-1 border-0 border-b border-line p-0">
+          <fieldset className="mx-0 mb-0 min-w-0 inline-flex w-fit max-w-full flex-wrap gap-1 rounded-lg border border-line bg-raised p-1">
             <legend className="sr-only">{t("board.filterBy")}</legend>
             {(["all", ...FILTERS] as const)
               .filter((f) => f === "all" || (counts.get(f) ?? 0) > 0)
@@ -99,8 +99,8 @@ export default function DashboardPage() {
                     type="button"
                     aria-pressed={active}
                     onClick={() => setFilter(f)}
-                    className={`-mb-px border-b-2 px-3 py-2 text-sm font-semibold transition-colors ${
-                      active ? "border-ink text-ink" : "border-transparent text-dim hover:text-ink"
+                    className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                      active ? "bg-panel text-ink shadow-sm" : "text-dim hover:text-ink"
                     }`}
                   >
                     {f === "all" ? t("board.all") : t(statusKey(f))}
@@ -118,11 +118,11 @@ export default function DashboardPage() {
             <DeparturesTable rows={rows} caption={t("board.caption")} />
           )}
 
-          <div className="grid items-start gap-x-12 gap-y-8 xl:grid-cols-2">
+          <div className="grid items-start gap-6 xl:grid-cols-2">
             {(data?.incidents.length ?? 0) > 0 && (
               <section
                 aria-labelledby="open-incidents"
-                className="space-y-3 border-t border-line-strong pt-4"
+                className="space-y-3 rounded-xl border border-line bg-panel p-5 shadow-[var(--shadow-card)]"
               >
                 <h2 id="open-incidents" className="text-base font-semibold text-ink">
                   {t("board.openIncidents")}
@@ -150,7 +150,7 @@ export default function DashboardPage() {
             {undelivered.length > 0 && (
               <section
                 aria-labelledby="undelivered"
-                className="space-y-3 border-t border-line-strong pt-4"
+                className="space-y-3 rounded-xl border border-line bg-panel p-5 shadow-[var(--shadow-card)]"
               >
                 <h2 id="undelivered" className="text-base font-semibold text-ink">
                   {t("board.undelivered")}

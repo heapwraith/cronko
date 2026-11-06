@@ -33,7 +33,7 @@ export default function MonitorsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="text-[1.75rem] leading-tight">{t("monitors.title")}</h1>
+        <h1 className="text-2xl leading-tight">{t("monitors.title")}</h1>
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative">
             <label htmlFor={searchId} className="sr-only">
@@ -49,7 +49,7 @@ export default function MonitorsPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t("board.search")}
-              className="min-h-10 w-64 rounded-[2px] border border-line-strong bg-panel pl-9 pr-3 text-sm text-ink placeholder:text-dim focus-visible:outline-2"
+              className="min-h-10 w-64 rounded-md border border-line-strong bg-ground pl-9 pr-3 text-sm text-ink placeholder:text-dim focus-visible:outline-2"
             />
           </div>
           <Button href="/monitors/new">{t("dashboard.createMonitor")}</Button>

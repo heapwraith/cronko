@@ -15,12 +15,12 @@ function getSystemTheme(): "dark" | "light" {
 }
 function getStoredTheme(): Theme {
   if (typeof window === "undefined") return "light"
-  return (localStorage.getItem("cronko_theme") as Theme) ?? "light"
+  return (localStorage.getItem("cronko_theme") as Theme) ?? "dark"
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("light")
-  const [resolved, setResolved] = useState<"dark" | "light">("light")
+  const [theme, setThemeState] = useState<Theme>("dark")
+  const [resolved, setResolved] = useState<"dark" | "light">("dark")
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
