@@ -349,7 +349,7 @@ export default function SettingsPage() {
         </div>
       )}
 
-      <section className="space-y-3 rounded-[4px] border border-down/40 p-4">
+      <section className="space-y-3 border-t border-down pt-4">
         <h2 className="text-base font-semibold text-down">{t("settings.dangerZone")}</h2>
         <p className="text-sm text-dim">{t("settings.dangerZoneDesc")}</p>
         <Button variant="danger" onClick={() => setResetOpen(true)} disabled={saving || isPending}>

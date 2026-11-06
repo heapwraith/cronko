@@ -177,7 +177,7 @@ export default function NotificationsPage() {
             }}
             noValidate
             aria-label={editingId ? t("notifications.edit") : t("notifications.addChannel")}
-            className="space-y-4 rounded-[4px] border border-line-strong bg-panel p-4"
+            className="space-y-4 border-t border-line-strong pt-4"
           >
             {editingId === null && (
               <div className="max-w-xs">

@@ -88,7 +88,7 @@ export default function IncidentsPage() {
             to={tab.to}
             aria-current={tab.active ? "page" : undefined}
             className={`-mb-px border-b-2 px-3 py-2 text-sm font-semibold transition-colors ${
-              tab.active ? "border-signal text-ink" : "border-transparent text-dim hover:text-ink"
+              tab.active ? "border-ink text-ink" : "border-transparent text-dim hover:text-ink"
             }`}
           >
             {tab.label}

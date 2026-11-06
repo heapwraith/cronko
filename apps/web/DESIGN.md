@@ -101,7 +101,7 @@ components:
 
 # Design System: Cronko
 
-> Status: **migration started** (tokens, masthead, ledger tables, state stamps, dashboard, login, monitor list and detail are on this system; incidents, notifications, settings and how-to inherit the tokens and still need a finer pass; the run timeline is not built). Replaces the earlier
+> Status: **migration nearly complete** (tokens, masthead, ledger tables, state stamps, dashboard, login, monitor list and detail are on this system; incidents, notifications, settings and how-to now use rule-separated sections instead of boxes; the run timeline is not built). Replaces the earlier
 > "Quadro de Partidas" (graphite and amber departures board), which is retired. Re-run the
 > documenter in scan mode once the build lands.
 
