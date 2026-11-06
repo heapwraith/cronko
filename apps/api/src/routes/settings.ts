@@ -56,6 +56,12 @@ let settingsCache: CachedSettings | null = null
 let settingsCacheAt = 0
 const SETTINGS_CACHE_TTL_MS = 30_000 // 30 seconds
 
+/** Drop the read cache so the next load reflects what was just written. */
+function invalidateSettingsCache() {
+  settingsCache = null
+  settingsCacheAt = 0
+}
+
 async function loadSettings(): Promise<CachedSettings> {
   if (settingsCache && Date.now() - settingsCacheAt < SETTINGS_CACHE_TTL_MS) {
     return settingsCache
@@ -127,6 +133,7 @@ settingsRoute.post("/", zValidator("json", updateSettingsSchema), async (c) => {
   if (body.heartbeatHistoryDays !== undefined)
     await setSetting("heartbeatHistoryDays", String(body.heartbeatHistoryDays))
 
+  invalidateSettingsCache()
   const data = await loadSettings()
 
   if (schedulerChanged) {
