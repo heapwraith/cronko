@@ -144,6 +144,19 @@ export const users = sqliteTable("users", {
 })
 
 /**
+ * Denylist of session JWT ids (`jti`) revoked at logout. Rows can be dropped once
+ * `expiresAt` passes, because the token itself would be rejected by then anyway.
+ */
+export const revokedTokens = sqliteTable(
+  "revoked_tokens",
+  {
+    jti: text("jti").primaryKey(),
+    expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => [index("revoked_tokens_expires_idx").on(t.expiresAt)],
+)
+
+/**
  * User-created API tokens for scripts and CI. Only the SHA-256 of the token is
  * stored; `prefix` (first characters) lets the owner recognise it in the list.
  */

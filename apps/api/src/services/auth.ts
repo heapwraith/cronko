@@ -8,6 +8,8 @@ const jwtPayloadSchema = z.object({
   email: z.email(),
   iat: z.number(),
   exp: z.number(),
+  // Absent on tokens issued before logout revocation existed.
+  jti: z.string().optional(),
   iss: z.literal("cronko"),
   aud: z.literal("cronko-api"),
 })
@@ -17,6 +19,7 @@ const jwtRefreshSchema = z.object({
   email: z.email(),
   iat: z.number(),
   exp: z.number(),
+  jti: z.string().optional(),
   iss: z.literal("cronko"),
   aud: z.literal("cronko-refresh"),
 })
@@ -42,6 +45,7 @@ export async function generateAccessToken(userId: string, email: string): Promis
       email,
       iat: now,
       exp,
+      jti: crypto.randomUUID(),
       iss: "cronko",
       aud: "cronko-api",
     },
@@ -60,6 +64,7 @@ export async function generateRefreshToken(userId: string, email: string): Promi
       email,
       iat: now,
       exp,
+      jti: crypto.randomUUID(),
       iss: "cronko",
       aud: "cronko-refresh",
     },

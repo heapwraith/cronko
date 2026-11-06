@@ -1,3 +1,4 @@
+import { isTokenRevoked, revokeToken } from "@cronko/database/queries/revoked-tokens"
 import { findUserByEmail } from "@cronko/database/queries/users"
 import { zValidator } from "@hono/zod-validator"
 import { Hono } from "hono"
@@ -10,6 +11,7 @@ import { logAuditEvent } from "../services/audit"
 import {
   generateAccessToken,
   generateRefreshToken,
+  verifyAccessToken,
   verifyPassword,
   verifyRefreshToken,
 } from "../services/auth"
@@ -132,6 +134,7 @@ authRoute.post("/refresh", async (c) => {
 
   try {
     const payload = await verifyRefreshToken(refreshToken)
+    if (payload.jti && (await isTokenRevoked(payload.jti))) throw new Error("revoked")
     const accessToken = await generateAccessToken(payload.sub, payload.email)
 
     setCookie(c, "cronko_token", accessToken, {
@@ -163,7 +166,26 @@ authRoute.post("/refresh", async (c) => {
   }
 })
 
-authRoute.post("/logout", authenticate, async (c) => {
+/**
+ * Revoke the session server-side, not just the cookies: a stolen refresh token
+ * must stop working too. No `authenticate` here on purpose: logging out with an
+ * expired access token must still kill the refresh token. Idempotent, and
+ * best-effort per token (an invalid or already-expired one has nothing to revoke).
+ */
+authRoute.post("/logout", async (c) => {
+  const bearer = c.req.header("Authorization")
+  const access = bearer?.startsWith("Bearer ") ? bearer.slice(7) : getCookie(c, "cronko_token")
+  const refresh = getCookie(c, "cronko_refresh")
+
+  if (access && !access.startsWith("crk_")) {
+    const payload = await verifyAccessToken(access).catch(() => null)
+    if (payload?.jti) await revokeToken(payload.jti, new Date(payload.exp * 1000))
+  }
+  if (refresh) {
+    const payload = await verifyRefreshToken(refresh).catch(() => null)
+    if (payload?.jti) await revokeToken(payload.jti, new Date(payload.exp * 1000))
+  }
+
   deleteCookie(c, "cronko_token", {
     httpOnly: true,
     secure: isProd(),

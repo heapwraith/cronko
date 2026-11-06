@@ -127,6 +127,13 @@
       "when": 1782800000000,
       "tag": "0017_add_api_tokens",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1783100000000,
+      "tag": "0020_add_revoked_tokens",
+      "breakpoints": true
     }
   ]
 }
