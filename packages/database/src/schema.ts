@@ -101,7 +101,7 @@ export const notificationDeliveries = sqliteTable(
       .references(() => notificationChannels.id, { onDelete: "cascade" }),
     monitorName: text("monitor_name").notNull(),
     event: text("event", {
-      enum: ["missed", "down", "failed", "recovered", "slow", "unusual", "overlap"],
+      enum: ["missed", "down", "failed", "recovered", "slow", "unusual", "overlap", "digest"],
     }).notNull(),
     message: text("message").notNull(),
     status: text("status", { enum: ["pending", "sent", "failed"] })

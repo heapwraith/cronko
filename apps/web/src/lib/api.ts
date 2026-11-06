@@ -1,3 +1,4 @@
+import type { DigestFrequency } from "@cronko/shared/digest"
 import type { DurationStats } from "@cronko/shared/run-stats"
 export class ApiError extends Error {
   constructor(
@@ -396,6 +397,8 @@ export const api = {
         pingRateLimitPerMinute: number
         maxHeartbeatsPerMonitor: number
         heartbeatHistoryDays: number
+        digestFrequency: DigestFrequency
+        digestHour: number
       }>("/api/settings"),
     update: (body: {
       instanceName?: string
@@ -406,6 +409,8 @@ export const api = {
       pingRateLimitPerMinute?: number
       maxHeartbeatsPerMonitor?: number
       heartbeatHistoryDays?: number
+      digestFrequency?: DigestFrequency
+      digestHour?: number
     }) =>
       post<{
         instanceName: string
@@ -416,6 +421,9 @@ export const api = {
         pingRateLimitPerMinute: number
         maxHeartbeatsPerMonitor: number
         heartbeatHistoryDays: number
+        digestFrequency: DigestFrequency
+        digestHour: number
       }>("/api/settings", body),
+    sendTestDigest: () => post<{ queued: number }>("/api/settings/digest/test", {}),
   },
 }

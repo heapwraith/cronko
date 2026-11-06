@@ -14,7 +14,8 @@
     "./run-stats": "./src/run-stats.ts",
     "./tags": "./src/tags.ts",
     "./status": "./src/status.ts",
-    "./maintenance": "./src/maintenance.ts"
+    "./maintenance": "./src/maintenance.ts",
+    "./digest": "./src/digest.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

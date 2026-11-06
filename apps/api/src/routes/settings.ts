@@ -7,23 +7,28 @@ import {
   PING_RATE_LIMIT_PER_MINUTE,
   SCHEDULER_TICK_INTERVAL_MS,
 } from "@cronko/shared/constants"
+import { DIGEST_FREQUENCIES } from "@cronko/shared/digest"
+import { isValidTimezone } from "@cronko/shared/schedule"
 import { zValidator } from "@hono/zod-validator"
 import { Hono } from "hono"
 import { z } from "zod"
 import { logAuditEvent } from "../services/audit"
+import { loadDigestConfig, resetDigestClock, sendDigest } from "../services/digest"
 import { restartScheduler } from "../services/scheduler"
 
 export const settingsRoute = new Hono()
 
 const updateSettingsSchema = z.object({
   instanceName: z.string().min(1).max(100).optional(),
-  timezone: z.string().min(1).optional(),
+  timezone: z.string().min(1).refine(isValidTimezone, "unknown timezone").optional(),
   schedulerTickMs: z.number().int().min(1000).max(120_000).optional(),
   defaultGracePeriodSeconds: z.number().int().min(0).max(86_400).optional(),
   defaultIntervalSeconds: z.number().int().min(10).max(31_536_000).optional(),
   pingRateLimitPerMinute: z.number().int().min(1).max(600).optional(),
   maxHeartbeatsPerMonitor: z.number().int().min(10).max(10_000).optional(),
   heartbeatHistoryDays: z.number().int().min(1).max(365).optional(),
+  digestFrequency: z.enum(DIGEST_FREQUENCIES as [string, ...string[]]).optional(),
+  digestHour: z.number().int().min(0).max(23).optional(),
 })
 
 export const currentSettings = {
@@ -50,6 +55,8 @@ interface CachedSettings {
   pingRateLimitPerMinute: number
   maxHeartbeatsPerMonitor: number
   heartbeatHistoryDays: number
+  digestFrequency: string
+  digestHour: number
 }
 
 let settingsCache: CachedSettings | null = null
@@ -77,6 +84,7 @@ async function loadSettings(): Promise<CachedSettings> {
     maxHeartbeatsPerMonitor: await getSetting("maxHeartbeatsPerMonitor"),
     heartbeatHistoryDays: await getSetting("heartbeatHistoryDays"),
   }
+  const digest = await loadDigestConfig()
 
   const parsed = {
     instanceName: raw.instanceName ?? "Cronko",
@@ -102,14 +110,23 @@ async function loadSettings(): Promise<CachedSettings> {
   }
 
   updateCurrentSettings(parsed)
-  settingsCache = parsed
+  settingsCache = { ...parsed, digestFrequency: digest.frequency, digestHour: digest.hour }
   settingsCacheAt = Date.now()
-  return parsed
+  return settingsCache
 }
 
 settingsRoute.get("/", async (c) => {
   const data = await loadSettings()
   return c.json({ data })
+})
+
+/** Send the digest for the period ending now, to check how it looks. */
+settingsRoute.post("/digest/test", async (c) => {
+  const config = await loadDigestConfig()
+  const frequency = config.frequency === "off" ? "daily" : config.frequency
+  const { queued } = await sendDigest({ ...config, frequency }, new Date())
+  if (queued === 0) return c.json({ error: "no enabled notification channel" }, 400)
+  return c.json({ data: { queued } })
 })
 
 settingsRoute.post("/", zValidator("json", updateSettingsSchema), async (c) => {
@@ -132,6 +149,19 @@ settingsRoute.post("/", zValidator("json", updateSettingsSchema), async (c) => {
     await setSetting("maxHeartbeatsPerMonitor", String(body.maxHeartbeatsPerMonitor))
   if (body.heartbeatHistoryDays !== undefined)
     await setSetting("heartbeatHistoryDays", String(body.heartbeatHistoryDays))
+
+  const before = await loadDigestConfig()
+  if (body.digestFrequency !== undefined) await setSetting("digestFrequency", body.digestFrequency)
+  if (body.digestHour !== undefined) await setSetting("digestHour", String(body.digestHour))
+  const after = await loadDigestConfig()
+  // A new schedule starts counting now: no digest for a slot that already passed.
+  if (
+    after.frequency !== before.frequency ||
+    after.hour !== before.hour ||
+    after.timezone !== before.timezone
+  ) {
+    await resetDigestClock()
+  }
 
   invalidateSettingsCache()
   const data = await loadSettings()
