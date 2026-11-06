@@ -147,6 +147,44 @@ at the `RCPT` step. It never relays and has no login. Messages are capped at 1 M
 and the ping rate limit applies. Some cloud providers block inbound port 25;
 check yours before relying on it.
 
+### Importing from Healthchecks or Uptime Kuma
+
+Two authenticated endpoints create monitors from other tools. Both accept
+`?dryRun=true` to report what would be created and skipped without changing
+anything, and both go through the same validation as `POST /api/monitors`.
+The response is `{ data: { dryRun, created[], skipped[] } }`; each entry has
+`warnings` for anything that had no equivalent. A name that already exists
+(same slug) is skipped, so re-running an import is safe.
+
+**Healthchecks** (`POST /api/import/healthchecks`). Send the saved response of
+`GET /api/v3/checks/` (`{"checks": [...]}`), or `{"apiKey": "...", "baseUrl": "https://hc.example.com"}`
+and Cronko fetches it with `X-Api-Key` (`baseUrl` defaults to `https://healthchecks.io`;
+a read-only key is enough).
+
+| Healthchecks                | Cronko                        |
+| --------------------------- | ----------------------------- |
+| `name` (or `slug` if empty) | name                          |
+| `timeout`                   | expected interval             |
+| `schedule` + `tz`           | cron schedule + timezone      |
+| `grace`                     | grace period (capped at 24 h) |
+| `tags` (space separated)    | tags                          |
+| `status: "paused"`          | paused                        |
+
+Not imported: integrations/channels, keyword filters (`start_kw`, `success_kw`,
+`failure_kw`), `desc`, ping history and the old ping URLs. Imported monitors get
+new tokens, so update the ping URLs in your jobs.
+
+**Uptime Kuma** (`POST /api/import/kuma`). Send the backup JSON (Settings -> Backup
+in Kuma 1.x) as the body. Only `push` monitors are imported (`interval` becomes the
+expected interval, `active: 0` becomes paused, tags by name, default grace period).
+Every other type is an active check, which Cronko does not do, and is listed under
+`skipped`. Kuma's push tokens are not reused.
+
+```sh
+curl -X POST "$CRONKO/api/import/kuma?dryRun=true" -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" --data @kuma-backup.json
+```
+
 ## Security
 
 - Passwords: bcrypt (12 rounds). Sessions: HS256 JWT, 15-minute access token and

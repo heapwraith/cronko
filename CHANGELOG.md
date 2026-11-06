@@ -10,6 +10,7 @@ include breaking changes; they are called out below.
 ### Added
 
 - Prometheus metrics: `GET /metrics` in the text exposition format, with per-monitor status (one series per status), last ping time, last run duration and open incidents, plus the open incident total and the notification outbox's pending and failed counts. Off by default (404): set `METRICS_TOKEN` (16+ characters) and scrape with `Authorization: Bearer <token>`. No migration.
+- Importers: `POST /api/import/healthchecks` (saved `GET /api/v3/checks/` response, or an API key to fetch it) and `POST /api/import/kuma` (Uptime Kuma backup JSON, push monitors only; other types are reported as skipped). Both take `?dryRun=true`, reuse the monitor validation, skip names that already exist and warn about fields with no equivalent. No migration.
 
 ## [0.3.0] - 2026-11-06
 

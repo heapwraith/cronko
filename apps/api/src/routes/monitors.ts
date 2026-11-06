@@ -72,7 +72,7 @@ const tagsSchema = z
   .max(MAX_TAGS * 2)
   .transform((tags) => normalizeTags(tags))
 
-const createMonitorSchema = z
+export const createMonitorSchema = z
   .object({
     name: z.string().min(1).max(100),
     expectedIntervalSeconds: z.number().int().min(10).max(31_536_000).optional(),
@@ -149,26 +149,19 @@ monitorsRoute.get("/", async (c) => {
   return c.json({ data: monitorsWithHeartbeat })
 })
 
-monitorsRoute.post("/", zValidator("json", createMonitorSchema), async (c) => {
-  const body = c.req.valid("json")
-  const slug = body.name
+export function slugFor(name: string) {
+  return name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "")
+}
 
-  const existing = await findMonitorBySlug(slug)
-  if (existing) {
-    return c.json(
-      {
-        error: "A monitor with this name already exists",
-        code: "CONFLICT",
-      },
-      409,
-    )
-  }
+/** Creates a monitor from an already validated body; null when the name's slug is taken. */
+export async function insertMonitor(body: z.output<typeof createMonitorSchema>) {
+  const slug = slugFor(body.name)
+  if (await findMonitorBySlug(slug)) return null
 
-  const now = new Date()
-  const monitor = await createMonitor({
+  return createMonitor({
     id: crypto.randomUUID(),
     name: body.name,
     slug,
@@ -187,8 +180,22 @@ monitorsRoute.post("/", zValidator("json", createMonitorSchema), async (c) => {
       scheduleCron: body.scheduleCron,
       timezone: body.timezone ?? "UTC",
     }),
-    now,
+    now: new Date(),
   })
+}
+
+monitorsRoute.post("/", zValidator("json", createMonitorSchema), async (c) => {
+  const body = c.req.valid("json")
+  const monitor = await insertMonitor(body)
+  if (!monitor) {
+    return c.json(
+      {
+        error: "A monitor with this name already exists",
+        code: "CONFLICT",
+      },
+      409,
+    )
+  }
 
   logAuditEvent({
     userId: (c.get("jwtPayload") as { sub: string })?.sub,

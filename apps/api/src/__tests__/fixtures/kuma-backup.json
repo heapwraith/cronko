@@ -1,0 +1,33 @@
+{
+  "version": "1.23.16",
+  "notificationList": [],
+  "monitorList": [
+    {
+      "id": 1,
+      "name": "Nightly rsync",
+      "type": "push",
+      "interval": 86400,
+      "active": 1,
+      "pushToken": "abc123",
+      "tags": [{ "name": "Backup", "color": "#059669", "value": "" }]
+    },
+    { "id": 2, "name": "Paused push", "type": "push", "interval": 300, "active": 0, "tags": [] },
+    {
+      "id": 3,
+      "name": "Website",
+      "type": "http",
+      "url": "https://example.com",
+      "interval": 60,
+      "active": 1
+    },
+    {
+      "id": 4,
+      "name": "DB port",
+      "type": "port",
+      "hostname": "db",
+      "port": 5432,
+      "interval": 60,
+      "active": 1
+    }
+  ]
+}

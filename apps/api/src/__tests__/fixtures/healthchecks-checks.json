@@ -1,0 +1,37 @@
+{
+  "checks": [
+    {
+      "name": "Filesystem Backup",
+      "slug": "filesystem-backup",
+      "tags": "backup fs",
+      "desc": "Runs incremental backup every hour",
+      "grace": 600,
+      "status": "up",
+      "start_kw": "START",
+      "success_kw": "SUCCESS",
+      "failure_kw": "ERROR",
+      "channels": "1bdea468-03bf-47b8-ab27-29a9dd0e4b94",
+      "timeout": 3600
+    },
+    {
+      "name": "Database Backup",
+      "slug": "database-backup",
+      "tags": "production db",
+      "grace": 1200,
+      "status": "paused",
+      "channels": "",
+      "schedule": "15 5 * * *",
+      "tz": "America/Sao_Paulo"
+    },
+    {
+      "name": "Broken Cron",
+      "tags": "",
+      "grace": 60,
+      "status": "new",
+      "schedule": "not a cron",
+      "tz": "UTC"
+    },
+    { "name": "", "slug": "", "timeout": 60 },
+    { "name": "Long Grace", "grace": 172800, "timeout": 86400, "status": "up" }
+  ]
+}

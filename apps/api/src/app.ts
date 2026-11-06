@@ -9,6 +9,7 @@ import { securityHeaders } from "./middleware/securityHeaders"
 import { registerOpenApi } from "./openapi"
 import { auditRoute } from "./routes/audit"
 import { authRoute } from "./routes/auth"
+import { importRoute } from "./routes/import"
 import { incidentsRoute } from "./routes/incidents"
 import { maintenanceRoute } from "./routes/maintenance"
 import { metricsRoute } from "./routes/metrics"
@@ -133,6 +134,7 @@ api.route("/settings", settingsRoute)
 api.route("/audit", auditRoute)
 api.route("/status-pages", statusPagesRoute)
 api.route("/maintenance-windows", maintenanceRoute)
+api.route("/import", importRoute)
 
 app.route("/api", api)
 
