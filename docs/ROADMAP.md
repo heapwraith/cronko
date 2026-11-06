@@ -66,7 +66,7 @@ making product claims.
 ## P3 - reach
 
 - Teams and roles, scoped API tokens, importers (Healthchecks, Kuma).
-- Prometheus metrics.
+- ~~Prometheus metrics.~~ Done: opt-in `GET /metrics` behind `METRICS_TOKEN`.
 - ~~Semantic versioning and a changelog.~~ Done from 0.1.0 (`CHANGELOG.md`).
 
 ## Non-goals
