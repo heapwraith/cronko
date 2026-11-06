@@ -36,11 +36,7 @@ export function DurationBars({ points }: { points: DurationPoint[] }) {
             key={p.id}
             title={`${p.label} · ${formatRunDuration(p.durationMs)}`}
             style={{ height: `${Math.max(4, (p.durationMs / max) * 100)}%` }}
-            className={`min-w-1 flex-1 rounded-t-[2px] ${
-              p.failed
-                ? "bg-[repeating-linear-gradient(135deg,var(--st-failed)_0_3px,transparent_3px_6px)] outline outline-1 -outline-offset-1 outline-failed"
-                : "bg-healthy/70"
-            }`}
+            className={`min-w-1 flex-1 rounded-t-[2px] ${p.failed ? "bg-failed" : "bg-healthy/70"}`}
           />
         ))}
       </div>

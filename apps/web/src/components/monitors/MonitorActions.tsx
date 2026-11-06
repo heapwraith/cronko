@@ -1,5 +1,4 @@
 import { useQueryClient } from "@tanstack/react-query"
-import { Pause, Pencil, Play, Trash2 } from "lucide-react"
 import { useState } from "react"
 import { useNavigate } from "react-router"
 import { Button } from "@/components/shared/Button"
@@ -61,18 +60,15 @@ export function MonitorActions({ monitorId, status }: { monitorId: string; statu
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Button href={`/monitors/${monitorId}/edit`} variant="secondary" size="sm">
-        <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
         {t("monitors.edit")}
       </Button>
 
       {status !== "paused" ? (
         <Button variant="secondary" size="sm" onClick={handlePause} disabled={pauseLoading}>
-          <Pause className="h-3.5 w-3.5" aria-hidden="true" />
           {pauseLoading ? t("monitor.pausing") : t("monitors.pause")}
         </Button>
       ) : (
         <Button variant="secondary" size="sm" onClick={handleResume} disabled={resumeLoading}>
-          <Play className="h-3.5 w-3.5" aria-hidden="true" />
           {resumeLoading ? t("monitor.resuming") : t("monitors.resume")}
         </Button>
       )}
@@ -83,7 +79,6 @@ export function MonitorActions({ monitorId, status }: { monitorId: string; statu
         onClick={() => setConfirmOpen(true)}
         disabled={deleteLoading}
       >
-        <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
         {deleteLoading ? t("monitors.deleting") : t("monitors.delete")}
       </Button>
 

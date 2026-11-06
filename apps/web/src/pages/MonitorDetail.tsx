@@ -1,7 +1,6 @@
 import type { MonitorStatus } from "@cronko/shared/types"
 import { formatDuration, formatRelativeTime } from "@cronko/shared/utils"
 import { useQuery } from "@tanstack/react-query"
-import { CircleCheck, CircleX, Clock, Download, TriangleAlert } from "lucide-react"
 import type { ReactNode } from "react"
 import { useParams } from "react-router"
 import { DurationBars } from "@/components/monitors/DurationBars"
@@ -57,8 +56,6 @@ function Fact({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-const CAUSE_ICON = { failed: CircleX, down: TriangleAlert, missed: Clock } as const
-
 function MonitorDetailView({ monitor, incidents }: { monitor: Monitor; incidents: Incident[] }) {
   const { t, locale } = useT()
   const status = monitor.status as MonitorStatus
@@ -82,8 +79,6 @@ function MonitorDetailView({ monitor, incidents }: { monitor: Monitor; incidents
     }))
 
   const incident = monitor.openIncident
-  const CauseIcon =
-    incident && status in CAUSE_ICON ? CAUSE_ICON[status as keyof typeof CAUSE_ICON] : TriangleAlert
   const cause =
     status === "failed"
       ? t("monitor.monitorFailed")
@@ -110,7 +105,6 @@ function MonitorDetailView({ monitor, incidents }: { monitor: Monitor; incidents
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button href={csvUrl} variant="ghost" size="sm" target="_blank" rel="noreferrer">
-            <Download className="h-3.5 w-3.5" aria-hidden="true" />
             {t("detail.exportCsv")}
           </Button>
           <MonitorActions monitorId={monitor.id} status={monitor.status} />
@@ -122,7 +116,6 @@ function MonitorDetailView({ monitor, incidents }: { monitor: Monitor; incidents
           role="status"
           className="flex items-start gap-3 rounded-[6px] border border-line-strong bg-[color-mix(in_oklch,var(--st-down)_9%,var(--panel))] p-4"
         >
-          <CauseIcon className="mt-0.5 h-5 w-5 shrink-0 text-down" aria-hidden="true" />
           <div>
             <p className="text-sm font-semibold">{t("monitor.incidentInProgress")}</p>
             <p className="text-sm text-dim">
@@ -149,14 +142,12 @@ function MonitorDetailView({ monitor, incidents }: { monitor: Monitor; incidents
                         "—"
                       ) : lastFailed ? (
                         <>
-                          <CircleX className="h-4 w-4 text-failed" aria-hidden="true" />
                           <span className="font-semibold text-failed">
                             {last.exitCode} · {t("detail.exitFail")}
                           </span>
                         </>
                       ) : (
                         <>
-                          <CircleCheck className="h-4 w-4 text-healthy" aria-hidden="true" />
                           {last.exitCode} · {t("detail.exitOk")}
                         </>
                       )}

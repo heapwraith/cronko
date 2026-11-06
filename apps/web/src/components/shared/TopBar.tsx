@@ -1,14 +1,4 @@
-import {
-  Activity,
-  AlertTriangle,
-  Bell,
-  BookOpen,
-  LayoutDashboard,
-  LogOut,
-  Moon,
-  Settings,
-  Sun,
-} from "lucide-react"
+import { LogOut, Moon, Sun } from "lucide-react"
 import { useEffect, useState } from "react"
 import { NavLink, useNavigate } from "react-router"
 import { api } from "@/lib/api"
@@ -89,12 +79,12 @@ export function TopBar({ instanceName, email }: { instanceName?: string; email?:
   const { t } = useT()
 
   const tabs = [
-    { to: "/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
-    { to: "/monitors", label: t("nav.monitors"), icon: Activity },
-    { to: "/incidents", label: t("nav.incidents"), icon: AlertTriangle },
-    { to: "/notifications", label: t("nav.notifications"), icon: Bell },
-    { to: "/settings", label: t("nav.settings"), icon: Settings },
-    { to: "/how-to-use", label: t("nav.howto"), icon: BookOpen },
+    { to: "/dashboard", label: t("nav.dashboard") },
+    { to: "/monitors", label: t("nav.monitors") },
+    { to: "/incidents", label: t("nav.incidents") },
+    { to: "/notifications", label: t("nav.notifications") },
+    { to: "/settings", label: t("nav.settings") },
+    { to: "/how-to-use", label: t("nav.howto") },
   ]
 
   return (
@@ -124,19 +114,18 @@ export function TopBar({ instanceName, email }: { instanceName?: string; email?:
 
       <nav aria-label="Principal" className="border-t border-line">
         <ul className="mx-auto flex max-w-[1400px] gap-1 overflow-x-auto px-2 sm:px-6">
-          {tabs.map(({ to, label, icon: Icon }) => (
+          {tabs.map(({ to, label }) => (
             <li key={to}>
               <NavLink
                 to={to}
                 className={({ isActive }) =>
-                  `relative flex items-center gap-2 whitespace-nowrap px-3 py-2.5 text-sm font-medium transition-colors after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 ${
+                  `relative flex items-center whitespace-nowrap px-3 py-2.5 text-sm font-medium transition-colors after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 ${
                     isActive
                       ? "text-ink after:bg-signal"
                       : "text-dim after:bg-transparent hover:text-ink"
                   }`
                 }
               >
-                <Icon className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
                 {label}
               </NavLink>
             </li>

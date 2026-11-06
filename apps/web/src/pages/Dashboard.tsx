@@ -1,7 +1,7 @@
 import type { MonitorStatus } from "@cronko/shared/types"
 import { formatRelativeTime } from "@cronko/shared/utils"
 import { useQuery } from "@tanstack/react-query"
-import { BarChart3, Plus } from "lucide-react"
+import { BarChart3 } from "lucide-react"
 import { useState } from "react"
 import { Link } from "react-router"
 import { DeparturesTable, sortBySeverity } from "@/components/monitors/DeparturesTable"
@@ -71,10 +71,7 @@ export default function DashboardPage() {
             </p>
           )}
         </div>
-        <Button href="/monitors/new">
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          {t("dashboard.createMonitor")}
-        </Button>
+        <Button href="/monitors/new">{t("dashboard.createMonitor")}</Button>
       </div>
 
       {isPending ? (

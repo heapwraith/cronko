@@ -1,4 +1,3 @@
-import { Check, Copy } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { useT } from "@/lib/i18n"
 import { Button } from "./Button"
@@ -22,11 +21,6 @@ export function CopyButton({ text, label }: { text: string; label?: string }) {
 
   return (
     <Button variant="secondary" size="sm" onClick={copy} aria-live="polite">
-      {copied ? (
-        <Check className="h-3.5 w-3.5 text-healthy" aria-hidden="true" />
-      ) : (
-        <Copy className="h-3.5 w-3.5" aria-hidden="true" />
-      )}
       {copied ? t("detail.copied") : (label ?? t("detail.copy"))}
     </Button>
   )

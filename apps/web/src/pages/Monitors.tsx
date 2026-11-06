@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { Plus, Search } from "lucide-react"
+import { Search } from "lucide-react"
 import { useEffect, useId, useState } from "react"
 import { DeleteMonitorButton } from "@/components/monitors/DeleteMonitorButton"
 import { DeparturesTable, sortBySeverity } from "@/components/monitors/DeparturesTable"
@@ -52,10 +52,7 @@ export default function MonitorsPage() {
               className="min-h-10 w-64 rounded-[4px] border border-line-strong bg-panel pl-9 pr-3 text-sm text-ink placeholder:text-dim focus-visible:outline-2"
             />
           </div>
-          <Button href="/monitors/new">
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            {t("dashboard.createMonitor")}
-          </Button>
+          <Button href="/monitors/new">{t("dashboard.createMonitor")}</Button>
         </div>
       </div>
 
