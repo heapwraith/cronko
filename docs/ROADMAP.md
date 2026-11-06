@@ -69,6 +69,27 @@ making product claims.
 - ~~Prometheus metrics.~~ Done: opt-in `GET /metrics` behind `METRICS_TOKEN`.
 - ~~Semantic versioning and a changelog.~~ Done from 0.1.0 (`CHANGELOG.md`).
 
+## Next up (gap research, 2026-11-06)
+
+Compared against the Healthchecks docs (Pinging API, Management API, badges, notifications, changelog)
+and Cronitor's integrations page. Better Stack, Sentry Crons, Dead Man's Snitch and Uptime Kuma were
+not verified in depth, so claims about them are unconfirmed. In order of value over effort:
+
+1. Ping API parity: `/log`, `/<exit-status>` in the path, and `rid=<uuid>` to pair concurrent start/finish runs.
+2. Generic webhook with a custom template and headers (covers many missing channels at once).
+3. Cheap channels: Google Chat, Mattermost/Rocket.Chat, Gotify, Matrix, Opsgenie.
+4. 2FA (TOTP, later WebAuthn): the UI is internet-facing and holds ping tokens.
+5. Scheduled automatic SQLite backup and a JSON export of monitors and channels.
+6. Ping by slug with a project key and `?create=1` (provisioning from CI/IaC).
+7. Badges per tag, JSON/Shields.io formats, three states.
+8. Apprise integration (one URL covers dozens of services).
+9. Proxy-header login and/or OIDC for self-hosters with SSO.
+10. Official GitHub Action and a clean OpenAPI for generated clients.
+
+Later: text search and bulk actions in the UI, Web Push, teams and roles, SMS/WhatsApp (paid and
+against the one-container model). To check: that `read` API tokens omit ping tokens from responses,
+and that the Prometheus output exposes grace and paused like Healthchecks does.
+
 ## Non-goals
 
 Active HTTP/TCP/DNS checks as a focus. Document coexistence instead:
