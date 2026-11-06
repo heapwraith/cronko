@@ -12,7 +12,8 @@
     "./queries/incidents": "./src/queries/incidents.ts",
     "./queries/notifications": "./src/queries/notifications.ts",
     "./queries/settings": "./src/queries/settings.ts",
-    "./queries/users": "./src/queries/users.ts"
+    "./queries/users": "./src/queries/users.ts",
+    "./queries/status-pages": "./src/queries/status-pages.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

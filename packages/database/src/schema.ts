@@ -160,3 +160,16 @@ export const incidentsRelations = relations(incidents, ({ one }) => ({
     references: [monitors.id],
   }),
 }))
+
+/** A public, read-only status page showing the monitors that carry one tag. */
+export const statusPages = sqliteTable("status_pages", {
+  id: text("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  title: text("title").notNull(),
+  description: text("description"),
+  tag: text("tag").notNull(),
+  // Off until switched on: nothing becomes public by accident.
+  enabled: integer("enabled", { mode: "boolean" }).notNull().default(false),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+})

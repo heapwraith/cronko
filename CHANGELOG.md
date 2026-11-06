@@ -9,6 +9,7 @@ include breaking changes; they are called out below.
 
 ### Added
 
+- Public status pages (`/status/<slug>`, no login), one per tag: overall state, each monitor's public state (operational, degraded, problem, paused), 90 days of daily availability (share of each UTC day without an open incident) and the last 30 days of incidents. They expose only those fields, are off until published, and missing and unpublished pages answer the same 404. Managed under "Status" (migration `0014`).
 - Tags on monitors: up to 10 per monitor, normalized (lowercase, no accents, `a-z 0-9 . _ -`). Tags show next to each job, the dashboard and monitor list have a tag filter kept in the URL, and `GET /api/monitors?tag=` filters the API (migration `0013`).
 
 ## [0.1.0] - 2026-11-06

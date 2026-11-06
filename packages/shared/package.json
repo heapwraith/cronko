@@ -12,7 +12,8 @@
     "./schedule": "./src/schedule.ts",
     "./translations": "./src/translations.ts",
     "./run-stats": "./src/run-stats.ts",
-    "./tags": "./src/tags.ts"
+    "./tags": "./src/tags.ts",
+    "./status": "./src/status.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

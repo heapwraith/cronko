@@ -116,6 +116,21 @@ export interface MonitorInput {
   tags?: string[]
 }
 
+export interface StatusPageInput {
+  slug: string
+  title: string
+  description?: string | null
+  tag: string
+  enabled?: boolean
+}
+
+export interface StatusPageAdmin extends Required<Omit<StatusPageInput, "description">> {
+  id: string
+  description: string | null
+  createdAt: string
+  updatedAt: string
+}
+
 export const api = {
   auth: {
     login: (body: { email: string; password: string }) =>
@@ -135,6 +150,13 @@ export const api = {
         uptimePercent: number
         heartbeatsByHour: number[]
       }>("/api/stats"),
+  },
+  statusPages: {
+    list: () => get<StatusPageAdmin[]>("/api/status-pages"),
+    create: (body: StatusPageInput) => post<StatusPageAdmin>("/api/status-pages", body),
+    update: (id: string, body: Partial<StatusPageInput>) =>
+      patch<StatusPageAdmin>(`/api/status-pages/${id}`, body),
+    delete: (id: string) => del<{ ok: boolean }>(`/api/status-pages/${id}`),
   },
   monitors: {
     list: () =>

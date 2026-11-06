@@ -34,6 +34,12 @@ const router = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
+        // Public and read-only: outside AppLayout, so no session is needed.
+        path: "/status/:slug",
+        lazy: () => import("@/pages/PublicStatus").then((m) => ({ Component: m.default })),
+        errorElement: <ErrorPage />,
+      },
+      {
         element: <AppLayout />,
         errorElement: <ErrorPage />,
         children: [
@@ -73,6 +79,10 @@ const router = createBrowserRouter([
           {
             path: "settings",
             lazy: () => import("@/pages/Settings").then((m) => ({ Component: m.default })),
+          },
+          {
+            path: "status-pages",
+            lazy: () => import("@/pages/StatusPages").then((m) => ({ Component: m.default })),
           },
           {
             path: "how-to-use",
