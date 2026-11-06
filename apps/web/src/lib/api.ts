@@ -102,6 +102,17 @@ async function del<T>(path: string): Promise<T> {
   return json.data
 }
 
+/** Body for creating a monitor: an interval, or a cron schedule with a timezone. */
+export interface MonitorInput {
+  name: string
+  expectedIntervalSeconds?: number
+  /** null switches an existing monitor back to a plain interval (update only). */
+  scheduleCron?: string | null
+  timezone?: string
+  gracePeriodSeconds: number
+  maxDurationMs?: number
+}
+
 export const api = {
   auth: {
     login: (body: { email: string; password: string }) =>
@@ -134,6 +145,9 @@ export const api = {
           paused: boolean
           slug: string
           token: string
+          scheduleCron: string | null
+          timezone: string | null
+          nextExpectedAt: string | null
           createdAt: string
           updatedAt: string
           latestHeartbeat: {
@@ -151,6 +165,9 @@ export const api = {
         expectedIntervalSeconds: number
         gracePeriodSeconds: number
         maxDurationMs: number | null
+        scheduleCron: string | null
+        timezone: string | null
+        nextExpectedAt: string | null
         paused: boolean
         slug: string
         token: string
@@ -174,7 +191,7 @@ export const api = {
           resolvedAt: string | null
         } | null
       }>(`/api/monitors/${id}`),
-    create: (body: { name: string; expectedIntervalSeconds: number; gracePeriodSeconds: number }) =>
+    create: (body: MonitorInput) =>
       post<{
         id: string
         name: string
@@ -182,14 +199,8 @@ export const api = {
         slug: string
         token: string
       }>("/api/monitors", body),
-    update: (
-      id: string,
-      body: {
-        name?: string
-        expectedIntervalSeconds?: number
-        gracePeriodSeconds?: number
-      },
-    ) => patch<{ id: string; name: string }>(`/api/monitors/${id}`, body),
+    update: (id: string, body: Partial<MonitorInput>) =>
+      patch<{ id: string; name: string }>(`/api/monitors/${id}`, body),
     delete: (id: string) => del<{ ok: boolean }>(`/api/monitors/${id}`),
     pause: (id: string) => post<{ id: string; status: string }>(`/api/monitors/${id}/pause`),
     resume: (id: string) => post<{ id: string; status: string }>(`/api/monitors/${id}/resume`),

@@ -3,13 +3,7 @@ import { useEffect, useState } from "react"
 import { useT } from "@/lib/i18n"
 
 /** Time until the next ping is due (or how late it is), in the UI language. */
-export function NextPingCountdown({
-  lastPingIso,
-  intervalSeconds,
-}: {
-  lastPingIso: string | null
-  intervalSeconds: number
-}) {
+export function NextPingCountdown({ dueIso }: { dueIso: string | null }) {
   const { t } = useT()
   const [now, setNow] = useState(() => Date.now())
 
@@ -18,9 +12,9 @@ export function NextPingCountdown({
     return () => clearInterval(id)
   }, [])
 
-  if (!lastPingIso) return <span>—</span>
+  if (!dueIso) return <span>—</span>
 
-  const due = new Date(lastPingIso).getTime() + intervalSeconds * 1000
+  const due = new Date(dueIso).getTime()
   const time = formatDuration(Math.abs(due - now))
   return (
     <span className="tnum">

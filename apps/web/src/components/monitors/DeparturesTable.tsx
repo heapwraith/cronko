@@ -39,9 +39,11 @@ export function DeparturesTable({
   const now = Date.now()
 
   const next = (row: MonitorRow): string => {
-    if (row.paused || !row.latestHeartbeat) return "—"
-    const due =
-      new Date(row.latestHeartbeat.receivedAt).getTime() + row.expectedIntervalSeconds * 1000
+    if (row.paused) return "—"
+    // The server computes it (cron monitors follow their schedule, not the last ping).
+    const dueIso = row.nextExpectedAt
+    if (!dueIso) return "—"
+    const due = new Date(dueIso).getTime()
     return due >= now
       ? t("board.in", { time: formatDuration(due - now) })
       : t("board.overdue", { time: formatDuration(now - due) })

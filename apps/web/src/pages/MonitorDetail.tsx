@@ -184,15 +184,19 @@ function MonitorDetailView({ monitor, incidents }: { monitor: Monitor; incidents
         <div className="lg:col-span-2">
           <Panel id="schedule" title={t("detail.schedule")}>
             <dl className="grid grid-cols-2 gap-4">
-              <Fact label={t("detail.interval")}>
-                {formatInterval(monitor.expectedIntervalSeconds)}
-              </Fact>
+              {monitor.scheduleCron ? (
+                <Fact label={t("form.cron")}>
+                  {monitor.scheduleCron}
+                  <span className="block text-xs text-dim">{monitor.timezone ?? "UTC"}</span>
+                </Fact>
+              ) : (
+                <Fact label={t("detail.interval")}>
+                  {formatInterval(monitor.expectedIntervalSeconds)}
+                </Fact>
+              )}
               <Fact label={t("detail.grace")}>{formatInterval(monitor.gracePeriodSeconds)}</Fact>
               <Fact label={t("detail.nextExpected")}>
-                <NextPingCountdown
-                  lastPingIso={last?.receivedAt ?? null}
-                  intervalSeconds={monitor.expectedIntervalSeconds}
-                />
+                <NextPingCountdown dueIso={monitor.paused ? null : monitor.nextExpectedAt} />
               </Fact>
               <Fact label={t("detail.maxDuration")}>
                 {monitor.maxDurationMs ? formatDuration(monitor.maxDurationMs) : "—"}
