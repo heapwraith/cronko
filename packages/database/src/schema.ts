@@ -15,6 +15,10 @@ export const monitors = sqliteTable("monitors", {
   gracePeriodSeconds: integer("grace_period_seconds").notNull().default(300),
   paused: integer("paused", { mode: "boolean" }).notNull().default(false),
   maxDurationMs: integer("max_duration_ms"),
+  // Optional cron schedule (5 fields or @nickname) evaluated in `timezone` (IANA).
+  // When set, deadlines come from the next scheduled run, not from the last ping.
+  scheduleCron: text("schedule_cron"),
+  timezone: text("timezone"),
   displayOrder: integer("display_order").notNull().default(0),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),

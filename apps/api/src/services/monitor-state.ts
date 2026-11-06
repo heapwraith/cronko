@@ -4,6 +4,7 @@ import {
   resolveIncident,
 } from "@cronko/database/queries/incidents"
 import { transitionMonitorStatus } from "@cronko/database/queries/monitors"
+import { nextRun } from "@cronko/shared/schedule"
 import { sendNotification } from "./notifier"
 
 export type MonitorStatus = "healthy" | "missed" | "down" | "failed" | "paused" | "pending"
@@ -15,12 +16,59 @@ export interface MonitorSnapshot {
   expectedIntervalSeconds: number
   gracePeriodSeconds: number
   createdAt: Date
+  /** Optional cron schedule; when set it replaces "last ping + interval". */
+  scheduleCron?: string | null
+  timezone?: string | null
+}
+
+export type ScheduleFields = Pick<
+  MonitorSnapshot,
+  "expectedIntervalSeconds" | "gracePeriodSeconds" | "createdAt" | "scheduleCron" | "timezone"
+>
+
+export interface ExpectedWindow {
+  /** When the next ping is due (the scheduled run, or last ping + interval). */
+  nextExpected: Date
+  /** After this instant the monitor is "missed" (due + grace). */
+  missedAt: number
+  /** After this instant the monitor is "down" (missed + one period). */
+  downAt: number
+}
+
+/**
+ * Deadlines for a monitor. Interval monitors count from the last ping; cron
+ * monitors count from the next scheduled run after it. A ping that lands up to
+ * one grace period (at most half a period) before a slot counts as that slot's
+ * ping, so a job that reports a few seconds early is not flagged as late.
+ */
+export function expectedWindow(m: ScheduleFields, lastPingAt: Date | undefined): ExpectedWindow {
+  const base = (lastPingAt ?? m.createdAt).getTime()
+  const grace = m.gracePeriodSeconds * 1000
+
+  if (m.scheduleCron) {
+    let slot = nextRun(m.scheduleCron, m.timezone, new Date(base))
+    let following = slot ? nextRun(m.scheduleCron, m.timezone, slot) : null
+    if (slot && following) {
+      let period = following.getTime() - slot.getTime()
+      if (lastPingAt && slot.getTime() - base <= Math.min(grace, period / 2)) {
+        slot = following
+        following = nextRun(m.scheduleCron, m.timezone, slot)
+        period = following ? following.getTime() - slot.getTime() : period
+      }
+      const missedAt = slot.getTime() + grace
+      return { nextExpected: slot, missedAt, downAt: missedAt + period }
+    }
+  }
+
+  const interval = m.expectedIntervalSeconds * 1000
+  const missedAt = base + interval + grace
+  return { nextExpected: new Date(base + interval), missedAt, downAt: missedAt + interval }
 }
 
 /**
  * Decide what the scheduler should do for a monitor. Pure: no I/O.
  *
- *   last ping (or creation) ──interval+grace──▶ missed ──interval──▶ down
+ *   due ──grace──▶ missed ──one period──▶ down
  *
  * Recovery is not decided here: it happens when a ping arrives (see
  * recoverOnPing), never by the clock.
@@ -33,9 +81,7 @@ export function evaluateMonitor(
   // A failed run was already reported; it stays failed until a good ping arrives.
   if (monitor.status === "paused" || monitor.status === "failed") return null
 
-  const base = (lastPingAt ?? monitor.createdAt).getTime()
-  const missedAt = base + (monitor.expectedIntervalSeconds + monitor.gracePeriodSeconds) * 1000
-  const downAt = missedAt + monitor.expectedIntervalSeconds * 1000
+  const { missedAt, downAt } = expectedWindow(monitor, lastPingAt)
 
   if (now <= missedAt) return null
   if (now > downAt) return monitor.status === "down" ? null : "down"

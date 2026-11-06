@@ -192,6 +192,10 @@ importers:
         version: 6.0.3
 
   packages/shared:
+    dependencies:
+      croner:
+        specifier: ^11.0.0
+        version: 11.0.0
     devDependencies:
       typescript:
         specifier: ^6.0.3
@@ -1367,6 +1371,10 @@ packages:
     peerDependenciesMeta:
       typescript:
         optional: true
+
+  croner@11.0.0:
+    resolution: {integrity: sha512-T17ADjdttrVToyzLpLq9Xb9xzcMwpQ/M3Qs9szhh0MVNTbv6NWQ9OFYa2qlzPYXFMn+uoDlnW1IpIv6cAvFtyA==}
+    engines: {node: '>=18.0'}
 
   css.escape@1.5.1:
     resolution: {integrity: sha512-YUifsXXuknHlUsmlgyY0PKzgPOr7/FjCePfHNt0jxm83wHZi44VDMQ7/fGNkjY3/jV1MC+1CmZbaHzugyeRtpg==}
@@ -3235,6 +3243,8 @@ snapshots:
       parse-json: 5.2.0
     optionalDependencies:
       typescript: 6.0.3
+
+  croner@11.0.0: {}
 
   css.escape@1.5.1: {}
 

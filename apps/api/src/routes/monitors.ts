@@ -13,12 +13,14 @@ import {
 } from "@cronko/database/queries/monitors"
 import { monitors as monitorsTable } from "@cronko/database/schema"
 import { DEFAULT_GRACE_PERIOD_SECONDS } from "@cronko/shared/constants"
+import { isValidSchedule, isValidTimezone, schedulePeriodSeconds } from "@cronko/shared/schedule"
 import { zValidator } from "@hono/zod-validator"
 import type { InferSelectModel } from "drizzle-orm"
 import { eq } from "drizzle-orm"
 import { Hono } from "hono"
 import { z } from "zod"
 import { logAuditEvent } from "../services/audit"
+import { expectedWindow } from "../services/monitor-state"
 
 type MonitorRow = InferSelectModel<typeof monitorsTable>
 
@@ -28,19 +30,60 @@ const pathParamSchema = z.object({
   id: z.string().min(1),
 })
 
-const createMonitorSchema = z.object({
-  name: z.string().min(1).max(100),
-  expectedIntervalSeconds: z.number().int().min(10).max(31_536_000),
-  gracePeriodSeconds: z.number().int().min(0).max(86_400).default(DEFAULT_GRACE_PERIOD_SECONDS),
-  maxDurationMs: z.number().int().min(0).max(86_400_000).optional(),
+const timezoneSchema = z.string().refine(isValidTimezone, {
+  message: "Unknown timezone (use an IANA name, e.g. America/Sao_Paulo)",
 })
 
-const updateMonitorSchema = z.object({
-  name: z.string().min(1).max(100).optional(),
-  expectedIntervalSeconds: z.number().int().min(10).max(31_536_000).optional(),
-  gracePeriodSeconds: z.number().int().min(0).max(86_400).optional(),
-  maxDurationMs: z.number().int().min(0).max(86_400_000).optional(),
-})
+/** Shared cross-field rule: a cron expression must parse in its timezone. */
+function checkSchedule(
+  v: { scheduleCron?: string | null | undefined; timezone?: string | null | undefined },
+  ctx: z.RefinementCtx,
+) {
+  if (v.scheduleCron && !isValidSchedule(v.scheduleCron, v.timezone)) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["scheduleCron"],
+      message: "Invalid cron expression (5 fields or an @nickname)",
+    })
+  }
+}
+
+const createMonitorSchema = z
+  .object({
+    name: z.string().min(1).max(100),
+    expectedIntervalSeconds: z.number().int().min(10).max(31_536_000).optional(),
+    scheduleCron: z.string().trim().min(1).max(100).optional(),
+    timezone: timezoneSchema.optional(),
+    gracePeriodSeconds: z.number().int().min(0).max(86_400).default(DEFAULT_GRACE_PERIOD_SECONDS),
+    maxDurationMs: z.number().int().min(0).max(86_400_000).optional(),
+  })
+  .superRefine((v, ctx) => {
+    if (v.expectedIntervalSeconds === undefined && !v.scheduleCron) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["expectedIntervalSeconds"],
+        message: "Provide expectedIntervalSeconds or scheduleCron",
+      })
+    }
+    checkSchedule(v, ctx)
+  })
+
+const updateMonitorSchema = z
+  .object({
+    name: z.string().min(1).max(100).optional(),
+    expectedIntervalSeconds: z.number().int().min(10).max(31_536_000).optional(),
+    /** null switches back to a plain interval. */
+    scheduleCron: z.string().trim().min(1).max(100).nullable().optional(),
+    timezone: timezoneSchema.nullable().optional(),
+    gracePeriodSeconds: z.number().int().min(0).max(86_400).optional(),
+    maxDurationMs: z.number().int().min(0).max(86_400_000).optional(),
+  })
+  .superRefine(checkSchedule)
+
+/** A cron monitor's interval is the gap between its scheduled runs. */
+function intervalFor(cron: string, timezone: string | undefined, fallback: number | undefined) {
+  return schedulePeriodSeconds(cron, timezone, new Date()) ?? fallback ?? 86_400
+}
 
 monitorsRoute.get("/", async (c) => {
   const monitors = await findAllMonitors()
@@ -52,6 +95,9 @@ monitorsRoute.get("/", async (c) => {
     const hb = heartbeats.get(m.id)
     return {
       ...m,
+      nextExpectedAt: m.paused
+        ? null
+        : expectedWindow(m, hb?.receivedAt).nextExpected.toISOString(),
       latestHeartbeat: hb
         ? {
             receivedAt: hb.receivedAt.toISOString(),
@@ -89,9 +135,15 @@ monitorsRoute.post("/", zValidator("json", createMonitorSchema), async (c) => {
     name: body.name,
     slug,
     token: crypto.randomUUID(),
-    expectedIntervalSeconds: body.expectedIntervalSeconds,
+    expectedIntervalSeconds: body.scheduleCron
+      ? intervalFor(body.scheduleCron, body.timezone, body.expectedIntervalSeconds)
+      : (body.expectedIntervalSeconds as number),
     gracePeriodSeconds: body.gracePeriodSeconds,
     ...(body.maxDurationMs !== undefined && { maxDurationMs: body.maxDurationMs }),
+    ...(body.scheduleCron && {
+      scheduleCron: body.scheduleCron,
+      timezone: body.timezone ?? "UTC",
+    }),
     now,
   })
 
@@ -120,6 +172,9 @@ monitorsRoute.get("/:id", async (c) => {
   return c.json({
     data: {
       ...monitor,
+      nextExpectedAt: monitor.paused
+        ? null
+        : expectedWindow(monitor, recentHeartbeats[0]?.receivedAt).nextExpected.toISOString(),
       recentHeartbeats,
       openIncident,
     },
@@ -131,11 +186,27 @@ monitorsRoute.patch("/:id", zValidator("json", updateMonitorSchema), async (c) =
   const body = c.req.valid("json")
   const now = new Date()
 
+  const cronChange =
+    body.scheduleCron === null
+      ? { scheduleCron: null, timezone: null }
+      : body.scheduleCron
+        ? { scheduleCron: body.scheduleCron, timezone: body.timezone ?? "UTC" }
+        : {}
+
   const updated = await updateMonitor(id, {
     ...(body.name !== undefined && { name: body.name }),
-    ...(body.expectedIntervalSeconds !== undefined && {
-      expectedIntervalSeconds: body.expectedIntervalSeconds,
-    }),
+    ...(body.scheduleCron
+      ? {
+          expectedIntervalSeconds: intervalFor(
+            body.scheduleCron,
+            body.timezone ?? undefined,
+            body.expectedIntervalSeconds,
+          ),
+        }
+      : body.expectedIntervalSeconds !== undefined && {
+          expectedIntervalSeconds: body.expectedIntervalSeconds,
+        }),
+    ...cronChange,
     ...(body.gracePeriodSeconds !== undefined && {
       gracePeriodSeconds: body.gracePeriodSeconds,
     }),
