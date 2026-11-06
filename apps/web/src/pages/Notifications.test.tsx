@@ -42,7 +42,9 @@ describe("NotificationsPage add-channel flow", () => {
     expect(create).toHaveBeenCalledWith({
       name: "Webhook",
       type: "webhook",
-      config: { url: "http://localhost:9/hook" },
+      // The optional headers and body template are sent blank; the API treats
+      // a blank template as "use the default payload".
+      config: { url: "http://localhost:9/hook", headers: "", bodyTemplate: "" },
     })
     expect(await screen.findByText("Canal criado com sucesso")).toBeInTheDocument()
   })
