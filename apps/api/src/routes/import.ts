@@ -1,5 +1,6 @@
 import { Hono } from "hono"
 import { logAuditEvent } from "../services/audit"
+import { extractExport, importCronko } from "../services/cronko-export"
 import {
   extractHealthchecksChecks,
   type ImportCandidate,
@@ -88,4 +89,33 @@ importRoute.post("/kuma", async (c) => {
     return c.json(bad("Send the Uptime Kuma backup JSON (it has a monitorList)"), 400)
   }
   return c.json({ data: await finish(c, "kuma", mapKuma(body.monitorList), dryRun) })
+})
+
+/** Body is a Cronko export (`GET /api/export`), bare or wrapped as `{ "data": ... }`. */
+importRoute.post("/cronko", async (c) => {
+  const dryRun = isDryRun(c.req.query("dryRun"))
+  const doc = extractExport(await c.req.json().catch(() => null))
+  if (!doc) return c.json(bad("Send the JSON from GET /api/export"), 400)
+  const report = await importCronko(doc, dryRun)
+  const total =
+    report.created.length +
+    report.channels.created.length +
+    report.statusPages.created.length +
+    report.maintenanceWindows.created.length
+  if (!dryRun && total) {
+    const userId = (c.get("jwtPayload") as { sub: string } | undefined)?.sub
+    logAuditEvent({
+      ...(userId && { userId }),
+      action: "config.imported",
+      resourceType: "config",
+      metadata: {
+        source: "cronko",
+        monitors: report.created.length,
+        channels: report.channels.created.length,
+        statusPages: report.statusPages.created.length,
+        maintenanceWindows: report.maintenanceWindows.created.length,
+      },
+    }).catch(() => {})
+  }
+  return c.json({ data: report })
 })

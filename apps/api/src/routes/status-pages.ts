@@ -31,6 +31,8 @@ const fields = {
 const userId = (c: { get: (k: "jwtPayload") => unknown }) =>
   (c.get("jwtPayload") as { sub: string })?.sub
 
+export const statusPageSchema = z.object(fields)
+
 statusPagesRoute.get("/", async (c) => c.json({ data: await findAllStatusPages() }))
 
 statusPagesRoute.post("/", zValidator("json", z.object(fields)), async (c) => {

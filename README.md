@@ -111,7 +111,8 @@ pnpm --filter @cronko/web dev     # web on :3000, proxies the API
 - Public SVG status badge (`/badge/:token`), CSV export of heartbeats
 - Dashboard, dark/light theme, English and pt-BR, installable PWA
 - OpenAPI docs at `/docs`; health probes at `/health/live` and `/health/ready`
-- Online backup and restore (`node scripts/db.mjs backup|restore`)
+- Scheduled automatic backups, online backup and restore (`node scripts/db.mjs backup|restore`)
+- JSON export of monitors, tags, channels, status pages and maintenance windows, and import of it
 
 ## Configuration
 
@@ -128,6 +129,7 @@ pnpm --filter @cronko/web dev     # web on :3000, proxies the API
 | `METRICS_TOKEN`                                                 | no       | Enables `GET /metrics` (Prometheus) for requests sending `Authorization: Bearer <token>`; at least 16 characters. Unset = 404                                     |
 | `INBOUND_SMTP_PORT`, `INBOUND_EMAIL_DOMAIN`                     | no       | Ping by e-mail: an SMTP listener on this port accepts mail for `<token>@<domain>` (see below)                                                                     |
 | `INBOUND_SMTP_TLS_CERT`, `INBOUND_SMTP_TLS_KEY`                 | no       | PEM files to offer STARTTLS on the e-mail listener                                                                                                                |
+| `BACKUP_DIR`, `BACKUP_INTERVAL_HOURS`, `BACKUP_KEEP`            | no       | Scheduled SQLite backups into this directory (unset = off), every 24 h by default, keeping the newest 7 (see [Backups](#backups-and-restore))                     |
 | `PUBLIC_URL`                                                    | no       | Public address of this Cronko (e.g. `https://cronko.example.com`); alerts then include a link to the failing run or monitor                                       |
 | `AUTO_MIGRATE`                                                  | no       | Apply migrations on boot (default `true`, but `false` when `NODE_ENV=production`; the image sets `true`)                                                          |
 | `WEB_DIST`                                                      | no       | Path of the built web app (auto-detected)                                                                                                                         |
@@ -166,6 +168,46 @@ Gotify (`POST /message`, token in a header):
 headers:       X-Gotify-Key: <app token>
 body template: {"title": "Cronko: {{monitor.name}}", "message": "{{message}}", "priority": 5}
 ```
+
+### Backups and restore
+
+Set `BACKUP_DIR` and Cronko writes a consistent snapshot of the database inside
+the API process, using SQLite's online backup (safe while it keeps serving). Every
+`BACKUP_INTERVAL_HOURS` (default 24) it writes `cronko-<utc>.db`, checks the copy
+with `PRAGMA integrity_check`, renames it into place only if that passes (a failed
+run leaves no half-written file) and deletes all but the newest `BACKUP_KEEP`
+(default 7). Only files named `cronko-*.db` are ever deleted. After a restart the
+next backup waits out the rest of the interval. Failures are logged and shown in
+Settings, next to the time and size of the last good backup; they never stop the
+server. The same status is at `GET /api/settings/backup`.
+
+With the bundled `docker-compose.yml` the backups go to a second volume, so a
+damaged data volume does not take them along:
+
+```sh
+echo "BACKUP_DIR=/app/backups" >> .env
+docker compose up -d
+docker compose exec cronko ls -l /app/backups
+```
+
+A volume on the same disk is not a backup against disk loss: bind-mount a
+directory that something else copies off the host (`./backups:/app/backups`,
+owned by uid 1000), or point `BACKUP_DIR` at a subfolder of `/app/data`
+(`/app/data/backups`) if one volume is all you have.
+
+**Restore** (stop the API first, the script replaces the database file):
+
+```sh
+docker compose stop cronko
+docker compose run --rm --no-deps -v cronko_backups:/app/backups cronko \
+  node scripts/db.mjs restore /app/backups/cronko-2026-11-06T02-00-00-000Z.db
+docker compose up -d
+```
+
+Outside Docker: `node scripts/db.mjs restore path/to/cronko-....db` with
+`DATABASE_URL` set. It verifies the file, removes the stale `-wal`/`-shm` files
+and copies the backup over the database. `node scripts/db.mjs backup [file]` takes
+a one-off snapshot the same way.
 
 ### Ping by e-mail
 
@@ -220,6 +262,33 @@ Every other type is an active check, which Cronko does not do, and is listed und
 ```sh
 curl -X POST "$CRONKO/api/import/kuma?dryRun=true" -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" --data @kuma-backup.json
+```
+
+### Exporting and importing configuration
+
+`GET /api/export` returns your setup as JSON (`format: "cronko-export"`): monitors
+(settings, tags, paused state), tags, notification channels, status pages and
+maintenance windows. It has no heartbeat history and no ping tokens, so an
+imported monitor gets a new ping URL.
+
+- Channel secrets (webhook URLs, bot tokens, routing and user keys) are
+  `"[REDACTED]"` by default, so the file is safe to keep in version control or share.
+- `?includeSecrets=true` includes them in clear text and needs a browser session
+  or login: an API token, even with `write` scope, gets `403`. Treat that file like a password.
+- Every export is in the audit log (`config.exported`, `config.exported_with_secrets`).
+
+`POST /api/import/cronko` takes that JSON as the body, with `?dryRun=true` like the
+other importers, and answers `{ data: { dryRun, created, skipped, channels, statusPages, maintenanceWindows } }`
+(each section has `created` and `skipped`). Existing monitor names, status page slugs,
+maintenance window names and channels with the same type and name are skipped, so
+re-running is safe. A channel whose secrets were redacted is skipped with a
+reason (add it by hand, or export with secrets). Maintenance windows aimed at one
+monitor travel by its slug. Import needs a session too: API tokens cannot import.
+
+```sh
+curl -b "cronko_token=$SESSION" "$CRONKO/api/export" -o cronko.json
+curl -b "cronko_token=$SESSION" -X POST "$CRONKO/api/import/cronko?dryRun=true" \
+  -H "Content-Type: application/json" --data @cronko.json
 ```
 
 ### API tokens

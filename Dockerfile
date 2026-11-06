@@ -39,7 +39,7 @@ COPY --from=build /app/apps/web/dist ./web
 COPY --from=build /app/packages/database/src/migrations ./packages/database/src/migrations
 COPY scripts/db.mjs ./scripts/db.mjs
 
-RUN mkdir -p /app/data && chown -R node:node /app/data
+RUN mkdir -p /app/data /app/backups && chown -R node:node /app/data /app/backups
 VOLUME /app/data
 USER node
 EXPOSE 3000

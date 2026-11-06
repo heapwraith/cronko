@@ -554,6 +554,11 @@ export const translations = {
     "settings.tokensRevokeTitle": "Revogar token?",
     "settings.tokensRevokeMessage":
       "Quem usa o token “{name}” perde o acesso imediatamente. Isso não pode ser desfeito.",
+    "settings.backup": "Backup automático",
+    "settings.backupOff": "Desligado. Defina BACKUP_DIR no servidor para ativar (veja o README).",
+    "settings.backupNone": "Ativo, aguardando o primeiro backup.",
+    "settings.backupOk": "Último backup: {when} ({size})",
+    "settings.backupFailed": "O último backup falhou em {when}: {error}",
     "settings.history": "Histórico e Exibição",
     "settings.heartbeatHistory": "Histórico de Heartbeats (dias)",
     "settings.heartbeatHistoryHint": "Dias exibidos no calendário de heatmap.",
@@ -1267,6 +1272,11 @@ export const translations = {
     "settings.tokensRevokeTitle": "Revoke token?",
     "settings.tokensRevokeMessage":
       "Anything using the token “{name}” loses access immediately. This cannot be undone.",
+    "settings.backup": "Automatic backup",
+    "settings.backupOff": "Off. Set BACKUP_DIR on the server to enable it (see the README).",
+    "settings.backupNone": "On, waiting for the first backup.",
+    "settings.backupOk": "Last backup: {when} ({size})",
+    "settings.backupFailed": "The last backup failed at {when}: {error}",
     "settings.history": "History & Display",
     "settings.heartbeatHistory": "Heartbeat History (days)",
     "settings.heartbeatHistoryHint": "Days shown in calendar heatmap.",

@@ -15,7 +15,7 @@ import { logAuditEvent } from "../services/audit"
 
 export const maintenanceRoute = new Hono()
 
-const base = z.object({
+export const base = z.object({
   name: z.string().trim().min(1).max(80),
   schedule: z.string().trim().min(1).max(100),
   timezone: z.string().refine(isValidTimezone, "Unknown timezone"),
@@ -28,7 +28,7 @@ const base = z.object({
 type Body = z.infer<typeof base>
 
 /** Cross-field checks shared by create and update. Returns an error message or null. */
-async function problem(b: Partial<Body>): Promise<string | null> {
+export async function problem(b: Partial<Body>): Promise<string | null> {
   if (b.schedule !== undefined && !isValidSchedule(b.schedule, b.timezone ?? "UTC")) {
     return "Invalid schedule"
   }
@@ -42,7 +42,7 @@ async function problem(b: Partial<Body>): Promise<string | null> {
   return null
 }
 
-function targetValue(b: Pick<Body, "target" | "targetValue">): string | null {
+export function targetValue(b: Pick<Body, "target" | "targetValue">): string | null {
   if (b.target === "all") return null
   if (b.target === "tag") return normalizeTag(b.targetValue ?? "")
   return b.targetValue ?? null
