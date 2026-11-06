@@ -60,7 +60,7 @@ making product claims.
    flag, overlapping /start runs), with opt-in alerts per monitor (off by default;
    PagerDuty skips them).
 3. Public status page per group with SLA and incident history.
-4. Tags/groups, maintenance windows, daily/weekly digest.
+4. Tags are done (up to 10 per monitor, filter in the UI and `?tag=` in the API). Maintenance windows and a daily/weekly digest remain.
 
 ## P3 - reach
 

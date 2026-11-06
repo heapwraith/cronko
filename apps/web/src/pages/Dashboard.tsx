@@ -5,6 +5,7 @@ import { BarChart3 } from "lucide-react"
 import { useState } from "react"
 import { Link } from "react-router"
 import { DeparturesTable, sortBySeverity } from "@/components/monitors/DeparturesTable"
+import { TagFilter, useTagFilter } from "@/components/monitors/TagFilter"
 import { Button } from "@/components/shared/Button"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { SkeletonTable } from "@/components/shared/Skeleton"
@@ -19,6 +20,7 @@ const FILTERS: MonitorStatus[] = ["failed", "down", "missed", "pending", "health
 export default function DashboardPage() {
   const { t, locale } = useT()
   const [filter, setFilter] = useState<MonitorStatus | "all">("all")
+  const [tag, setTag] = useTagFilter()
 
   const { data, isPending } = useQuery({
     queryKey: ["dashboard"],
@@ -35,10 +37,12 @@ export default function DashboardPage() {
   })
 
   const monitors = data?.monitors ?? []
+  // The tag narrows the table and the status tabs; the headline stays global.
+  const tagged = tag ? monitors.filter((m) => m.tags.includes(tag)) : monitors
   const counts = new Map<string, number>()
-  for (const m of monitors) counts.set(m.status, (counts.get(m.status) ?? 0) + 1)
+  for (const m of tagged) counts.set(m.status, (counts.get(m.status) ?? 0) + 1)
   const attention = monitors.filter((m) => ATTENTION.has(m.status)).length
-  const rows = sortBySeverity(monitors).filter((m) => filter === "all" || m.status === filter)
+  const rows = sortBySeverity(tagged).filter((m) => filter === "all" || m.status === filter)
   const names = new Map(monitors.map((m) => [m.id, m.name]))
   const undelivered = (data?.deliveries ?? []).filter((d) => d.status !== "sent")
 
@@ -87,30 +91,33 @@ export default function DashboardPage() {
         />
       ) : (
         <>
-          <fieldset className="mx-0 mb-0 min-w-0 inline-flex w-fit max-w-full flex-wrap gap-1 rounded-lg border border-line bg-raised p-1">
-            <legend className="sr-only">{t("board.filterBy")}</legend>
-            {(["all", ...FILTERS] as const)
-              .filter((f) => f === "all" || (counts.get(f) ?? 0) > 0)
-              .map((f) => {
-                const active = filter === f
-                return (
-                  <button
-                    key={f}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() => setFilter(f)}
-                    className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                      active ? "bg-panel text-ink shadow-sm" : "text-dim hover:text-ink"
-                    }`}
-                  >
-                    {f === "all" ? t("board.all") : t(statusKey(f))}
-                    <span className="ml-2 font-mono tnum opacity-80">
-                      {f === "all" ? monitors.length : (counts.get(f) ?? 0)}
-                    </span>
-                  </button>
-                )
-              })}
-          </fieldset>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <fieldset className="mx-0 mb-0 min-w-0 inline-flex w-fit max-w-full flex-wrap gap-1 rounded-lg border border-line bg-raised p-1">
+              <legend className="sr-only">{t("board.filterBy")}</legend>
+              {(["all", ...FILTERS] as const)
+                .filter((f) => f === "all" || (counts.get(f) ?? 0) > 0)
+                .map((f) => {
+                  const active = filter === f
+                  return (
+                    <button
+                      key={f}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => setFilter(f)}
+                      className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                        active ? "bg-panel text-ink shadow-sm" : "text-dim hover:text-ink"
+                      }`}
+                    >
+                      {f === "all" ? t("board.all") : t(statusKey(f))}
+                      <span className="ml-2 font-mono tnum opacity-80">
+                        {f === "all" ? tagged.length : (counts.get(f) ?? 0)}
+                      </span>
+                    </button>
+                  )
+                })}
+            </fieldset>
+            <TagFilter monitors={monitors} value={tag} onChange={setTag} />
+          </div>
 
           {rows.length === 0 ? (
             <p className="py-8 text-center text-sm text-dim">{t("board.noResults")}</p>

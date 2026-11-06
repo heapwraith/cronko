@@ -113,6 +113,7 @@ export interface MonitorInput {
   gracePeriodSeconds: number
   maxDurationMs?: number
   alertOnAnomalies?: boolean
+  tags?: string[]
 }
 
 export const api = {
@@ -150,6 +151,7 @@ export const api = {
           scheduleCron: string | null
           timezone: string | null
           mutedUntil: string | null
+          tags: string[]
           nextExpectedAt: string | null
           createdAt: string
           updatedAt: string
@@ -172,6 +174,7 @@ export const api = {
         timezone: string | null
         mutedUntil: string | null
         alertOnAnomalies: boolean
+        tags: string[]
         nextExpectedAt: string | null
         paused: boolean
         slug: string

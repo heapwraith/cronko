@@ -11,7 +11,8 @@
     "./utils": "./src/utils.ts",
     "./schedule": "./src/schedule.ts",
     "./translations": "./src/translations.ts",
-    "./run-stats": "./src/run-stats.ts"
+    "./run-stats": "./src/run-stats.ts",
+    "./tags": "./src/tags.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
