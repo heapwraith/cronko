@@ -22,6 +22,7 @@ import { statusPagesRoute } from "./routes/status-pages"
 type Variables = {
   jwtPayload: { sub: string; email: string }
   requestId: string
+  apiToken?: { id: string; scope: "read" | "write" }
 }
 
 const app = new Hono<{ Variables: Variables }>()

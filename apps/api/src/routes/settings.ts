@@ -1,4 +1,11 @@
+import {
+  createApiToken,
+  findApiToken,
+  listApiTokens,
+  revokeApiToken,
+} from "@cronko/database/queries/api-tokens"
 import { getSetting, setSetting } from "@cronko/database/queries/settings"
+import type { apiTokens } from "@cronko/database/schema"
 import {
   DEFAULT_EXPECTED_INTERVAL_SECONDS,
   DEFAULT_GRACE_PERIOD_SECONDS,
@@ -13,11 +20,31 @@ import { zValidator } from "@hono/zod-validator"
 import { Hono } from "hono"
 import { z } from "zod"
 import { env } from "../env"
+import { API_TOKEN_SCOPES, generateApiToken } from "../services/api-tokens"
 import { logAuditEvent } from "../services/audit"
 import { loadDigestConfig, resetDigestClock, sendDigest } from "../services/digest"
 import { restartScheduler } from "../services/scheduler"
 
 export const settingsRoute = new Hono()
+
+const sessionUserId = (c: { get: (k: "jwtPayload") => unknown }) =>
+  (c.get("jwtPayload") as { sub: string }).sub
+
+/** Never includes the hash; `status` folds revoked/expired for the UI. */
+function tokenView(row: Omit<typeof apiTokens.$inferSelect, "tokenHash" | "userId">) {
+  const expired = row.expiresAt ? row.expiresAt.getTime() <= Date.now() : false
+  return {
+    id: row.id,
+    name: row.name,
+    prefix: row.prefix,
+    scope: row.scope,
+    expiresAt: row.expiresAt?.toISOString() ?? null,
+    lastUsedAt: row.lastUsedAt?.toISOString() ?? null,
+    revokedAt: row.revokedAt?.toISOString() ?? null,
+    createdAt: row.createdAt.toISOString(),
+    status: row.revokedAt ? "revoked" : expired ? "expired" : "active",
+  }
+}
 
 const updateSettingsSchema = z.object({
   instanceName: z.string().min(1).max(100).optional(),
@@ -130,6 +157,69 @@ settingsRoute.post("/digest/test", async (c) => {
   const { queued } = await sendDigest({ ...config, frequency }, new Date())
   if (queued === 0) return c.json({ error: "no enabled notification channel" }, 400)
   return c.json({ data: { queued } })
+})
+
+// Scoped API tokens. Session only: authenticate refuses API tokens on this path.
+settingsRoute.get("/tokens", async (c) => {
+  const rows = await listApiTokens(sessionUserId(c))
+  return c.json({ data: rows.map(tokenView) })
+})
+
+const createTokenSchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  scope: z.enum(API_TOKEN_SCOPES),
+  expiresInDays: z.number().int().min(1).max(3650).optional(),
+})
+
+settingsRoute.post("/tokens", zValidator("json", createTokenSchema), async (c) => {
+  const body = c.req.valid("json")
+  const userId = sessionUserId(c)
+  const { token, hash, prefix } = generateApiToken()
+  const now = new Date()
+  const expiresAt = body.expiresInDays
+    ? new Date(now.getTime() + body.expiresInDays * 86_400_000)
+    : null
+  const id = crypto.randomUUID()
+  await createApiToken({
+    id,
+    userId,
+    name: body.name,
+    prefix,
+    tokenHash: hash,
+    scope: body.scope,
+    expiresAt,
+    createdAt: now,
+  })
+
+  logAuditEvent({
+    userId,
+    action: "api_token.created",
+    resourceType: "api_token",
+    resourceId: id,
+    metadata: { name: body.name, scope: body.scope, expiresAt: expiresAt?.toISOString() ?? null },
+  }).catch(() => {})
+
+  const row = await findApiToken(id, userId)
+  // The only time the secret is returned.
+  return c.json({ data: { ...tokenView(row as NonNullable<typeof row>), token } }, 201)
+})
+
+settingsRoute.delete("/tokens/:id", async (c) => {
+  const userId = sessionUserId(c)
+  const id = c.req.param("id")
+  const row = await findApiToken(id, userId)
+  if (!row) return c.json({ error: "token not found", code: "NOT_FOUND" }, 404)
+  await revokeApiToken(id, userId)
+
+  logAuditEvent({
+    userId,
+    action: "api_token.revoked",
+    resourceType: "api_token",
+    resourceId: id,
+    metadata: { name: row.name, scope: row.scope },
+  }).catch(() => {})
+
+  return c.json({ data: { id } })
 })
 
 settingsRoute.post("/", zValidator("json", updateSettingsSchema), async (c) => {
