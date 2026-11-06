@@ -1,24 +1,33 @@
 import { Check, Copy } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import { useT } from "@/lib/i18n"
+import { Button } from "./Button"
 
-export function CopyButton({ text }: { text: string }) {
+export function CopyButton({ text, label }: { text: string; label?: string }) {
+  const { t } = useT()
   const [copied, setCopied] = useState(false)
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  useEffect(() => () => clearTimeout(timer.current), [])
 
-  async function handleCopy() {
-    await (
-      navigator as Navigator & { clipboard: { writeText: (s: string) => Promise<void> } }
-    ).clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      clearTimeout(timer.current)
+      timer.current = setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Clipboard needs a secure context; the URL stays selectable in the page.
+    }
   }
 
   return (
-    <button
-      onClick={handleCopy}
-      className="inline-flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-200"
-    >
-      {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
-      {copied ? "Copied" : "Copy"}
-    </button>
+    <Button variant="secondary" size="sm" onClick={copy} aria-live="polite">
+      {copied ? (
+        <Check className="h-3.5 w-3.5 text-healthy" aria-hidden="true" />
+      ) : (
+        <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+      )}
+      {copied ? t("detail.copied") : (label ?? t("detail.copy"))}
+    </Button>
   )
 }

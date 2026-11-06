@@ -150,6 +150,7 @@ export const api = {
         status: string
         expectedIntervalSeconds: number
         gracePeriodSeconds: number
+        maxDurationMs: number | null
         paused: boolean
         slug: string
         token: string

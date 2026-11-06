@@ -1,43 +1,30 @@
+import { formatDuration } from "@cronko/shared/utils"
 import { useEffect, useState } from "react"
+import { useT } from "@/lib/i18n"
 
-interface NextPingCountdownProps {
+/** Time until the next ping is due (or how late it is), in the UI language. */
+export function NextPingCountdown({
+  lastPingIso,
+  intervalSeconds,
+}: {
   lastPingIso: string | null
   intervalSeconds: number
-}
-
-export function NextPingCountdown({ lastPingIso, intervalSeconds }: NextPingCountdownProps) {
-  const [label, setLabel] = useState("—")
+}) {
+  const { t } = useT()
+  const [now, setNow] = useState(() => Date.now())
 
   useEffect(() => {
-    if (!lastPingIso) {
-      setLabel("—")
-      return
-    }
-
-    const lastMs = new Date(lastPingIso).getTime()
-
-    function tick() {
-      const nextMs = lastMs + intervalSeconds * 1000
-      const remaining = Math.max(0, Math.floor((nextMs - Date.now()) / 1000))
-
-      if (remaining <= 0) {
-        setLabel("due now")
-        return
-      }
-
-      const h = Math.floor(remaining / 3600)
-      const m = Math.floor((remaining % 3600) / 60)
-      const s = remaining % 60
-
-      if (h > 0) setLabel(`in ${h}h ${m}m`)
-      else if (m > 0) setLabel(`in ${m}m ${s}s`)
-      else setLabel(`in ${s}s`)
-    }
-
-    tick()
-    const id = setInterval(tick, 1000)
+    const id = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(id)
-  }, [lastPingIso, intervalSeconds])
+  }, [])
 
-  return <span className="tabular-nums">{label}</span>
+  if (!lastPingIso) return <span>—</span>
+
+  const due = new Date(lastPingIso).getTime() + intervalSeconds * 1000
+  const time = formatDuration(Math.abs(due - now))
+  return (
+    <span className="tnum">
+      {due >= now ? t("board.in", { time }) : t("board.overdue", { time })}
+    </span>
+  )
 }
