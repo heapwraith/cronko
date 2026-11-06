@@ -38,16 +38,16 @@ making product claims.
 
 ## P0 - reliability (a lost alert is fatal)
 
-1. Notification delivery: retry with backoff, per-attempt log, visible failures in the UI.
+1. ~~Notification delivery: retry with backoff, per-attempt log, visible failures in the UI.~~ Done.
 2. ~~"Monitor the monitor": optional outbound heartbeat.~~ Done (`SELF_HEARTBEAT_URL`).
-3. Tests for the notifier and the routes are done, and so is the e2e smoke (`pnpm e2e`, Playwright: login → monitor → failing ping → run page), which also runs in CI.
-4. Verify the Docker image on amd64 and arm64 (CI builds it; not yet run on a real host).
-5. Accessibility pass on the legacy UI (labels, button types, keyboard handlers); the lint rules are warnings today.
+3. ~~Tests for the notifier and the routes, and an e2e smoke.~~ Done (`pnpm e2e`, also in CI).
+4. Verify the Docker image on a real amd64 and arm64 host. CI builds and boots it on amd64 only; the release workflow builds both.
+5. ~~Accessibility pass on the legacy UI.~~ Done; the a11y lint rules are errors.
 
 ## P1 - parity with Healthchecks
 
 1. ~~Cron expression + timezone schedules, with next-expected-run.~~ Done.
-2. Per-check event log with captured output (size-limited).
+2. ~~Per-check event log with captured output (size-limited).~~ Done (run page, 10 KB output).
 3. More channels: generic webhook, ntfy, Pushover, Teams and PagerDuty are done.
 4. Ping by e-mail (still missing); mute per check is done (1 h to 7 days, state and incidents still tracked).
 
@@ -65,7 +65,8 @@ making product claims.
 ## P3 - reach
 
 - Teams and roles, scoped API tokens, importers (Healthchecks, Kuma).
-- Prometheus metrics; semantic versioning and a changelog (everything is `0.0.0`).
+- Prometheus metrics.
+- ~~Semantic versioning and a changelog.~~ Done from 0.1.0 (`CHANGELOG.md`).
 
 ## Non-goals
 
