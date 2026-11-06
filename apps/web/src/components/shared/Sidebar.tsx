@@ -1,30 +1,27 @@
-"use client"
-
-import { useState } from "react"
-import Link from "next/link"
 import {
-  LayoutDashboard,
   Activity,
   AlertTriangle,
   Bell,
-  Settings,
   BookOpen,
   ChevronLeft,
   ChevronRight,
-  Menu,
-  X,
-  Sun,
-  Moon,
+  LayoutDashboard,
   LogOut,
+  Menu,
+  Moon,
+  Settings,
+  Sun,
+  X,
 } from "lucide-react"
+import { useState } from "react"
+import { Link, useNavigate } from "react-router"
+import { api } from "@/lib/api"
+import { useT } from "@/lib/i18n"
+import { CompactToggle } from "./CompactToggle"
 import { CronkoLogo } from "./CronkoLogo"
 import { NavLink } from "./NavLink"
 import { useTheme } from "./ThemeProvider"
-import { CompactToggle } from "./CompactToggle"
-import { useT } from "@/lib/i18n"
-import { useRouter } from "next/navigation"
 import { UserAvatar } from "./UserAvatar"
-import { api } from "@/lib/api"
 
 function ThemeToggle() {
   const { t } = useT()
@@ -34,7 +31,8 @@ function ThemeToggle() {
   const label = theme === "dark" ? t("auth.switchToLight") : t("auth.switchToDark")
 
   const handleClick = (e: React.MouseEvent) => {
-    const fn = (window as Window & { __cronkoSetOrigin?: (x: number, y: number) => void }).__cronkoSetOrigin
+    const fn = (window as Window & { __cronkoSetOrigin?: (x: number, y: number) => void })
+      .__cronkoSetOrigin
     if (fn) fn(e.clientX, e.clientY)
     setTheme(next)
   }
@@ -53,10 +51,17 @@ function ThemeToggle() {
 
 function LogoutButton() {
   const { t } = useT()
-  const router = useRouter()
+  const navigate = useNavigate()
   return (
     <button
-      onClick={async () => { try { await api.auth.logout() } catch { /* logout best-effort */ } router.push("/login") }}
+      onClick={async () => {
+        try {
+          await api.auth.logout()
+        } catch {
+          /* logout best-effort */
+        }
+        navigate("/login")
+      }}
       className="flex items-center justify-center h-8 w-8 rounded-lg text-[#697386] dark:text-zinc-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all duration-200"
       title={t("nav.logout")}
       aria-label={t("nav.logout")}
@@ -112,7 +117,10 @@ export function Sidebar({ instanceName }: { instanceName?: string }) {
       </button>
 
       {mobileOpen && (
-        <div className="lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+        <div
+          className="lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+          onClick={() => setMobileOpen(false)}
+        />
       )}
 
       <aside
@@ -122,22 +130,37 @@ export function Sidebar({ instanceName }: { instanceName?: string }) {
         style={{ transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)" }}
       >
         {/* Header */}
-        <div className={`flex items-center px-4 py-4 border-b border-zinc-200 dark:border-zinc-800/80 ${collapsed ? "justify-center" : "justify-between"}`}>
+        <div
+          className={`flex items-center px-4 py-4 border-b border-zinc-200 dark:border-zinc-800/80 ${collapsed ? "justify-center" : "justify-between"}`}
+        >
           {collapsed ? (
-            <button onClick={() => setCollapsed(false)} className="flex items-center justify-center h-8 w-8 rounded text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors" title={t("nav.expand")}>
+            <button
+              onClick={() => setCollapsed(false)}
+              className="flex items-center justify-center h-8 w-8 rounded text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              title={t("nav.expand")}
+            >
               <ChevronRight className="h-4 w-4" strokeWidth={1.5} />
             </button>
           ) : (
             <>
-              <Link href="/dashboard" className="flex items-center gap-2 overflow-hidden">
+              <Link to="/dashboard" className="flex items-center gap-2 overflow-hidden">
                 <CronkoLogo className="h-5 w-5 text-emerald-400 shrink-0" />
-                <span className="font-semibold text-sm truncate text-zinc-900 dark:text-zinc-100">{instanceName ?? "Cronko"}</span>
+                <span className="font-semibold text-sm truncate text-zinc-900 dark:text-zinc-100">
+                  {instanceName ?? "Cronko"}
+                </span>
               </Link>
               <div className="flex items-center gap-1">
-                <button onClick={() => setCollapsed(true)} className="hidden lg:flex items-center justify-center h-6 w-6 rounded text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shrink-0" title={t("nav.collapse")}>
+                <button
+                  onClick={() => setCollapsed(true)}
+                  className="hidden lg:flex items-center justify-center h-6 w-6 rounded text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shrink-0"
+                  title={t("nav.collapse")}
+                >
                   <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
                 </button>
-                <button onClick={() => setMobileOpen(false)} className="lg:hidden flex items-center justify-center h-6 w-6 rounded text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                <button
+                  onClick={() => setMobileOpen(false)}
+                  className="lg:hidden flex items-center justify-center h-6 w-6 rounded text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                >
                   <X className="h-4 w-4" strokeWidth={1.5} />
                 </button>
               </div>
@@ -148,7 +171,12 @@ export function Sidebar({ instanceName }: { instanceName?: string }) {
         {/* Navigation */}
         <nav className="flex-1 py-2 space-y-0.5">
           {items.map((item) => (
-            <NavLink key={item.href} href={item.href} label={collapsed ? "" : item.label} collapsed={collapsed}>
+            <NavLink
+              key={item.href}
+              href={item.href}
+              label={collapsed ? "" : item.label}
+              collapsed={collapsed}
+            >
               <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
             </NavLink>
           ))}
@@ -163,15 +191,23 @@ export function Sidebar({ instanceName }: { instanceName?: string }) {
         className={`lg:hidden fixed inset-y-0 left-0 z-50 w-56 shadow-[1px_0_3px_rgba(0,0,0,0.04)] dark:shadow-[1px_0_3px_rgba(0,0,0,0.2)] bg-[#fbfbfa]/95 dark:bg-zinc-900/90 backdrop-blur-xl flex flex-col transition-transform ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
-        style={{ transitionDuration: "300ms", transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)" }}
+        style={{
+          transitionDuration: "300ms",
+          transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)",
+        }}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-4 border-b border-zinc-200 dark:border-zinc-800/80">
-          <Link href="/dashboard" className="flex items-center gap-2 overflow-hidden">
+          <Link to="/dashboard" className="flex items-center gap-2 overflow-hidden">
             <CronkoLogo className="h-5 w-5 text-emerald-400 shrink-0" />
-            <span className="font-semibold text-sm truncate text-zinc-900 dark:text-zinc-100">{instanceName ?? "Cronko"}</span>
+            <span className="font-semibold text-sm truncate text-zinc-900 dark:text-zinc-100">
+              {instanceName ?? "Cronko"}
+            </span>
           </Link>
-          <button onClick={() => setMobileOpen(false)} className="flex items-center justify-center h-6 w-6 rounded text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="flex items-center justify-center h-6 w-6 rounded text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+          >
             <X className="h-4 w-4" strokeWidth={1.5} />
           </button>
         </div>

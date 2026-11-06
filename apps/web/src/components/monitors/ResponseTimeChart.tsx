@@ -1,5 +1,3 @@
-"use client"
-
 interface ResponseTimeChartProps {
   heartbeats: Array<{
     receivedAt: string
@@ -21,7 +19,7 @@ export function ResponseTimeChart({ heartbeats }: ResponseTimeChartProps) {
     )
   }
 
-  const values = hbsWithDuration.map((hb) => hb.durationMs!)
+  const values = hbsWithDuration.flatMap((hb) => (hb.durationMs === null ? [] : [hb.durationMs]))
   const max = Math.max(...values)
   const min = Math.min(...values)
   const range = max - min || 1
@@ -32,8 +30,7 @@ export function ResponseTimeChart({ heartbeats }: ResponseTimeChartProps) {
     return `${x},${y}`
   })
 
-  const avg =
-    values.reduce((sum, v) => sum + v, 0) / values.length
+  const avg = values.reduce((sum, v) => sum + v, 0) / values.length
   const sorted = [...values].sort((a, b) => a - b)
   const p95 = sorted[Math.floor(sorted.length * 0.95)] ?? sorted[sorted.length - 1] ?? 0
   const p50 = sorted[Math.floor(sorted.length * 0.5)] ?? 0

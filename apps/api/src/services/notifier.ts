@@ -1,98 +1,106 @@
-import * as nodemailer from "nodemailer"
-import { findEnabledNotificationChannels } from "@cronko/database/queries/notifications"
-import { env } from "../env"
+import {
+  deleteDeliveriesOlderThan,
+  enqueueDeliveries,
+  findDueDeliveries,
+  findEnabledNotificationChannels,
+  markDeliveryAttemptFailed,
+  markDeliverySent,
+} from "@cronko/database/queries/notifications"
 import { logger } from "../lib/logger"
-import type {
-  DiscordConfig,
-  TelegramConfig,
-  EmailConfig,
-} from "@cronko/shared"
-import type { notificationChannels } from "@cronko/database/schema"
+import { type ChannelRow, DeliveryError, deliver } from "./channels"
 
-type NotificationEvent = "missed" | "down" | "recovered"
+export type NotificationEvent = "missed" | "down" | "recovered" | "slow"
 
 const messages: Record<NotificationEvent, (name: string) => string> = {
   missed: (name) => `⚠️ ${name} não executou no tempo esperado`,
   down: (name) => `🔴 ${name} está down`,
   recovered: (name) => `✅ ${name} voltou a executar normalmente`,
+  slow: (name) => `🐢 ${name} excedeu a duração máxima configurada`,
 }
 
-type ChannelRow = typeof notificationChannels.$inferSelect
+/** Delay before retry N (1-based): 30s, 1m, 2m, 5m, 10m — then give up. */
+export const RETRY_DELAYS_MS = [30_000, 60_000, 120_000, 300_000, 600_000]
+export const MAX_ATTEMPTS = RETRY_DELAYS_MS.length + 1
 
-async function sendToChannel(
-  channel: ChannelRow,
-  event: NotificationEvent,
-  text: string,
-) {
+/**
+ * Queue an alert for every enabled channel. Returns immediately: delivery (and
+ * its retries) happens in the outbox worker, so a slow or failing channel can
+ * never stall the scheduler, and queued alerts survive a restart.
+ */
+export async function sendNotification(monitor: { name: string }, event: NotificationEvent) {
+  const channels = await findEnabledNotificationChannels()
+  if (channels.length === 0) return
+
+  const now = new Date()
+  await enqueueDeliveries(
+    channels.map((channel: ChannelRow) => ({
+      id: crypto.randomUUID(),
+      channelId: channel.id,
+      monitorName: monitor.name,
+      event,
+      message: messages[event](monitor.name),
+    })),
+    now,
+  )
+
+  void processDueDeliveries()
+}
+
+let processing = false
+
+/** Attempt every due delivery once. Safe to call often; runs one pass at a time. */
+export async function processDueDeliveries(now = new Date()): Promise<number> {
+  if (processing) return 0
+  processing = true
+  let handled = 0
+
   try {
-    const cfg = channel.config as
-      | DiscordConfig
-      | TelegramConfig
-      | EmailConfig
+    for (const { delivery, channel } of await findDueDeliveries(now)) {
+      const attempts = delivery.attempts + 1
+      handled++
+      try {
+        await deliver(channel, delivery.event, delivery.message)
+        await markDeliverySent(delivery.id, attempts, new Date())
+      } catch (err) {
+        const retryable = err instanceof DeliveryError ? err.retryable : true
+        const error = err instanceof Error ? err.message : "delivery failed"
+        const delay = RETRY_DELAYS_MS[attempts - 1]
+        const retryAt = retryable && delay !== undefined ? new Date(now.getTime() + delay) : null
 
-    if (channel.type === "discord") {
-      const discordCfg = cfg as DiscordConfig
-      await fetch(discordCfg.webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: text }),
-      })
-    } else if (channel.type === "slack") {
-      const slackCfg = cfg as { webhookUrl: string }
-      await fetch(slackCfg.webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      })
-    } else if (channel.type === "telegram") {
-      const telegramCfg = cfg as TelegramConfig
-      await fetch(
-        `https://api.telegram.org/bot${telegramCfg.botToken}/sendMessage`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chat_id: telegramCfg.chatId,
-            text,
-          }),
-        },
-      )
-    } else if (channel.type === "email") {
-      const emailCfg = cfg as EmailConfig
-      if (env.SMTP_HOST) {
-        const transporter = nodemailer.createTransport({
-          host: env.SMTP_HOST,
-          port: env.SMTP_PORT ?? 587,
-          secure: (env.SMTP_PORT ?? 587) === 465,
-          auth: env.SMTP_USER
-            ? { user: env.SMTP_USER, pass: env.SMTP_PASS }
-            : undefined,
-        })
-        await transporter.sendMail({
-          from: env.SMTP_FROM,
-          to: emailCfg.to,
-          subject: `Cronko — ${event} alert`,
-          text,
-        })
+        await markDeliveryAttemptFailed(delivery.id, { attempts, error, retryAt, now: new Date() })
+        logger.warn(
+          {
+            channel: channel.name,
+            type: channel.type,
+            event: delivery.event,
+            attempts,
+            error,
+            willRetry: retryAt !== null,
+          },
+          "notification delivery failed",
+        )
       }
     }
   } catch (err) {
-    logger.error(
-      { err, event, channelType: channel.type, channelName: channel.name },
-      "notification send failed",
-    )
+    logger.error({ err }, "notification worker failed")
+  } finally {
+    processing = false
+  }
+  return handled
+}
+
+/** Send a one-off test message and report the outcome to the caller. */
+export async function sendTestNotification(
+  channel: ChannelRow,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    await deliver(channel, "recovered", messages.recovered("Test Notification"))
+    return { ok: true }
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "delivery failed" }
   }
 }
 
-export async function sendNotification(
-  monitor: { name: string },
-  event: NotificationEvent,
-  specificChannels?: ChannelRow[],
-) {
-  const channels = specificChannels ?? await findEnabledNotificationChannels()
-  const text = messages[event](monitor.name)
-
-  const tasks = channels.map((channel: ChannelRow) => sendToChannel(channel, event, text))
-
-  await Promise.allSettled(tasks)
+export async function cleanupDeliveries(retentionDays: number) {
+  await deleteDeliveriesOlderThan(new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000))
 }

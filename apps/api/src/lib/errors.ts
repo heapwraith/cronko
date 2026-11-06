@@ -7,9 +7,9 @@ export const ErrorCode = {
   CONFLICT: "CONFLICT",
   INTERNAL_ERROR: "INTERNAL_ERROR",
   CSRF_INVALID: "CSRF_INVALID",
-} as const;
+} as const
 
-export type ErrorCodeType = (typeof ErrorCode)[keyof typeof ErrorCode];
+export type ErrorCodeType = (typeof ErrorCode)[keyof typeof ErrorCode]
 
 export class AppError extends Error {
   constructor(
@@ -18,20 +18,20 @@ export class AppError extends Error {
     public code: ErrorCodeType,
     public details?: unknown,
   ) {
-    super(message);
-    this.name = "AppError";
+    super(message)
+    this.name = "AppError"
   }
 }
 
 export function errorResponse(
   message: string,
   code: ErrorCodeType,
-  status: number,
+  _status: number,
   requestId?: string,
 ) {
   return {
     error: message,
     code,
     ...(requestId ? { requestId } : {}),
-  };
+  }
 }

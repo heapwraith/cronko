@@ -1,17 +1,18 @@
-import { Hono } from "hono"
-import { setCookie, deleteCookie, getCookie } from "hono/cookie"
-import { z } from "zod"
-import { zValidator } from "@hono/zod-validator"
 import { findUserByEmail } from "@cronko/database/queries/users"
+import { zValidator } from "@hono/zod-validator"
+import { Hono } from "hono"
+import { deleteCookie, getCookie, setCookie } from "hono/cookie"
+import { z } from "zod"
+import { env } from "../env"
+import { clientIp } from "../lib/clientIp"
+import { authenticate } from "../middleware/authenticate"
+import { logAuditEvent } from "../services/audit"
 import {
-  verifyPassword,
   generateAccessToken,
   generateRefreshToken,
+  verifyPassword,
   verifyRefreshToken,
 } from "../services/auth"
-import { authenticate } from "../middleware/authenticate"
-import { env } from "../env"
-import { logAuditEvent } from "../services/audit"
 
 export const authRoute = new Hono()
 
@@ -50,13 +51,10 @@ const isProd = () => env.NODE_ENV === "production"
 authRoute.post("/login", zValidator("json", loginSchema), async (c) => {
   const { email, password } = c.req.valid("json")
 
-  const ip = c.req.header("x-forwarded-for") ?? c.req.header("x-real-ip") ?? "127.0.0.1"
+  const ip = clientIp(c)
 
   if (!checkLoginRateLimit(ip, email)) {
-    return c.json(
-      { error: "Too many login attempts. Try again later.", code: "RATE_LIMITED" },
-      429,
-    )
+    return c.json({ error: "Too many login attempts. Try again later.", code: "RATE_LIMITED" }, 429)
   }
 
   const user = await findUserByEmail(email)
@@ -88,7 +86,7 @@ authRoute.post("/login", zValidator("json", loginSchema), async (c) => {
   setCookie(c, "cronko_token", accessToken, {
     httpOnly: true,
     secure: isProd(),
-    sameSite: "Lax",
+    sameSite: "Strict",
     path: "/",
     maxAge: 15 * 60,
   })
@@ -96,7 +94,7 @@ authRoute.post("/login", zValidator("json", loginSchema), async (c) => {
   setCookie(c, "cronko_refresh", refreshToken, {
     httpOnly: true,
     secure: isProd(),
-    sameSite: "Lax",
+    sameSite: "Strict",
     path: "/",
     maxAge: 7 * 24 * 60 * 60,
   })
@@ -123,10 +121,7 @@ authRoute.post("/refresh", async (c) => {
   const refreshToken = getCookie(c, "cronko_refresh")
 
   if (!refreshToken) {
-    return c.json(
-      { error: "No refresh token", code: "UNAUTHORIZED" },
-      401,
-    )
+    return c.json({ error: "No refresh token", code: "UNAUTHORIZED" }, 401)
   }
 
   try {
@@ -136,9 +131,9 @@ authRoute.post("/refresh", async (c) => {
     setCookie(c, "cronko_token", accessToken, {
       httpOnly: true,
       secure: isProd(),
-    sameSite: "Lax",
-    path: "/",
-    maxAge: 15 * 60,
+      sameSite: "Strict",
+      path: "/",
+      maxAge: 15 * 60,
     })
 
     const now = Math.floor(Date.now() / 1000)
@@ -155,13 +150,10 @@ authRoute.post("/refresh", async (c) => {
     deleteCookie(c, "cronko_refresh", {
       httpOnly: true,
       secure: isProd(),
-    sameSite: "Lax",
-    path: "/",
-  })
-  return c.json(
-    { error: "Refresh token expired or invalid", code: "UNAUTHORIZED" },
-      401,
-    )
+      sameSite: "Strict",
+      path: "/",
+    })
+    return c.json({ error: "Refresh token expired or invalid", code: "UNAUTHORIZED" }, 401)
   }
 })
 
@@ -169,14 +161,14 @@ authRoute.post("/logout", authenticate, async (c) => {
   deleteCookie(c, "cronko_token", {
     httpOnly: true,
     secure: isProd(),
-    sameSite: "Lax",
+    sameSite: "Strict",
     path: "/",
   })
 
   deleteCookie(c, "cronko_refresh", {
     httpOnly: true,
     secure: isProd(),
-    sameSite: "Lax",
+    sameSite: "Strict",
     path: "/",
   })
 

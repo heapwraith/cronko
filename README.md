@@ -1,191 +1,114 @@
 # Cronko
 
-Know when your jobs stop running.
+Know when your jobs stop running. A self-hosted dead-man's-switch for cron jobs,
+backups and ETLs: one container, one SQLite file.
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-24-green.svg)](https://nodejs.org)
-[![pnpm](https://img.shields.io/badge/pnpm-9-orange.svg)](https://pnpm.io)
 
-[Leia em português](README.pt-BR.md)
-
-```
-$ docker compose up
-✔ db        Started
-✔ api       Started  (http://localhost:3001)
-✔ web       Started  (http://localhost:3000)
-```
-
----
-
-## What it is
-
-Cronko monitors cron jobs, backup scripts, ETL pipelines, and any scheduled
-automation that can fire an HTTP request. You configure a monitor with an
-expected interval, receive a ping URL, and the system alerts you when a job
-misses its window.
-
-It is not an observability platform. It does not collect metrics, parse logs,
-or do distributed tracing. If you need Datadog, this is not it. Cronko does
-one thing: it tells you when your jobs stop running.
+> **Resumo em português:** o Cronko avisa quando um cron job, backup ou ETL deixa de
+> rodar. Cada monitor ganha uma URL de ping; se ela não for chamada no prazo, você é
+> alertado (Discord, Telegram, e-mail, Slack). Instalação: veja _Quick start_ abaixo
+> (`docker compose up -d`) e abra `http://localhost:3000`. A interface tem pt-BR e en.
 
 ## How it works
 
-Each monitor gets a unique ping URL. Your cron job hits that URL when it runs.
-The scheduler checks every few seconds whether each monitor received a heartbeat
-within its expected window. Late heartbeats trigger a miss, prolonged absence
-triggers a down status, and recovery resets everything. Incidents are tracked
-with start/end timestamps. Notifications fire on every state transition through
-Discord, Telegram, Email, or Slack.
+Each monitor has a unique ping URL. Your job calls it when it runs. If no ping
+arrives within _interval + grace_, the monitor becomes **missed**; if it stays
+silent for another interval it becomes **down**. A ping brings it back to
+**healthy**, closes the incident and sends a recovery alert.
 
 ```bash
-# in your crontab
-0 2 * * * /usr/local/bin/backup.sh && \
-  curl -s https://cronko.example.com/ping/your-token > /dev/null
+# crontab: ping only if the backup succeeded
+0 2 * * * /usr/local/bin/backup.sh && curl -fsS https://cronko.example.com/ping/TOKEN
+
+# measure duration and report the exit code
+curl -fsS https://cronko.example.com/ping/TOKEN/start
+./long-job.sh; code=$?
+curl -fsS "https://cronko.example.com/ping/TOKEN/finish?d=$SECONDS&exit=$code"
 ```
 
-## Features
+Cronko is not an observability platform and does not run active checks
+(HTTP/TCP). For uptime of services, use a tool like Uptime Kuma next to it.
 
-- Heartbeat monitoring for cron jobs, scripts, ETLs
-- Status detection: pending → healthy → missed → down → recovered
-- Configurable grace periods before marking as missed
-- Incident tracking with timestamps for every status transition
-- Pulse (start/finish) for precise duration measurement of long-running jobs
-- Max duration alerts when jobs exceed configured limits
-- Notifications via Discord, Telegram, Email, Slack
-- Public SVG status badge (`/badge/:token`) without authentication
-- Dashboard with donut chart, sparklines, animated counters, 24h uptime
-- Automatic heartbeat cleanup (configurable retention)
-- Dark / Light / System theme with animated View Transition API
-- Compact mode for smaller screens
-- CSV export for heartbeat data
-- i18n: English and Portuguese (Brazil)
-- SQLite for development, PostgreSQL for production
-- Redis for distributed rate limiting (optional)
-- Docker and local dev support
-- Health probes: `/health`, `/health/live`, `/health/ready`
-- Scheduler metrics: `/health/metrics`
-- Audit logging for all critical actions
-- Database backup and restore scripts
-- Refresh token rotation with automatic renewal
-
-## Installation
-
-### Docker
+## Quick start
 
 ```bash
-git clone https://github.com/wesllen-lima/cronko
-cd cronko
-cp .env.example .env
-# edit .env — set JWT_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD
-docker compose up -d
+git clone https://github.com/wesllen-lima/cronko && cd cronko
+cp .env.example .env     # set JWT_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD
+docker compose up -d     # http://localhost:3000
 ```
 
-Open `http://localhost:3000` and log in with `ADMIN_EMAIL` and `ADMIN_PASSWORD`.
+Data lives in the `cronko_data` volume (`/app/data/cronko.db`). Behind a reverse
+proxy, set `TRUST_PROXY=true` and `TRUSTED_ORIGINS=https://your.domain`.
 
-### Local development
+### Development
 
 ```bash
 pnpm install
 cp .env.example .env
-# DATABASE_URL defaults to SQLite — no additional setup needed
-pnpm dev
+pnpm --filter @cronko/api dev     # API on :3001
+pnpm --filter @cronko/web dev     # web on :3000, proxies the API
 ```
 
-API runs on `:3001`, web on `:3000`.
+## Features
 
-## Environment variables
+- Heartbeat monitoring with grace periods and a missed → down → recovered lifecycle
+- Pulse (`/start` + `/finish`) with duration, exit code and optional output
+- Max-duration alerts, incident history, audit log
+- Alerts to Discord, Telegram, e-mail (SMTP) and Slack
+- Public SVG status badge (`/badge/:token`), CSV export of heartbeats
+- Dashboard, dark/light theme, English and pt-BR, installable PWA
+- OpenAPI docs at `/docs`; health probes at `/health/live` and `/health/ready`
+- Online backup and restore (`node scripts/db.mjs backup|restore`)
 
-| Variable | Required | Description |
-|---|---|---|
-| `DATABASE_URL` | Yes | `file:./data/cronko.db` (SQLite) or `postgresql://...` |
-| `API_PORT` | No | API server port (default: 3001) |
-| `API_HOST` | No | API bind address (default: 0.0.0.0) |
-| `NEXT_PUBLIC_API_URL` | No | URL the frontend uses to reach the API |
-| `JWT_SECRET` | Yes | Key for signing JWT tokens (min 32 chars) |
-| `ADMIN_EMAIL` | No | Auto-created admin user email on first boot |
-| `ADMIN_PASSWORD` | No | Auto-created admin user password (min 8 chars) |
-| `SMTP_HOST` | No | SMTP server for email notifications |
-| `SMTP_PORT` | No | SMTP port (default: 587) |
-| `SMTP_USER` | No | SMTP username |
-| `SMTP_PASS` | No | SMTP password |
-| `SMTP_FROM` | No | From address for notification emails |
-| `TELEGRAM_BOT_TOKEN` | No | Bot token for Telegram notifications |
-| `CORS_ORIGINS` | No | Additional CORS origins, comma-separated |
-| `REDIS_URL` | No | Redis URL for distributed rate limiting |
-| `NODE_ENV` | No | `development`, `production`, or `test` (default: `development`) |
+## Configuration
 
-## Notification integrations
+| Variable                                                        | Required | Description                                                              |
+| --------------------------------------------------------------- | -------- | ------------------------------------------------------------------------ |
+| `JWT_SECRET`                                                    | yes      | Signing key, at least 32 characters                                      |
+| `DATABASE_URL`                                                  | yes      | SQLite file, e.g. `file:./data/cronko.db` (set in the image)             |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD`                                 | no       | Admin account created on first boot                                      |
+| `API_PORT`, `API_HOST`                                          | no       | Default `3001` / `0.0.0.0` (the image uses `3000`)                       |
+| `TRUST_PROXY`                                                   | no       | `true` to trust `X-Forwarded-For` / `X-Real-IP` (only behind your proxy) |
+| `TRUSTED_ORIGINS`                                               | no       | Extra public origins allowed to make changes, comma-separated            |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | no       | E-mail alerts                                                            |
+| `AUTO_MIGRATE`                                                  | no       | Apply migrations on boot (default `true`)                                |
+| `WEB_DIST`                                                      | no       | Path of the built web app (auto-detected)                                |
 
-### Discord
-Create a webhook in your Discord server settings. Add a channel in Cronko with
-type `discord` and paste the webhook URL.
-```json
-{ "webhookUrl": "https://discord.com/api/webhooks/..." }
-```
+Notification channels are configured in the UI: Discord/Slack take a
+`webhookUrl`, Telegram a `botToken` and `chatId`, e-mail a recipient `to`.
 
-### Telegram
-Create a bot via `@BotFather`, get the token, find your chat ID. Add a channel
-with type `telegram`.
-```json
-{ "botToken": "123456:ABC-DEF...", "chatId": "-1001234567890" }
-```
+## Security
 
-### Email
-Set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, and `SMTP_FROM` in
-`.env`. Add a channel with type `email` and the recipient address.
-```json
-{ "to": "alerts@example.com" }
-```
-
-### Slack
-Create a Slack webhook. Add a channel with type `slack` and paste the webhook URL.
-```json
-{ "webhookUrl": "https://hooks.slack.com/services/..." }
-```
-
-## Advanced features
-
-### Pulse (start/finish)
-For long-running jobs, use `/start` before starting and `/finish` when done.
-Duration is calculated automatically.
-```bash
-curl -X POST https://cronko.example.com/ping/TOKEN/start
-./my-long-job.sh
-curl -X POST "https://cronko.example.com/ping/TOKEN/finish?d=$SECONDS&exit=$?"
-```
-
-### Public status badge
-Display your monitor's status anywhere with a public SVG badge.
-```markdown
-![Cronko](https://cronko.example.com/badge/TOKEN)
-```
-
-### Max duration
-Set a max duration limit when creating a monitor. If a ping reports a duration
-above this limit, an incident is automatically generated.
-
-### Heartbeat cleanup
-Heartbeats older than 90 days are automatically removed (configurable in
-Settings).
-
-### CSV export
-Export any monitor's heartbeats as CSV:
-`/api/monitors/:id/heartbeats?format=csv`
-
-## Stack
-
-- Backend: Hono, Node.js, Drizzle ORM, SQLite / PostgreSQL
-- Frontend: Next.js, React, Tailwind CSS
-- Infra: Docker, pnpm workspaces, Turborepo
+- Passwords: bcrypt (12 rounds). Sessions: HS256 JWT, 15-minute access token and
+  7-day refresh token in `HttpOnly`, `SameSite=Strict` cookies (`Secure` in production).
+- CSRF: state-changing requests with a cookie session must be same-origin
+  (`Sec-Fetch-Site`, falling back to `Origin`); `Authorization` clients are exempt.
+- Login limited to 5 attempts per 15 minutes per IP and e-mail; pings are rate limited per token.
+- Strict CSP, `X-Frame-Options: DENY`, HSTS in production, no CORS (same origin).
+- Report vulnerabilities privately to the maintainer, not in public issues.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for local setup and code style guidelines.
+Node 24 and pnpm (see `.nvmrc`, `packageManager`). Before a PR:
 
-Before opening a PR, ensure `pnpm typecheck` passes across all workspaces.
-Report bugs using the issue templates and review our
-[Security Policy](SECURITY.md) for vulnerability disclosures.
+```bash
+pnpm lint        # Biome (lint + format + import order); `pnpm format` fixes
+pnpm typecheck
+pnpm test        # Vitest; API tests use a real, migrated SQLite
+pnpm build
+```
+
+Commits follow [Conventional Commits](https://www.conventionalcommits.org/)
+(enforced by lefthook). UI strings live in `packages/shared/src/translations.ts`.
+See [docs/ROADMAP.md](docs/ROADMAP.md) for where the project is heading.
+
+## Stack
+
+Hono · Drizzle ORM · SQLite (better-sqlite3) · Vite · React 19 · React Router ·
+TanStack Query · Tailwind 4 · Zod 4 · Biome · Vitest · pnpm workspaces.
 
 ## License
 
-MIT — see [LICENSE](LICENSE) for details.
+MIT — see [LICENSE](LICENSE).

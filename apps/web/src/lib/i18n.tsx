@@ -1,7 +1,5 @@
-"use client"
-
-import { createContext, useContext, useState, useEffect, type ReactNode, useCallback } from "react"
-import { t, type Locale } from "@cronko/shared/translations"
+import { type Locale, t } from "@cronko/shared/translations"
+import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from "react"
 
 type I18nContextValue = {
   locale: Locale

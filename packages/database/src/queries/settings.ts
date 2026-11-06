@@ -3,11 +3,7 @@ import { db } from "../index"
 import { settings } from "../schema"
 
 export async function getSetting(key: string): Promise<string | null> {
-  const row = await db
-    .select()
-    .from(settings)
-    .where(eq(settings.key, key))
-    .get()
+  const row = await db.select().from(settings).where(eq(settings.key, key)).get()
   return row?.value ?? null
 }
 

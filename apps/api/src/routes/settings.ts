@@ -1,15 +1,15 @@
-import { Hono } from "hono"
-import { z } from "zod"
-import { zValidator } from "@hono/zod-validator"
 import { getSetting, setSetting } from "@cronko/database/queries/settings"
 import {
-  DEFAULT_GRACE_PERIOD_SECONDS,
   DEFAULT_EXPECTED_INTERVAL_SECONDS,
-  SCHEDULER_TICK_INTERVAL_MS,
-  PING_RATE_LIMIT_PER_MINUTE,
-  MAX_HEARTBEATS_PER_MONITOR,
+  DEFAULT_GRACE_PERIOD_SECONDS,
   HEARTBEAT_HISTORY_DAYS,
+  MAX_HEARTBEATS_PER_MONITOR,
+  PING_RATE_LIMIT_PER_MINUTE,
+  SCHEDULER_TICK_INTERVAL_MS,
 } from "@cronko/shared/constants"
+import { zValidator } from "@hono/zod-validator"
+import { Hono } from "hono"
+import { z } from "zod"
 import { logAuditEvent } from "../services/audit"
 import { restartScheduler } from "../services/scheduler"
 
@@ -75,12 +75,24 @@ async function loadSettings(): Promise<CachedSettings> {
   const parsed = {
     instanceName: raw.instanceName ?? "Cronko",
     timezone: raw.timezone ?? "UTC",
-    schedulerTickMs: raw.schedulerTickMs ? parseInt(raw.schedulerTickMs, 10) : SCHEDULER_TICK_INTERVAL_MS,
-    defaultGracePeriodSeconds: raw.defaultGracePeriodSeconds ? parseInt(raw.defaultGracePeriodSeconds, 10) : DEFAULT_GRACE_PERIOD_SECONDS,
-    defaultIntervalSeconds: raw.defaultIntervalSeconds ? parseInt(raw.defaultIntervalSeconds, 10) : DEFAULT_EXPECTED_INTERVAL_SECONDS,
-    pingRateLimitPerMinute: raw.pingRateLimitPerMinute ? parseInt(raw.pingRateLimitPerMinute, 10) : PING_RATE_LIMIT_PER_MINUTE,
-    maxHeartbeatsPerMonitor: raw.maxHeartbeatsPerMonitor ? parseInt(raw.maxHeartbeatsPerMonitor, 10) : MAX_HEARTBEATS_PER_MONITOR,
-    heartbeatHistoryDays: raw.heartbeatHistoryDays ? parseInt(raw.heartbeatHistoryDays, 10) : HEARTBEAT_HISTORY_DAYS,
+    schedulerTickMs: raw.schedulerTickMs
+      ? parseInt(raw.schedulerTickMs, 10)
+      : SCHEDULER_TICK_INTERVAL_MS,
+    defaultGracePeriodSeconds: raw.defaultGracePeriodSeconds
+      ? parseInt(raw.defaultGracePeriodSeconds, 10)
+      : DEFAULT_GRACE_PERIOD_SECONDS,
+    defaultIntervalSeconds: raw.defaultIntervalSeconds
+      ? parseInt(raw.defaultIntervalSeconds, 10)
+      : DEFAULT_EXPECTED_INTERVAL_SECONDS,
+    pingRateLimitPerMinute: raw.pingRateLimitPerMinute
+      ? parseInt(raw.pingRateLimitPerMinute, 10)
+      : PING_RATE_LIMIT_PER_MINUTE,
+    maxHeartbeatsPerMonitor: raw.maxHeartbeatsPerMonitor
+      ? parseInt(raw.maxHeartbeatsPerMonitor, 10)
+      : MAX_HEARTBEATS_PER_MONITOR,
+    heartbeatHistoryDays: raw.heartbeatHistoryDays
+      ? parseInt(raw.heartbeatHistoryDays, 10)
+      : HEARTBEAT_HISTORY_DAYS,
   }
 
   updateCurrentSettings(parsed)
@@ -94,38 +106,39 @@ settingsRoute.get("/", async (c) => {
   return c.json({ data })
 })
 
-settingsRoute.post(
-  "/",
-  zValidator("json", updateSettingsSchema),
-  async (c) => {
-    const body = c.req.valid("json")
-    let schedulerChanged = false
+settingsRoute.post("/", zValidator("json", updateSettingsSchema), async (c) => {
+  const body = c.req.valid("json")
+  let schedulerChanged = false
 
-    if (body.instanceName !== undefined) await setSetting("instanceName", body.instanceName)
-    if (body.timezone !== undefined) await setSetting("timezone", body.timezone)
-    if (body.schedulerTickMs !== undefined) {
-      await setSetting("schedulerTickMs", String(body.schedulerTickMs))
-      schedulerChanged = true
-    }
-    if (body.defaultGracePeriodSeconds !== undefined) await setSetting("defaultGracePeriodSeconds", String(body.defaultGracePeriodSeconds))
-    if (body.defaultIntervalSeconds !== undefined) await setSetting("defaultIntervalSeconds", String(body.defaultIntervalSeconds))
-    if (body.pingRateLimitPerMinute !== undefined) await setSetting("pingRateLimitPerMinute", String(body.pingRateLimitPerMinute))
-    if (body.maxHeartbeatsPerMonitor !== undefined) await setSetting("maxHeartbeatsPerMonitor", String(body.maxHeartbeatsPerMonitor))
-    if (body.heartbeatHistoryDays !== undefined) await setSetting("heartbeatHistoryDays", String(body.heartbeatHistoryDays))
+  if (body.instanceName !== undefined) await setSetting("instanceName", body.instanceName)
+  if (body.timezone !== undefined) await setSetting("timezone", body.timezone)
+  if (body.schedulerTickMs !== undefined) {
+    await setSetting("schedulerTickMs", String(body.schedulerTickMs))
+    schedulerChanged = true
+  }
+  if (body.defaultGracePeriodSeconds !== undefined)
+    await setSetting("defaultGracePeriodSeconds", String(body.defaultGracePeriodSeconds))
+  if (body.defaultIntervalSeconds !== undefined)
+    await setSetting("defaultIntervalSeconds", String(body.defaultIntervalSeconds))
+  if (body.pingRateLimitPerMinute !== undefined)
+    await setSetting("pingRateLimitPerMinute", String(body.pingRateLimitPerMinute))
+  if (body.maxHeartbeatsPerMonitor !== undefined)
+    await setSetting("maxHeartbeatsPerMonitor", String(body.maxHeartbeatsPerMonitor))
+  if (body.heartbeatHistoryDays !== undefined)
+    await setSetting("heartbeatHistoryDays", String(body.heartbeatHistoryDays))
 
-    const data = await loadSettings()
+  const data = await loadSettings()
 
-    if (schedulerChanged) {
-      restartScheduler()
-    }
+  if (schedulerChanged) {
+    restartScheduler()
+  }
 
-    logAuditEvent({
-      userId: (c.get("jwtPayload") as { sub: string })?.sub,
-      action: "settings.updated",
-      resourceType: "settings",
-      metadata: body as Record<string, unknown>,
-    }).catch(() => {})
+  logAuditEvent({
+    userId: (c.get("jwtPayload") as { sub: string })?.sub,
+    action: "settings.updated",
+    resourceType: "settings",
+    metadata: body as Record<string, unknown>,
+  }).catch(() => {})
 
-    return c.json({ data })
-  },
-)
+  return c.json({ data })
+})

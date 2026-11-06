@@ -1,7 +1,5 @@
-"use client"
-
-import { useState, useEffect } from "react"
 import { Maximize2, Minimize2 } from "lucide-react"
+import { useEffect, useState } from "react"
 import { useT } from "@/lib/i18n"
 
 const STORAGE_KEY = "cronko_compact"
@@ -31,7 +29,11 @@ export function CompactToggle() {
       title={compact ? t("ui.normalDensity") : t("ui.compactMode")}
       aria-label={compact ? t("ui.normalDensity") : t("ui.compactMode")}
     >
-      {compact ? <Maximize2 className="h-4 w-4" strokeWidth={1.5} /> : <Minimize2 className="h-4 w-4" strokeWidth={1.5} />}
+      {compact ? (
+        <Maximize2 className="h-4 w-4" strokeWidth={1.5} />
+      ) : (
+        <Minimize2 className="h-4 w-4" strokeWidth={1.5} />
+      )}
     </button>
   )
 }

@@ -1,49 +1,41 @@
-const CACHE_NAME = "cronko-v1"
-const ASSETS_TO_CACHE = [
-  "/",
-  "/dashboard",
-  "/login",
-  "/manifest.json",
-  "/icon.svg",
-]
+// Minimal offline shell. Navigation is network-first so a deploy is never
+// hidden behind a stale index.html; fingerprinted /assets/* are cache-first.
+const CACHE = "cronko-v2"
 
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE)),
-  )
-  self.skipWaiting()
-})
+self.addEventListener("install", () => self.skipWaiting())
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)),
-      ),
-    ),
+    caches
+      .keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim()),
   )
-  self.clients.claim()
 })
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return
+  const { request } = event
+  if (request.method !== "GET") return
 
-  const url = new URL(event.request.url)
+  const url = new URL(request.url)
+  if (url.origin !== location.origin) return
 
-  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/auth/")) {
+  if (url.pathname.startsWith("/assets/")) {
+    event.respondWith(
+      caches.open(CACHE).then(async (cache) => {
+        const hit = await cache.match(request)
+        if (hit) return hit
+        const res = await fetch(request)
+        if (res.ok) cache.put(request, res.clone())
+        return res
+      }),
+    )
     return
   }
 
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const fetchPromise = fetch(event.request).then((response) => {
-        if (response.ok) {
-          const clone = response.clone()
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
-        }
-        return response
-      })
-      return cached ?? fetchPromise
-    }),
-  )
+  if (request.mode === "navigate") {
+    event.respondWith(
+      fetch(request).catch(async () => (await caches.match("/")) ?? Response.error()),
+    )
+  }
 })

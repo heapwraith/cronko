@@ -1,19 +1,14 @@
-"use client"
-
-import { useState, useEffect, useRef, useCallback } from "react"
-import { useRouter } from "next/navigation"
 import {
-  LayoutDashboard,
   Activity,
   AlertTriangle,
   Bell,
-  Settings,
+  LayoutDashboard,
   Plus,
   Search,
-  Monitor,
-  Sun,
-  Moon,
+  Settings,
 } from "lucide-react"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { useNavigate } from "react-router"
 
 interface CommandItem {
   id: string
@@ -24,7 +19,7 @@ interface CommandItem {
 }
 
 export function CommandPalette() {
-  const router = useRouter()
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -35,42 +30,42 @@ export function CommandPalette() {
       id: "dashboard",
       label: "Go to Dashboard",
       icon: LayoutDashboard,
-      action: () => router.push("/dashboard"),
+      action: () => navigate("/dashboard"),
       keywords: ["home", "overview"],
     },
     {
       id: "monitors",
       label: "Go to Monitors",
       icon: Activity,
-      action: () => router.push("/monitors"),
+      action: () => navigate("/monitors"),
       keywords: ["list", "all"],
     },
     {
       id: "incidents",
       label: "Go to Incidents",
       icon: AlertTriangle,
-      action: () => router.push("/incidents"),
+      action: () => navigate("/incidents"),
       keywords: ["alerts", "issues"],
     },
     {
       id: "notifications",
       label: "Go to Notifications",
       icon: Bell,
-      action: () => router.push("/notifications"),
+      action: () => navigate("/notifications"),
       keywords: ["alerts", "channels"],
     },
     {
       id: "settings",
       label: "Go to Settings",
       icon: Settings,
-      action: () => router.push("/settings"),
+      action: () => navigate("/settings"),
       keywords: ["config", "preferences"],
     },
     {
       id: "new-monitor",
       label: "New Monitor",
       icon: Plus,
-      action: () => router.push("/monitors/new"),
+      action: () => navigate("/monitors/new"),
       keywords: ["create", "add"],
     },
   ]
@@ -79,9 +74,7 @@ export function CommandPalette() {
     ? commands.filter(
         (cmd) =>
           cmd.label.toLowerCase().includes(query.toLowerCase()) ||
-          cmd.keywords?.some((kw) =>
-            kw.toLowerCase().includes(query.toLowerCase()),
-          ),
+          cmd.keywords?.some((kw) => kw.toLowerCase().includes(query.toLowerCase())),
       )
     : commands
 
@@ -105,14 +98,10 @@ export function CommandPalette() {
 
       if (e.key === "ArrowDown") {
         e.preventDefault()
-        setSelectedIndex((prev) =>
-          prev < filtered.length - 1 ? prev + 1 : 0,
-        )
+        setSelectedIndex((prev) => (prev < filtered.length - 1 ? prev + 1 : 0))
       } else if (e.key === "ArrowUp") {
         e.preventDefault()
-        setSelectedIndex((prev) =>
-          prev > 0 ? prev - 1 : filtered.length - 1,
-        )
+        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : filtered.length - 1))
       } else if (e.key === "Enter") {
         e.preventDefault()
         const selected = filtered[selectedIndex]
@@ -188,9 +177,7 @@ export function CommandPalette() {
                   <Icon className="h-4 w-4 shrink-0" />
                   <span className="flex-1 text-left">{cmd.label}</span>
                   {isSelected && (
-                    <kbd className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono">
-                      ↵
-                    </kbd>
+                    <kbd className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono">↵</kbd>
                   )}
                 </button>
               )

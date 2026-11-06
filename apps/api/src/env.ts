@@ -19,24 +19,31 @@ const envSchema = z.object({
   SMTP_PASS: z.string().optional(),
   SMTP_FROM: z.email().optional(),
   TELEGRAM_BOT_TOKEN: z.string().optional(),
-  NEXT_PUBLIC_API_URL: z.url().optional(),
-  CORS_ORIGINS: z.string().optional(),
-  NODE_ENV: z
-    .enum(["development", "production", "test"])
-    .default("development"),
-  REDIS_URL: z.url().optional(),
+  // Extra origins allowed to make state-changing requests (reverse proxy / custom domain)
+  // Honour X-Forwarded-For / X-Real-IP (only behind a reverse proxy you control)
+  TRUST_PROXY: z.enum(["true", "false"]).default("false"),
+  TRUSTED_ORIGINS: z.string().optional(),
+  // Directory with the built web app (apps/web/dist). Auto-detected when unset.
+  WEB_DIST: z.string().optional(),
+  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   AUTO_MIGRATE: z
     .enum(["true", "false"])
     .default(process.env.NODE_ENV === "production" ? "false" : "true"),
 })
 
+// Docker Compose passes unset optional variables as empty strings
+// (e.g. ADMIN_EMAIL=), which optional validators like z.email() reject.
+function readEnv(): Record<string, string | undefined> {
+  return Object.fromEntries(Object.entries(process.env).filter(([, value]) => value !== ""))
+}
+
 export const env = (() => {
   try {
-    return envSchema.parse(process.env)
+    return envSchema.parse(readEnv())
   } catch {
     // Test/CI fallback — inject defaults so downstream modules can read process.env
     process.env.DATABASE_URL ??= "file:./test.db"
     process.env.JWT_SECRET ??= "test-secret-key-minimum-32-characters-long"
-    return envSchema.parse(process.env)
+    return envSchema.parse(readEnv())
   }
 })()

@@ -1,7 +1,5 @@
 node_modules
-.next
 dist
-.turbo
 .env
 .env.local
 data/
@@ -13,3 +11,4 @@ sbom.json
 **/node_modules
 **/.next
 **/dist
+test.db*

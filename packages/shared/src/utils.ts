@@ -11,12 +11,9 @@ export function calculateUptime(
   const now = Date.now()
   const windowStart = now - 24 * 60 * 60 * 1000
 
-  const recentHeartbeats = heartbeats.filter(
-    (hb) => hb.receivedAt.getTime() >= windowStart,
-  )
+  const recentHeartbeats = heartbeats.filter((hb) => hb.receivedAt.getTime() >= windowStart)
 
-  const expectedHeartbeats =
-    (24 * 60 * 60) / monitor.expectedIntervalSeconds
+  const expectedHeartbeats = (24 * 60 * 60) / monitor.expectedIntervalSeconds
 
   if (expectedHeartbeats === 0) {
     return 0
@@ -69,10 +66,8 @@ export function formatRelativeTime(date: Date): string {
   const rtf = new Intl.RelativeTimeFormat("pt-BR", { numeric: "auto" })
 
   if (diff < 60_000) return rtf.format(-Math.round(diff / 1000), "seconds")
-  if (diff < 3_600_000)
-    return rtf.format(-Math.round(diff / 60_000), "minutes")
-  if (diff < 86_400_000)
-    return rtf.format(-Math.round(diff / 3_600_000), "hours")
+  if (diff < 3_600_000) return rtf.format(-Math.round(diff / 60_000), "minutes")
+  if (diff < 86_400_000) return rtf.format(-Math.round(diff / 3_600_000), "hours")
   return rtf.format(-Math.round(diff / 86_400_000), "days")
 }
 
@@ -90,7 +85,8 @@ export function groupHeartbeatsByDay(
   }
 
   for (const hb of heartbeats) {
-    const key = hb.receivedAt.toISOString().split("T")[0] ?? hb.receivedAt.toISOString().slice(0, 10)
+    const key =
+      hb.receivedAt.toISOString().split("T")[0] ?? hb.receivedAt.toISOString().slice(0, 10)
     const existing = map.get(key)
     if (existing) {
       existing.push(hb)

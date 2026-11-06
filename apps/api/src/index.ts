@@ -1,26 +1,36 @@
-import { migrate } from "drizzle-orm/better-sqlite3/migrator"
-import { sql } from "drizzle-orm"
+import { existsSync } from "node:fs"
+import { resolve } from "node:path"
+import { db, sqliteClient } from "@cronko/database"
+import { createUser, findUserByEmail } from "@cronko/database/queries/users"
 import { serve } from "@hono/node-server"
-import { env } from "./env"
-import { db } from "@cronko/database"
-import { findUserByEmail, createUser } from "@cronko/database/queries/users"
-import { hashPassword } from "./services/auth"
-import { startScheduler, stopScheduler, schedulerMetrics } from "./services/scheduler"
+import { migrate } from "drizzle-orm/better-sqlite3/migrator"
 import { app } from "./app"
+import { env } from "./env"
 import { logger } from "./lib/logger"
-import { getRedis } from "./lib/redis"
+import { hashPassword } from "./services/auth"
+import { schedulerMetrics, startScheduler, stopScheduler } from "./services/scheduler"
+import { registerWeb } from "./web"
+
+// Migrations ship next to the code: ./packages/database/src/migrations in the
+// Docker image (cwd=/app) and ../../packages/... when running from apps/api.
+function resolveMigrationsDir(): string {
+  const candidates = [
+    process.env.MIGRATIONS_DIR,
+    "packages/database/src/migrations",
+    "../../packages/database/src/migrations",
+  ].filter((p): p is string => Boolean(p))
+  const found = candidates.map((p) => resolve(p)).find((p) => existsSync(p))
+  if (!found) {
+    throw new Error(`migrations folder not found (tried: ${candidates.join(", ")})`)
+  }
+  return found
+}
 
 async function applyMigrations() {
   if (env.AUTO_MIGRATE !== "true") return
 
-  if (env.DATABASE_URL.startsWith("file:")) {
-    migrate(db, { migrationsFolder: "../../packages/database/src/migrations" })
-    logger.info("SQLite migrations applied")
-  } else {
-    const { migrate: migratePg } = await import("drizzle-orm/postgres-js/migrator")
-    await migratePg(db, { migrationsFolder: "../../packages/database/src/migrations" })
-    logger.info("PostgreSQL migrations applied")
-  }
+  migrate(db, { migrationsFolder: resolveMigrationsDir() })
+  logger.info("SQLite migrations applied")
 }
 
 async function seedAdmin() {
@@ -42,26 +52,19 @@ async function bootstrap() {
   await seedAdmin()
 
   // Health endpoints
-  app.get("/health", (c) =>
-    c.json({ ok: true, uptime: process.uptime() }),
-  )
+  app.get("/health", (c) => c.json({ ok: true, uptime: process.uptime() }))
 
   // Liveness probe
-  app.get("/health/live", (c) =>
-    c.json({ status: "ok" }),
-  )
+  app.get("/health/live", (c) => c.json({ status: "ok" }))
 
   // Readiness probe — database connectivity
   app.get("/health/ready", async (c) => {
     try {
-      await db.select({ val: sql`1` }).get()
+      sqliteClient.prepare("SELECT 1").get()
       return c.json({ status: "ok", checks: { database: "up" } })
     } catch (err) {
       logger.error({ err }, "readiness check failed")
-      return c.json(
-        { status: "error", checks: { database: "down" } },
-        503,
-      )
+      return c.json({ status: "error", checks: { database: "down" } }, 503)
     }
   })
 
@@ -79,6 +82,9 @@ async function bootstrap() {
     }),
   )
 
+  // Web app + SPA fallback must be registered last so API routes win.
+  registerWeb(app)
+
   // 3. Start scheduler and HTTP server
   startScheduler()
 
@@ -93,17 +99,6 @@ async function bootstrap() {
 
     stopScheduler()
 
-    // Close Redis connection gracefully
-    const redis = getRedis()
-    if (redis) {
-      try {
-        await redis.quit()
-        logger.info("redis disconnected")
-      } catch {
-        redis.disconnect()
-      }
-    }
-
     // Close HTTP server — allow in-flight requests to finish
     server.close(() => {
       logger.info("server closed")
@@ -117,8 +112,12 @@ async function bootstrap() {
     }, 30_000).unref()
   }
 
-  process.on("SIGTERM", () => { shutdown("SIGTERM").catch(() => {}) })
-  process.on("SIGINT", () => { shutdown("SIGINT").catch(() => {}) })
+  process.on("SIGTERM", () => {
+    shutdown("SIGTERM").catch(() => {})
+  })
+  process.on("SIGINT", () => {
+    shutdown("SIGINT").catch(() => {})
+  })
 }
 
 bootstrap().catch((err) => {

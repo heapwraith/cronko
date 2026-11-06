@@ -16,7 +16,6 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -25,15 +24,14 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "drizzle-orm": "^0.45",
-    "better-sqlite3": "^12",
-    "postgres": "^3",
-    "@cronko/shared": "workspace:*"
+    "@cronko/shared": "workspace:*",
+    "better-sqlite3": "^13.0.3",
+    "drizzle-orm": "^0.45.4"
   },
   "devDependencies": {
-    "drizzle-kit": "^0.31",
-    "@types/better-sqlite3": "^7",
-    "@types/node": "^25",
-    "typescript": "^6"
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/node": "^26.6.6",
+    "drizzle-kit": "^0.31.11",
+    "typescript": "^6.0.3"
   }
 }

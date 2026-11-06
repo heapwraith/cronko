@@ -1,5 +1,5 @@
-import type { ReactNode, ButtonHTMLAttributes } from "react"
-import Link from "next/link"
+import type { ButtonHTMLAttributes, ReactNode } from "react"
+import { Link } from "react-router"
 
 type Variant = "primary" | "secondary" | "ghost" | "danger"
 
@@ -30,8 +30,7 @@ const variants: Record<Variant, string> = {
     "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700",
   ghost:
     "text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800/50",
-  danger:
-    "bg-red-600 text-white hover:bg-red-500",
+  danger: "bg-red-600 text-white hover:bg-red-500",
 }
 
 const sizes: Record<"sm" | "md", string> = {
@@ -40,28 +39,36 @@ const sizes: Record<"sm" | "md", string> = {
 }
 
 export function Button(props: ButtonProps) {
-  const {
-    variant = "primary",
-    size = "md",
-    className = "",
-    children,
-    ...rest
-  } = props
-
-  const classes = `${base} ${variants[variant]} ${sizes[size]} ${className}`
-
-  if ("href" in props && props.href) {
-    const { href, target, rel, ...linkRest } = props as ButtonAsLink
+  if (props.href !== undefined) {
+    const { variant = "primary", size = "md", className = "", children, href, target, rel } = props
     return (
-      <Link href={href} className={classes} target={target} rel={rel}>
+      <Link
+        to={href}
+        className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}
+        target={target}
+        rel={rel}
+      >
         {children}
       </Link>
     )
   }
 
-  const { ...buttonRest } = props as ButtonAsButton
+  const {
+    variant = "primary",
+    size = "md",
+    className = "",
+    children,
+    type = "button",
+    href: _href,
+    ...rest
+  } = props
   return (
-    <button className={classes} {...buttonRest}>
+    // biome-ignore lint/a11y/useButtonType: type defaults to "button" above and is overridable
+    <button
+      {...rest}
+      type={type}
+      className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}
+    >
       {children}
     </button>
   )

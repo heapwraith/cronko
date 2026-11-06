@@ -1,10 +1,12 @@
-"use client"
-
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react"
+import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from "react"
 
 type Theme = "dark" | "light" | "system"
 
-interface ThemeContextValue { theme: Theme; setTheme: (t: Theme) => void; resolved: "dark" | "light" }
+interface ThemeContextValue {
+  theme: Theme
+  setTheme: (t: Theme) => void
+  resolved: "dark" | "light"
+}
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 
 function getSystemTheme(): "dark" | "light" {
@@ -47,20 +49,30 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    (window as Window & { __cronkoSetOrigin?: (x: number, y: number) => void }).__cronkoSetOrigin = (x: number, y: number) => {
-      document.documentElement.style.setProperty("--tx", `${(x / window.innerWidth) * 100}%`)
-      document.documentElement.style.setProperty("--ty", `${(y / window.innerHeight) * 100}%`)
-    }
+    ;(window as Window & { __cronkoSetOrigin?: (x: number, y: number) => void }).__cronkoSetOrigin =
+      (x: number, y: number) => {
+        document.documentElement.style.setProperty("--tx", `${(x / window.innerWidth) * 100}%`)
+        document.documentElement.style.setProperty("--ty", `${(y / window.innerHeight) * 100}%`)
+      }
   }, [])
 
   useEffect(() => {
     if (!mounted) return
     const mq = window.matchMedia("(prefers-color-scheme: dark)")
-    const h = () => { if (theme === "system") { const s = getSystemTheme(); setResolved(s); document.documentElement.classList.toggle("dark", s === "dark") } }
-    mq.addEventListener("change", h); return () => mq.removeEventListener("change", h)
+    const h = () => {
+      if (theme === "system") {
+        const s = getSystemTheme()
+        setResolved(s)
+        document.documentElement.classList.toggle("dark", s === "dark")
+      }
+    }
+    mq.addEventListener("change", h)
+    return () => mq.removeEventListener("change", h)
   }, [theme, mounted])
 
-  return <ThemeContext.Provider value={{ theme, setTheme, resolved }}>{children}</ThemeContext.Provider>
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme, resolved }}>{children}</ThemeContext.Provider>
+  )
 }
 
 export function useTheme() {

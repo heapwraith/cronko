@@ -1,8 +1,6 @@
-"use client"
-
+import { groupHeartbeatsByDay } from "@cronko/shared"
 import { useState } from "react"
-import { groupHeartbeatsByDay, HEARTBEAT_HISTORY_DAYS } from "@cronko/shared"
-import { Card, CardHeader, CardTitle, CardBody } from "@/components/shared/Card"
+import { Card, CardBody, CardHeader, CardTitle } from "@/components/shared/Card"
 import { useT } from "@/lib/i18n"
 
 const PERIODS = [
@@ -57,7 +55,11 @@ export function HeartbeatHistory({
         </div>
       </CardHeader>
       <CardBody>
-        <div className="flex flex-wrap gap-0.5" role="grid" aria-label={t("monitor.heatmapCalendarLabel")}>
+        <div
+          className="flex flex-wrap gap-0.5"
+          role="grid"
+          aria-label={t("monitor.heatmapCalendarLabel")}
+        >
           {Array.from(days.entries()).map(([date, hbs]) => {
             const today = new Date().toISOString().split("T")[0]
             const isToday = date === today
@@ -75,25 +77,34 @@ export function HeartbeatHistory({
             let color = "bg-zinc-200 dark:bg-zinc-800"
             let level = 0
 
-              if (healthy && !tardy) {
-                const count = hbs.length
-                if (count >= 8) { color = "bg-emerald-700"; level = 4 }
-                else if (count >= 4) { color = "bg-emerald-600"; level = 3 }
-                else if (count >= 2) { color = "bg-emerald-500"; level = 2 }
-                else { color = "bg-emerald-400"; level = 1 }
-              } else if (healthy && tardy) {
-                color = "bg-amber-500"
-                level = -1
-              } else if (hbs.length > 0) {
-                color = "bg-red-600"
-                level = -2
+            if (healthy && !tardy) {
+              const count = hbs.length
+              if (count >= 8) {
+                color = "bg-emerald-700"
+                level = 4
+              } else if (count >= 4) {
+                color = "bg-emerald-600"
+                level = 3
+              } else if (count >= 2) {
+                color = "bg-emerald-500"
+                level = 2
+              } else {
+                color = "bg-emerald-400"
+                level = 1
               }
+            } else if (healthy && tardy) {
+              color = "bg-amber-500"
+              level = -1
+            } else if (hbs.length > 0) {
+              color = "bg-red-600"
+              level = -2
+            }
 
-              const tooltipParts: string[] = [date]
-              if (level > 0) tooltipParts.push(`${hbs.length} ping${hbs.length !== 1 ? "s" : ""}`)
-              else if (level === -1) tooltipParts.push(t("monitor.heatmapLate").toLowerCase())
-              else if (level === -2) tooltipParts.push(t("monitor.heatmapMissed").toLowerCase())
-              else tooltipParts.push(t("monitor.heatmapNoData").toLowerCase())
+            const tooltipParts: string[] = [date]
+            if (level > 0) tooltipParts.push(`${hbs.length} ping${hbs.length !== 1 ? "s" : ""}`)
+            else if (level === -1) tooltipParts.push(t("monitor.heatmapLate").toLowerCase())
+            else if (level === -2) tooltipParts.push(t("monitor.heatmapMissed").toLowerCase())
+            else tooltipParts.push(t("monitor.heatmapNoData").toLowerCase())
 
             return (
               <div
@@ -102,7 +113,9 @@ export function HeartbeatHistory({
                 title={tooltipParts.join(": ")}
                 aria-label={tooltipParts.join(": ")}
                 className={`h-3.5 w-3.5 rounded-sm ${color} transition-colors ${
-                  isToday ? "ring-1 ring-zinc-400 dark:ring-zinc-500 ring-offset-1 ring-offset-white dark:ring-offset-zinc-900" : ""
+                  isToday
+                    ? "ring-1 ring-zinc-400 dark:ring-zinc-500 ring-offset-1 ring-offset-white dark:ring-offset-zinc-900"
+                    : ""
                 }`}
               />
             )
@@ -125,7 +138,10 @@ export function HeartbeatHistory({
             {t("monitor.heatmapMissed")}
           </div>
           <div className="flex items-center gap-1 text-xs text-zinc-500">
-            <span className="h-3 w-3 rounded-sm bg-zinc-200 dark:bg-zinc-800 inline-block" aria-hidden="true" />
+            <span
+              className="h-3 w-3 rounded-sm bg-zinc-200 dark:bg-zinc-800 inline-block"
+              aria-hidden="true"
+            />
             {t("monitor.heatmapNoData")}
           </div>
         </div>

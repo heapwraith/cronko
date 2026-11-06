@@ -1,0 +1,204 @@
+@import "tailwindcss";
+@import "./styles/tokens.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans:
+    system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    sans-serif;
+}
+
+/* Page transition animations */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes zoom-in-95 {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+main {
+  animation: fade-up 0.3s ease-out;
+}
+.animate-in {
+  animation-duration: 0.2s;
+  animation-fill-mode: both;
+}
+.fade-in {
+  animation-name: fade-in;
+}
+.zoom-in-95 {
+  animation-name: zoom-in-95;
+}
+
+/* ── Theme Switch — Circular Reveal (View Transitions API) ── */
+::view-transition-old(root) {
+  animation: none;
+}
+
+::view-transition-new(root) {
+  animation: vt-reveal 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes vt-reveal {
+  from {
+    clip-path: circle(0% at var(--tx, 50%) var(--ty, 50%));
+  }
+  to {
+    clip-path: circle(150% at var(--tx, 50%) var(--ty, 50%));
+  }
+}
+
+/* ── Other animations ── */
+@keyframes pulse-border {
+  0%,
+  100% {
+    border-color: rgb(239 68 68 / 0.2);
+  }
+  50% {
+    border-color: rgb(239 68 68 / 0.5);
+  }
+}
+.animate-pulse-border {
+  animation: pulse-border 2s ease-in-out infinite;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-2px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(2px);
+  }
+}
+.animate-shake {
+  animation: shake 0.6s ease-in-out;
+}
+
+@keyframes toast-progress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+.animate-toast-progress {
+  animation: toast-progress 5s linear forwards;
+}
+
+/* Shine effect */
+.shine {
+  position: relative;
+  overflow: hidden;
+}
+.shine::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.03), transparent);
+  transition: left 0.4s ease;
+}
+.dark .shine::after {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+}
+.shine:hover::after {
+  left: 200%;
+}
+
+/* Compact mode */
+.compact table {
+  font-size: 0.75rem;
+}
+.compact th,
+.compact td {
+  padding: 0.375rem 0.75rem;
+}
+.compact .py-3 {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+.compact .px-4 {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+.compact .py-2 {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+.compact .p-4 {
+  padding: 0.75rem;
+}
+.compact .p-6 {
+  padding: 1rem;
+}
+.compact .space-y-6 > * + * {
+  margin-top: 1rem;
+}
+.compact .text-sm {
+  font-size: 0.75rem;
+}
+.compact .gap-6 {
+  gap: 1rem;
+}
+.compact .gap-4 {
+  gap: 0.75rem;
+}
+.compact .gap-2 {
+  gap: 0.25rem;
+}
+
+/* Focus rings */
+:focus-visible {
+  outline: none;
+}
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  @apply ring-2 ring-emerald-500/50 ring-offset-2 ring-offset-zinc-950 dark:ring-offset-zinc-950;
+}
+
+/* Skip to content */
+.skip-link {
+  @apply absolute -top-10 left-4 z-[70] bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all focus:top-4;
+}

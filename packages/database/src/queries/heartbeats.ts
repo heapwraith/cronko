@@ -1,4 +1,4 @@
-import { eq, desc, lt, gte, lte, inArray, sql } from "drizzle-orm"
+import { and, desc, eq, gte, inArray, lt, lte, sql } from "drizzle-orm"
 import { db } from "../index"
 import { heartbeats } from "../schema"
 
@@ -7,20 +7,13 @@ export async function findHeartbeatsByMonitor(
   options: { limit: number; before?: string },
 ) {
   const where = options.before
-    ? lt(heartbeats.receivedAt, new Date(options.before))
-    : undefined
+    ? and(eq(heartbeats.monitorId, monitorId), lt(heartbeats.receivedAt, new Date(options.before)))
+    : eq(heartbeats.monitorId, monitorId)
 
   return db
     .select()
     .from(heartbeats)
-    .where(
-      where
-        ? () => [
-            eq(heartbeats.monitorId, monitorId),
-            where,
-          ]
-        : eq(heartbeats.monitorId, monitorId),
-    )
+    .where(where)
     .orderBy(desc(heartbeats.receivedAt))
     .limit(Math.min(options.limit, 500))
     .all()
@@ -37,11 +30,7 @@ export async function findLatestHeartbeat(monitorId: string) {
 }
 
 export async function findHeartbeatsSince(since: Date) {
-  return db
-    .select()
-    .from(heartbeats)
-    .where(gte(heartbeats.receivedAt, since))
-    .all()
+  return db.select().from(heartbeats).where(gte(heartbeats.receivedAt, since)).all()
 }
 
 export async function createHeartbeat(input: {
@@ -52,11 +41,12 @@ export async function createHeartbeat(input: {
   durationMs?: number
   exitCode?: number
   body?: string
+  receivedAt?: Date
 }) {
   await db.insert(heartbeats).values({
     id: input.id,
     monitorId: input.monitorId,
-    receivedAt: new Date(),
+    receivedAt: input.receivedAt ?? new Date(),
     sourceIp: input.sourceIp ?? null,
     userAgent: input.userAgent ?? null,
     durationMs: input.durationMs ?? null,
@@ -83,7 +73,9 @@ export async function findLatestHeartbeats(
       monitorId: heartbeats.monitorId,
       receivedAt: heartbeats.receivedAt,
       durationMs: heartbeats.durationMs,
-      rn: sql<number>`ROW_NUMBER() OVER (PARTITION BY ${heartbeats.monitorId} ORDER BY ${heartbeats.receivedAt} DESC)`.as("rn"),
+      rn: sql<number>`ROW_NUMBER() OVER (PARTITION BY ${heartbeats.monitorId} ORDER BY ${heartbeats.receivedAt} DESC)`.as(
+        "rn",
+      ),
     })
     .from(heartbeats)
     .where(inArray(heartbeats.monitorId, monitorIds))
@@ -97,4 +89,19 @@ export async function findLatestHeartbeats(
   }
 
   return map
+}
+
+/** Most recent heartbeat time per monitor, in a single query. */
+export async function findLatestHeartbeatTimes(): Promise<Map<string, Date>> {
+  const rows = db
+    .select({
+      monitorId: heartbeats.monitorId,
+      last: sql<number>`max(${heartbeats.receivedAt})`,
+    })
+    .from(heartbeats)
+    .groupBy(heartbeats.monitorId)
+    .all()
+
+  // receivedAt is stored as unix seconds (drizzle "timestamp" mode).
+  return new Map(rows.map((r) => [r.monitorId, new Date(r.last * 1000)]))
 }

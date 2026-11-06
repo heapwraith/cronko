@@ -1,10 +1,5 @@
-import {
-  sqliteTable,
-  text,
-  integer,
-  index,
-} from "drizzle-orm/sqlite-core"
 import { relations } from "drizzle-orm"
+import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
 export const monitors = sqliteTable("monitors", {
   id: text("id").primaryKey(),
@@ -18,59 +13,82 @@ export const monitors = sqliteTable("monitors", {
     .default("healthy"),
   expectedIntervalSeconds: integer("expected_interval_seconds").notNull(),
   gracePeriodSeconds: integer("grace_period_seconds").notNull().default(300),
-  paused: integer("paused", { mode: "boolean" })
-    .notNull()
-    .default(false),
+  paused: integer("paused", { mode: "boolean" }).notNull().default(false),
   maxDurationMs: integer("max_duration_ms"),
   displayOrder: integer("display_order").notNull().default(0),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 })
 
-export const heartbeats = sqliteTable("heartbeats", {
-  id: text("id").primaryKey(),
-  monitorId: text("monitor_id")
-    .notNull()
-    .references(() => monitors.id, { onDelete: "cascade" }),
-  receivedAt: integer("received_at", { mode: "timestamp" }).notNull(),
-  sourceIp: text("source_ip"),
-  userAgent: text("user_agent"),
-  durationMs: integer("duration_ms"),
-  exitCode: integer("exit_code"),
-  body: text("body"),
-})
+export const heartbeats = sqliteTable(
+  "heartbeats",
+  {
+    id: text("id").primaryKey(),
+    monitorId: text("monitor_id")
+      .notNull()
+      .references(() => monitors.id, { onDelete: "cascade" }),
+    receivedAt: integer("received_at", { mode: "timestamp" }).notNull(),
+    sourceIp: text("source_ip"),
+    userAgent: text("user_agent"),
+    durationMs: integer("duration_ms"),
+    exitCode: integer("exit_code"),
+    body: text("body"),
+  },
+  (t) => [index("heartbeats_monitor_received_idx").on(t.monitorId, t.receivedAt)],
+)
 
-export const incidents = sqliteTable("incidents", {
-  id: text("id").primaryKey(),
-  monitorId: text("monitor_id")
-    .notNull()
-    .references(() => monitors.id, { onDelete: "cascade" }),
-  status: text("status", { enum: ["open", "resolved"] })
-    .notNull()
-    .default("open"),
-  startedAt: integer("started_at", { mode: "timestamp" }).notNull(),
-  resolvedAt: integer("resolved_at", { mode: "timestamp" }),
-})
+export const incidents = sqliteTable(
+  "incidents",
+  {
+    id: text("id").primaryKey(),
+    monitorId: text("monitor_id")
+      .notNull()
+      .references(() => monitors.id, { onDelete: "cascade" }),
+    status: text("status", { enum: ["open", "resolved"] })
+      .notNull()
+      .default("open"),
+    startedAt: integer("started_at", { mode: "timestamp" }).notNull(),
+    resolvedAt: integer("resolved_at", { mode: "timestamp" }),
+  },
+  (t) => [index("incidents_monitor_status_idx").on(t.monitorId, t.status)],
+)
 
 export const notificationChannels = sqliteTable("notification_channels", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   type: text("type", { enum: ["discord", "telegram", "email", "slack"] }).notNull(),
-  enabled: integer("enabled", { mode: "boolean" })
-    .notNull()
-    .default(true),
+  enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
   config: text("config", { mode: "json" }).notNull(),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 })
 
-export const heartbeatsIndex = index("heartbeats_monitor_received_idx").on(
-  heartbeats.monitorId,
-  heartbeats.receivedAt,
-)
-
-export const incidentsIndex = index("incidents_monitor_status_idx").on(
-  incidents.monitorId,
-  incidents.status,
+/**
+ * Outbox of alerts. A row is written when a transition happens and a worker
+ * delivers it with retries, so a flaky webhook or a restart never loses an alert.
+ */
+export const notificationDeliveries = sqliteTable(
+  "notification_deliveries",
+  {
+    id: text("id").primaryKey(),
+    channelId: text("channel_id")
+      .notNull()
+      .references(() => notificationChannels.id, { onDelete: "cascade" }),
+    monitorName: text("monitor_name").notNull(),
+    event: text("event", { enum: ["missed", "down", "recovered", "slow"] }).notNull(),
+    message: text("message").notNull(),
+    status: text("status", { enum: ["pending", "sent", "failed"] })
+      .notNull()
+      .default("pending"),
+    attempts: integer("attempts").notNull().default(0),
+    nextAttemptAt: integer("next_attempt_at", { mode: "timestamp" }).notNull(),
+    lastError: text("last_error"),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => [
+    index("notification_deliveries_due_idx").on(t.status, t.nextAttemptAt),
+    index("notification_deliveries_created_idx").on(t.createdAt),
+  ],
 )
 
 export const monitorsRelations = relations(monitors, ({ many }) => ({
