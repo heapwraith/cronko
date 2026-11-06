@@ -16,6 +16,11 @@ services:
       SELF_HEARTBEAT_URL: ${SELF_HEARTBEAT_URL:-}
       PUBLIC_URL: ${PUBLIC_URL:-}
       SELF_HEARTBEAT_INTERVAL_SECONDS: ${SELF_HEARTBEAT_INTERVAL_SECONDS:-}
+      # Scheduled SQLite backups: set BACKUP_DIR=/app/backups in .env to turn them on
+      # (the second volume below keeps them apart from the live database).
+      BACKUP_DIR: ${BACKUP_DIR:-}
+      BACKUP_INTERVAL_HOURS: ${BACKUP_INTERVAL_HOURS:-}
+      BACKUP_KEEP: ${BACKUP_KEEP:-}
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-}
       SMTP_USER: ${SMTP_USER:-}
@@ -25,7 +30,9 @@ services:
       INBOUND_EMAIL_DOMAIN: ${INBOUND_EMAIL_DOMAIN:-}
     volumes:
       - cronko_data:/app/data
+      - cronko_backups:/app/backups
     restart: unless-stopped
 
 volumes:
   cronko_data:
+  cronko_backups:

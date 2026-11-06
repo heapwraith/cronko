@@ -536,6 +536,17 @@ const spec = {
         responses: { "200": { description: "Settings updated" } },
       },
     },
+    "/api/settings/backup": {
+      get: {
+        summary: "Status of the last scheduled backup",
+        description:
+          "enabled is false when BACKUP_DIR is unset. last holds the time of the last attempt, whether it worked, the file name and size of the newest good backup, and the error of a failed attempt.",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          "200": { description: "{ enabled, last: {at, ok, file, sizeBytes, error} | null }" },
+        },
+      },
+    },
     "/api/settings/tokens": {
       get: {
         summary: "List API tokens (never the secret). Session only, not usable with an API token",

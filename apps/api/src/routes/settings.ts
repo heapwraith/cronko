@@ -22,6 +22,7 @@ import { z } from "zod"
 import { env } from "../env"
 import { API_TOKEN_SCOPES, generateApiToken } from "../services/api-tokens"
 import { logAuditEvent } from "../services/audit"
+import { backupEnabled, getBackupStatus } from "../services/backup"
 import { loadDigestConfig, resetDigestClock, sendDigest } from "../services/digest"
 import { restartScheduler } from "../services/scheduler"
 
@@ -272,3 +273,8 @@ settingsRoute.post("/", zValidator("json", updateSettingsSchema), async (c) => {
 
   return c.json({ data })
 })
+
+/** Last scheduled backup (time, size, ok). `enabled` is false when BACKUP_DIR is unset. */
+settingsRoute.get("/backup", (c) =>
+  c.json({ data: { enabled: backupEnabled(), last: getBackupStatus() } }),
+)

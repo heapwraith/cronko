@@ -441,6 +441,17 @@ export const api = {
         digestHour: number
       }>("/api/settings", body),
     sendTestDigest: () => post<{ queued: number }>("/api/settings/digest/test", {}),
+    backup: () =>
+      get<{
+        enabled: boolean
+        last: {
+          at: string
+          ok: boolean
+          file: string | null
+          sizeBytes: number | null
+          error: string | null
+        } | null
+      }>("/api/settings/backup"),
     tokens: {
       list: () => get<ApiTokenInfo[]>("/api/settings/tokens"),
       create: (body: { name: string; scope: "read" | "write"; expiresInDays?: number }) =>

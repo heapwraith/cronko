@@ -100,7 +100,8 @@ pnpm --filter @cronko/web dev     # web on :3000, proxies the API
 - Public SVG status badge (`/badge/:token`), CSV export of heartbeats
 - Dashboard, dark/light theme, English and pt-BR, installable PWA
 - OpenAPI docs at `/docs`; health probes at `/health/live` and `/health/ready`
-- Online backup and restore (`node scripts/db.mjs backup|restore`)
+- Scheduled automatic backups, online backup and restore (`node scripts/db.mjs backup|restore`)
+- JSON export of monitors, tags, channels, status pages and maintenance windows, and import of it
 
 ## Configuration
 
@@ -117,6 +118,7 @@ pnpm --filter @cronko/web dev     # web on :3000, proxies the API
 | `METRICS_TOKEN`                                                 | no       | Enables `GET /metrics` (Prometheus) for requests sending `Authorization: Bearer <token>`; at least 16 characters. Unset = 404                                     |
 | `INBOUND_SMTP_PORT`, `INBOUND_EMAIL_DOMAIN`                     | no       | Ping by e-mail: an SMTP listener on this port accepts mail for `<token>@<domain>` (see below)                                                                     |
 | `INBOUND_SMTP_TLS_CERT`, `INBOUND_SMTP_TLS_KEY`                 | no       | PEM files to offer STARTTLS on the e-mail listener                                                                                                                |
+| `BACKUP_DIR`, `BACKUP_INTERVAL_HOURS`, `BACKUP_KEEP`            | no       | Scheduled SQLite backups into this directory (unset = off), every 24 h by default, keeping the newest 7 (see [Backups](#backups-and-restore))                     |
 | `PUBLIC_URL`                                                    | no       | Public address of this Cronko (e.g. `https://cronko.example.com`); alerts then include a link to the failing run or monitor                                       |
 | `AUTO_MIGRATE`                                                  | no       | Apply migrations on boot (default `true`, but `false` when `NODE_ENV=production`; the image sets `true`)                                                          |
 | `WEB_DIST`                                                      | no       | Path of the built web app (auto-detected)                                                                                                                         |
@@ -130,6 +132,46 @@ and an `appToken`. Microsoft Teams takes the `webhookUrl` of a Workflows flow
 ("Post to a channel when a webhook request is received"), since Office 365
 connectors are retired. PagerDuty takes the `routingKey` of an Events API v2
 integration: problems trigger an incident (one per monitor) and recovery resolves it.
+
+### Backups and restore
+
+Set `BACKUP_DIR` and Cronko writes a consistent snapshot of the database inside
+the API process, using SQLite's online backup (safe while it keeps serving). Every
+`BACKUP_INTERVAL_HOURS` (default 24) it writes `cronko-<utc>.db`, checks the copy
+with `PRAGMA integrity_check`, renames it into place only if that passes (a failed
+run leaves no half-written file) and deletes all but the newest `BACKUP_KEEP`
+(default 7). Only files named `cronko-*.db` are ever deleted. After a restart the
+next backup waits out the rest of the interval. Failures are logged and shown in
+Settings, next to the time and size of the last good backup; they never stop the
+server. The same status is at `GET /api/settings/backup`.
+
+With the bundled `docker-compose.yml` the backups go to a second volume, so a
+damaged data volume does not take them along:
+
+```sh
+echo "BACKUP_DIR=/app/backups" >> .env
+docker compose up -d
+docker compose exec cronko ls -l /app/backups
+```
+
+A volume on the same disk is not a backup against disk loss: bind-mount a
+directory that something else copies off the host (`./backups:/app/backups`,
+owned by uid 1000), or point `BACKUP_DIR` at a subfolder of `/app/data`
+(`/app/data/backups`) if one volume is all you have.
+
+**Restore** (stop the API first, the script replaces the database file):
+
+```sh
+docker compose stop cronko
+docker compose run --rm --no-deps -v cronko_backups:/app/backups cronko \
+  node scripts/db.mjs restore /app/backups/cronko-2026-11-06T02-00-00-000Z.db
+docker compose up -d
+```
+
+Outside Docker: `node scripts/db.mjs restore path/to/cronko-....db` with
+`DATABASE_URL` set. It verifies the file, removes the stale `-wal`/`-shm` files
+and copies the backup over the database. `node scripts/db.mjs backup [file]` takes
+a one-off snapshot the same way.
 
 ### Ping by e-mail
 

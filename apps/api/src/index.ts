@@ -10,6 +10,7 @@ import { app } from "./app"
 import { env } from "./env"
 import { logger } from "./lib/logger"
 import { hashPassword } from "./services/auth"
+import { startBackups, stopBackups } from "./services/backup"
 import { inboundEmailOptions, startInboundEmail, stopInboundEmail } from "./services/inbound-email"
 import { schedulerMetrics, startScheduler, stopScheduler } from "./services/scheduler"
 import { startSelfHeartbeat, stopSelfHeartbeat } from "./services/self-heartbeat"
@@ -93,6 +94,13 @@ async function bootstrap() {
   startScheduler()
   startSelfHeartbeat(env.SELF_HEARTBEAT_URL, env.SELF_HEARTBEAT_INTERVAL_SECONDS)
   startInboundEmail(inboundEmailOptions(env))
+  if (env.BACKUP_DIR) {
+    startBackups({
+      dir: env.BACKUP_DIR,
+      intervalHours: env.BACKUP_INTERVAL_HOURS,
+      keep: env.BACKUP_KEEP,
+    })
+  }
 
   const server = serve({ fetch: app.fetch, port: env.API_PORT, hostname: env.API_HOST })
 
@@ -105,6 +113,7 @@ async function bootstrap() {
 
     stopScheduler()
     stopSelfHeartbeat()
+    stopBackups()
     void stopInboundEmail()
 
     // Close HTTP server — allow in-flight requests to finish
