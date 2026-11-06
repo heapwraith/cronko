@@ -79,6 +79,10 @@ export interface EmailConfig {
 /** Generic webhook: Cronko POSTs a JSON body ({ event, monitor, message, sentAt }). */
 export interface WebhookConfig {
   url: string
+  /** Extra request headers, one "Name: value" per line. Values are secrets. */
+  headers?: string | undefined
+  /** Custom body with {{placeholders}}; empty keeps the fixed JSON payload. */
+  bodyTemplate?: string | undefined
 }
 
 /** ntfy.sh or a self-hosted ntfy server. */
