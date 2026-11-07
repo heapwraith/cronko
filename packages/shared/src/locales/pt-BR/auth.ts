@@ -33,4 +33,7 @@ export const auth = {
   "auth.back": "Voltar",
   "auth.switchToLight": "Mudar para tema claro",
   "auth.switchToDark": "Mudar para tema escuro",
+  "auth.useKey": "Usar chave de segurança",
+  "auth.keyFailed": "A chave não foi aceita. Entre de novo com email e senha.",
+  "auth.keyCancelled": "Autenticação cancelada. Tente de novo.",
 } as const

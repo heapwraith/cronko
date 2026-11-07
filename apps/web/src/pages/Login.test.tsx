@@ -6,6 +6,23 @@ import { ApiError, api } from "@/lib/api"
 import { renderApp } from "@/test/render"
 import LoginPage from "./Login"
 
+// A plain delegating function, not a vi.fn: the tooling around vi.fn flags a rejected
+// result as unhandled even though the component catches it.
+const browser = vi.hoisted(() => {
+  const state = {
+    impl: (async () => ({})) as (opts: unknown) => Promise<unknown>,
+    calls: [] as unknown[],
+  }
+  return {
+    state,
+    startAuthentication: (opts: unknown) => {
+      state.calls.push(opts)
+      return state.impl(opts)
+    },
+  }
+})
+vi.mock("@simplewebauthn/browser", () => ({ startAuthentication: browser.startAuthentication }))
+
 const open = (url = "/login", config = { oidc: false, proxy: false, passwordLogin: true }) => {
   vi.spyOn(api.auth, "me").mockRejectedValue(new ApiError("API 401", 401, null))
   vi.spyOn(api.auth, "ssoConfig").mockResolvedValue(config)
@@ -84,5 +101,81 @@ describe("LoginPage sign-in methods", () => {
     await waitFor(() =>
       expect(login).toHaveBeenCalledWith({ email: "ops@example.com", password: "pw-123456" }),
     )
+  })
+  describe("security key as the second step", () => {
+    const withKey = async () => {
+      const user = userEvent.setup()
+      open()
+      vi.spyOn(api.auth, "login").mockResolvedValue({
+        twoFactorRequired: true,
+        challenge: "login-token",
+        webauthn: { challenge: "wa-challenge" } as never,
+      })
+      await user.type(await screen.findByLabelText("Email"), "ops@example.com")
+      await user.type(screen.getByLabelText("Senha"), "pw-123456")
+      await user.click(screen.getByRole("button", { name: "Entrar" }))
+      return user
+    }
+
+    beforeEach(() => {
+      browser.state.calls.length = 0
+      browser.state.impl = async () => ({})
+    })
+
+    it("offers the key only when the server sent options for it", async () => {
+      const user = userEvent.setup()
+      open()
+      vi.spyOn(api.auth, "login").mockResolvedValue({
+        twoFactorRequired: true,
+        challenge: "login-token",
+      })
+      await user.type(await screen.findByLabelText("Email"), "a@b.co")
+      await user.type(screen.getByLabelText("Senha"), "x")
+      await user.click(screen.getByRole("button", { name: "Entrar" }))
+      expect(await screen.findByLabelText("Código")).toBeInTheDocument()
+      expect(
+        screen.queryByRole("button", { name: "Usar chave de segurança" }),
+      ).not.toBeInTheDocument()
+    })
+
+    it("signs in with the key: the browser answer goes to the server with the login token", async () => {
+      const user = await withKey()
+      const assertion = { id: "cred", type: "public-key" } as never
+      browser.state.impl = async () => assertion
+      const loginWebauthn = vi
+        .spyOn(api.auth, "loginWebauthn")
+        .mockResolvedValue({ token: "t", email: "a@b.co", expiresAt: "x" })
+      await user.click(await screen.findByRole("button", { name: "Usar chave de segurança" }))
+      await waitFor(() =>
+        expect(loginWebauthn).toHaveBeenCalledWith({
+          challenge: "login-token",
+          response: assertion,
+        }),
+      )
+      expect(browser.state.calls).toEqual([{ optionsJSON: { challenge: "wa-challenge" } }])
+    })
+
+    it("stays on the same step when the browser prompt is cancelled", async () => {
+      const user = await withKey()
+      // What browsers really throw when the user dismisses the prompt.
+      browser.state.impl = () => Promise.reject(new DOMException("denied", "NotAllowedError"))
+      const loginWebauthn = vi.spyOn(api.auth, "loginWebauthn")
+      await user.click(await screen.findByRole("button", { name: "Usar chave de segurança" }))
+      expect(await screen.findByRole("alert")).toHaveTextContent("Autenticação cancelada")
+      expect(loginWebauthn).not.toHaveBeenCalled()
+      expect(screen.getByRole("button", { name: "Usar chave de segurança" })).toBeInTheDocument()
+    })
+
+    it("goes back to the password when the server refuses the key", async () => {
+      const user = await withKey()
+      browser.state.impl = async () => ({ id: "c", type: "public-key" })
+      vi.spyOn(api.auth, "loginWebauthn").mockRejectedValue(new ApiError("API 401", 401, null))
+      await user.click(await screen.findByRole("button", { name: "Usar chave de segurança" }))
+      expect(await screen.findByRole("alert")).toHaveTextContent("A chave não foi aceita")
+      expect(await screen.findByLabelText("Email")).toBeInTheDocument()
+      expect(
+        screen.queryByRole("button", { name: "Usar chave de segurança" }),
+      ).not.toBeInTheDocument()
+    })
   })
 })
