@@ -99,7 +99,7 @@ pnpm --filter @cronko/web dev     # web on :3000, proxies the API
 - Pulse (`/start` + `/finish`) with duration, exit code and optional output
 - Explicit `/fail` signal and non-zero exit codes: a distinct `failed` state with an immediate alert
 - Max-duration alerts, incident history, audit log
-- Alerts to Discord, Telegram, e-mail (SMTP), Slack, Microsoft Teams, ntfy, Pushover, PagerDuty and any webhook
+- Alerts to Discord, Telegram, e-mail (SMTP), Slack, Microsoft Teams, Google Chat, Mattermost, Rocket.Chat, Gotify, Matrix, ntfy, Pushover, PagerDuty and any webhook
 - Run analytics: each run is compared with the runs before it (median, p95); runs much slower than usual and runs that started before the previous one finished are flagged, with optional alerts per monitor
 - Tags per monitor, with a tag filter on the dashboard and monitor list (`?tag=` in the API)
 - Public status pages per tag (`/status/<slug>`, no login): current state, 90 days of daily availability and recent incidents, never tokens or job output
@@ -144,6 +144,12 @@ and an `appToken`. Microsoft Teams takes the `webhookUrl` of a Workflows flow
 ("Post to a channel when a webhook request is received"), since Office 365
 connectors are retired. PagerDuty takes the `routingKey` of an Events API v2
 integration: problems trigger an incident (one per monitor) and recovery resolves it.
+Google Chat, Mattermost and Rocket.Chat take the `webhookUrl` of an incoming webhook.
+Gotify takes the `serverUrl` and the `appToken` of an application (high-priority
+events use priority 7-8). Matrix takes the `homeserverUrl`, an `accessToken` of the
+sending user and the `roomId` (like `!abc123:matrix.org`, not the `#alias`); the user
+must already be in the room, and encrypted rooms are not supported because messages
+are sent unencrypted.
 
 ### Webhook headers and body template
 

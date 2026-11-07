@@ -7,6 +7,10 @@ include breaking changes; they are called out below.
 
 ## [Unreleased]
 
+### Added
+
+- Five notification channels: Google Chat, Mattermost and Rocket.Chat (incoming webhooks), Gotify (server URL and app token, priorities by event) and Matrix (homeserver, access token and room id; plain, unencrypted messages). No migration.
+
 ## [0.4.0] - 2026-11-06
 
 Adds Prometheus metrics, scoped API tokens, importers, Healthchecks-style ping parity, TOTP

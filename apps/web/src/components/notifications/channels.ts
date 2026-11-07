@@ -1,4 +1,14 @@
-import { Bell, BellRing, Mail, MessageSquare, Send, Siren, Users, Webhook } from "lucide-react"
+import {
+  Bell,
+  BellRing,
+  Hash,
+  Mail,
+  MessageSquare,
+  Send,
+  Siren,
+  Users,
+  Webhook,
+} from "lucide-react"
 
 export type ChannelType =
   | "discord"
@@ -10,6 +20,11 @@ export type ChannelType =
   | "pushover"
   | "teams"
   | "pagerduty"
+  | "googlechat"
+  | "mattermost"
+  | "rocketchat"
+  | "gotify"
+  | "matrix"
 
 export type Channel = {
   id: string
@@ -40,6 +55,7 @@ export type FieldError =
   | "invalidTopic"
   | "invalidKey"
   | "invalidRoutingKey"
+  | "invalidRoomId"
 
 const url = (v: string) => (!v.trim() ? "required" : v.startsWith("https://") ? null : "invalidUrl")
 const httpUrl = (v: string) =>
@@ -51,6 +67,8 @@ const pushoverKey = (v: string) =>
   !v.trim() ? "required" : /^[A-Za-z0-9]{30}$/.test(v.trim()) ? null : "invalidKey"
 const routingKey = (v: string) =>
   !v.trim() ? "required" : /^[A-Za-z0-9]{32}$/.test(v.trim()) ? null : "invalidRoutingKey"
+const roomId = (v: string) =>
+  !v.trim() ? "required" : /^![^:\s]+:\S+$/.test(v.trim()) ? null : "invalidRoomId"
 const required = (v: string) => (v.trim() ? null : "required")
 const email = (v: string) => (!v.trim() ? "required" : v.includes("@") ? null : "invalidEmail")
 
@@ -187,6 +205,65 @@ export const CHANNELS: Record<
     label: "Microsoft Teams",
     icon: Users,
     fields: [{ ...webhook, placeholder: "https://prod-…logic.azure.com/workflows/…" }],
+  },
+  googlechat: {
+    label: "Google Chat",
+    icon: MessageSquare,
+    fields: [{ ...webhook, placeholder: "https://chat.googleapis.com/v1/spaces/…" }],
+  },
+  mattermost: {
+    label: "Mattermost",
+    icon: MessageSquare,
+    fields: [{ ...webhook, placeholder: "https://mattermost.example.com/hooks/…" }],
+  },
+  rocketchat: {
+    label: "Rocket.Chat",
+    icon: MessageSquare,
+    fields: [{ ...webhook, placeholder: "https://chat.example.com/hooks/…" }],
+  },
+  gotify: {
+    label: "Gotify",
+    icon: BellRing,
+    fields: [
+      {
+        key: "serverUrl",
+        labelKey: "notifications.serverUrl",
+        placeholder: "https://gotify.example.com",
+        type: "url",
+        validate: httpUrl,
+      },
+      {
+        key: "appToken",
+        labelKey: "notifications.appToken",
+        placeholder: "A0b1C2d3…",
+        validate: required,
+      },
+    ],
+  },
+  matrix: {
+    label: "Matrix",
+    icon: Hash,
+    fields: [
+      {
+        key: "homeserverUrl",
+        labelKey: "notifications.homeserver",
+        placeholder: "https://matrix.example.com",
+        type: "url",
+        validate: httpUrl,
+      },
+      {
+        key: "accessToken",
+        labelKey: "notifications.accessToken",
+        placeholder: "syt_…",
+        validate: required,
+      },
+      {
+        key: "roomId",
+        labelKey: "notifications.roomId",
+        placeholder: "!abc123:matrix.example.com",
+        validate: roomId,
+      },
+    ],
   },
   email: {
     label: "Email",

@@ -176,6 +176,11 @@ curl -fsS -X POST "${ping}/finish?exit=$?"`}</CodeBlock>
               "pushover",
               "pagerduty",
               "teams",
+              "googlechat",
+              "mattermost",
+              "rocketchat",
+              "gotify",
+              "matrix",
             ] as const
           ).map((k) => (
             <li key={k}>
