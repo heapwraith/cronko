@@ -114,6 +114,7 @@ export const notificationChannels = sqliteTable("notification_channels", {
       "rocketchat",
       "gotify",
       "matrix",
+      "apprise",
     ],
   }).notNull(),
   enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),

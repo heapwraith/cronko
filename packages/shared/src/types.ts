@@ -17,6 +17,7 @@ export type NotificationChannelType =
   | "rocketchat"
   | "gotify"
   | "matrix"
+  | "apprise"
 
 export type IncidentStatus = "open" | "resolved"
 
@@ -67,6 +68,7 @@ export interface NotificationChannel {
     | PagerDutyConfig
     | GotifyConfig
     | MatrixConfig
+    | AppriseConfig
   createdAt: Date
 }
 
@@ -126,4 +128,16 @@ export interface MatrixConfig {
   homeserverUrl: string
   accessToken: string
   roomId: string
+}
+
+/**
+ * A user-hosted apprise-api server. Either `configKey` (stored configuration, stateful
+ * `/notify/{key}`) or `urls` (inline Apprise URLs, stateless `/notify`) is required.
+ */
+export interface AppriseConfig {
+  serverUrl: string
+  configKey?: string | undefined
+  /** Inline Apprise URLs (they carry tokens, so they are secrets). */
+  urls?: string | undefined
+  tag?: string | undefined
 }

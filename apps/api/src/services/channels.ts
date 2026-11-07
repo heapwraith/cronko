@@ -1,5 +1,6 @@
 import type { notificationChannels } from "@cronko/database/schema"
 import type {
+  AppriseConfig,
   DiscordConfig,
   EmailConfig,
   GotifyConfig,
@@ -154,6 +155,39 @@ export function teamsCard(text: string, link?: string) {
         },
       },
     ],
+  }
+}
+
+/** Apprise notification types: info, success, warning, failure. */
+const APPRISE_TYPE: Record<string, string> = {
+  down: "failure",
+  failed: "failure",
+  missed: "failure",
+  slow: "warning",
+  unusual: "warning",
+  overlap: "warning",
+  recovered: "success",
+}
+
+export function appriseRequest(cfg: AppriseConfig, event: string, text: string, monitor?: string) {
+  const server = cfg.serverUrl.replace(/\/+$/, "")
+  const stored = cfg.configKey?.trim()
+  const payload = {
+    title: `Cronko: ${monitor ?? event}`,
+    body: text,
+    type: APPRISE_TYPE[event] ?? "info",
+    ...(!stored && {
+      urls: (cfg.urls ?? "")
+        .trim()
+        .split(/[\s,]+/)
+        .filter(Boolean)
+        .join(","),
+    }),
+    ...(cfg.tag?.trim() && { tag: cfg.tag.trim() }),
+  }
+  return {
+    url: stored ? `${server}/notify/${encodeURIComponent(stored)}` : `${server}/notify`,
+    payload,
   }
 }
 
@@ -367,6 +401,15 @@ export async function deliver(
         },
         "matrix",
       )
+    }
+    case "apprise": {
+      const { url, payload } = appriseRequest(
+        channel.config as AppriseConfig,
+        event,
+        text,
+        monitorName,
+      )
+      return postJson(url, payload, "apprise")
     }
     case "email": {
       const mailer = smtp()

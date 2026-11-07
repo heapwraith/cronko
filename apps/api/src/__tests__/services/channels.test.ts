@@ -240,3 +240,84 @@ describe("chat and push channels (Google Chat, Mattermost, Rocket.Chat, Gotify, 
     expect(permanent.message).not.toContain("SECRET")
   })
 })
+
+describe("apprise channel", () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it("stateful: posts to /notify/{key} with title, body, type and tag", async () => {
+    const fetch = stubFetch()
+    await deliver(
+      channel("apprise", {
+        serverUrl: "https://apprise.example/",
+        configKey: "cronko",
+        tag: "ops",
+        urls: "ignored://when-a-key-is-set",
+      }),
+      "down",
+      "etl caiu",
+      "etl",
+    )
+    const [url, init] = fetch.mock.calls[0] ?? []
+    expect(url).toBe("https://apprise.example/notify/cronko")
+    expect(JSON.parse(String(init?.body))).toEqual({
+      title: "Cronko: etl",
+      body: "etl caiu",
+      type: "failure",
+      tag: "ops",
+    })
+  })
+
+  it("stateless: posts to /notify with the inline urls joined by commas", async () => {
+    const fetch = stubFetch()
+    await deliver(
+      channel("apprise", {
+        serverUrl: "https://apprise.example",
+        urls: "tgram://bot/chat  mailto://u:p@mail.test,\nslack://a/b/c",
+      }),
+      "recovered",
+      "etl voltou",
+      "etl",
+    )
+    const [url, init] = fetch.mock.calls[0] ?? []
+    expect(url).toBe("https://apprise.example/notify")
+    expect(JSON.parse(String(init?.body))).toEqual({
+      title: "Cronko: etl",
+      body: "etl voltou",
+      type: "success",
+      urls: "tgram://bot/chat,mailto://u:p@mail.test,slack://a/b/c",
+    })
+  })
+
+  it("maps events to Apprise types", async () => {
+    const types: Record<string, string> = {}
+    for (const event of ["down", "failed", "missed", "slow", "unusual", "recovered", "digest"]) {
+      const fetch = stubFetch()
+      await deliver(
+        channel("apprise", { serverUrl: "https://a.example", configKey: "k" }),
+        event,
+        "x",
+      )
+      types[event] = JSON.parse(String(fetch.mock.calls[0]?.[1]?.body)).type
+    }
+    expect(types).toEqual({
+      down: "failure",
+      failed: "failure",
+      missed: "failure",
+      slow: "warning",
+      unusual: "warning",
+      recovered: "success",
+      digest: "info",
+    })
+  })
+
+  it("does not leak the urls in a delivery error", async () => {
+    stubFetch(500)
+    const err = await deliver(
+      channel("apprise", { serverUrl: "https://a.example", urls: "tgram://SECRET/chat" }),
+      "down",
+      "x",
+    ).catch((e) => e)
+    expect(err.retryable).toBe(true)
+    expect(err.message).not.toContain("SECRET")
+  })
+})

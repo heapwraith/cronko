@@ -105,4 +105,17 @@ describe("notification channel validation (HTTP, real SQLite)", () => {
     expect((await matrix("#alias:matrix.example")).status).toBe(400)
     expect((await matrix("abc")).status).toBe(400)
   })
+  it("requires a config key or inline urls for Apprise", async () => {
+    const apprise = (config: Record<string, unknown>) =>
+      create({
+        name: "a",
+        type: "apprise",
+        config: { serverUrl: "https://apprise.example", ...config },
+      })
+    expect((await apprise({ configKey: "cronko" })).status).toBe(201)
+    expect((await apprise({ urls: "tgram://bot/chat" })).status).toBe(201)
+    expect((await apprise({})).status).toBe(400)
+    expect((await apprise({ configKey: "", urls: "  " })).status).toBe(400)
+    expect((await apprise({ configKey: "bad key!" })).status).toBe(400)
+  })
 })
