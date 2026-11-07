@@ -291,6 +291,43 @@ curl -b "cronko_token=$SESSION" -X POST "$CRONKO/api/import/cronko?dryRun=true" 
   -H "Content-Type: application/json" --data @cronko.json
 ```
 
+### Single sign-on (OIDC and trusted proxy)
+
+Both options are **off by default** and both only sign in a user that **already exists**
+(matched by e-mail): Cronko never registers anyone, so the local user list is the allowlist.
+A successful SSO sign-in gives the same session as a password login and is written to the audit
+log with its method. SSO does not ask for the local TOTP code (the identity provider owns the
+second factor); the password login keeps its own 2FA.
+
+**OIDC** (authorization code with PKCE, `state` and `nonce`):
+
+| Variable                               | Meaning                                                                                         |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `OIDC_ISSUER`                          | Issuer URL; `/.well-known/openid-configuration` must live under it                              |
+| `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET` | The client registered for Cronko                                                                |
+| `OIDC_REDIRECT_URL`                    | Optional. Default: `PUBLIC_URL` + `/auth/sso/oidc/callback` (register this URL at the provider) |
+
+The ID token must be signed with an asymmetric key published in the provider's JWKS, and its
+issuer, audience, expiry and nonce are checked. `email` must be present with `email_verified: true`.
+Cronko asks for the `openid email` scopes only. Failed sign-ins share the password login's limit
+(5 in 15 minutes per address).
+
+**Trusted proxy** (Authelia, Authentik, oauth2-proxy, Cloudflare Access...): set
+`TRUSTED_PROXY_AUTH_HEADER` (for example `Remote-Email`) **and** `TRUSTED_PROXY_IPS`
+(comma-separated IPs or CIDRs of your proxies). The header is honoured only when the TCP peer
+that connected to Cronko is in that list; a forwarded header such as `X-Forwarded-For` never
+makes a peer trusted. **If Cronko is reachable without going through the proxy from an address
+in that list, anyone there can sign in as anyone**: keep Cronko on a network only the proxy can
+reach. The login page then offers "Continue with your organization login", which opens
+`/auth/sso/proxy`.
+
+`PASSWORD_LOGIN_DISABLED=true` hides the password form and answers 403 to `/auth/login`. Cronko
+refuses to start with it unless OIDC or trusted-proxy login is configured, so you cannot lock
+yourself out by mistake. If the identity provider is down, remove the variable and restart.
+
+These flows were tested against a fake provider written for the tests, not against a real
+Keycloak, Authentik or Google: try a sign-in on a real one before relying on it.
+
 ### API tokens
 
 For scripts and CI, create a token in Settings → API tokens (name, scope, optional

@@ -83,7 +83,7 @@ not verified in depth, so claims about them are unconfirmed. In order of value o
 6. Ping by slug with a project key and `?create=1` (provisioning from CI/IaC).
 7. Badges per tag, JSON/Shields.io formats, three states.
 8. Apprise integration (one URL covers dozens of services).
-9. Proxy-header login and/or OIDC for self-hosters with SSO.
+9. ~~Proxy-header login and/or OIDC for self-hosters with SSO.~~ Done (Unreleased); only tested against a fake provider, not a real IdP.
 10. Official GitHub Action and a clean OpenAPI for generated clients.
 
 Later: text search and bulk actions in the UI, Web Push, teams and roles, SMS/WhatsApp (paid and
