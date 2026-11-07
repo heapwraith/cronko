@@ -811,6 +811,68 @@ const spec = {
         },
       },
     },
+    "/auth/2fa/webauthn": {
+      get: {
+        summary: "Security keys registered for the signed-in user (session only)",
+        security: [{ bearerAuth: [] }],
+        description:
+          "`available` is false until PUBLIC_URL (or WEBAUTHN_ORIGIN) is set. Credentials never include key material.",
+        responses: {
+          "200": {
+            description:
+              "{ data: { available, credentials: [{ id, name, createdAt, lastUsedAt }] } }",
+          },
+        },
+      },
+    },
+    "/auth/2fa/webauthn/register/options": {
+      post: {
+        summary: "Start adding a security key (needs the authenticator app on first)",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        responses: {
+          "200": {
+            description: "PublicKeyCredentialCreationOptions for navigator.credentials.create",
+          },
+          "400": { description: "PUBLIC_URL is not configured" },
+          "409": { description: "TOTP is not enabled yet" },
+        },
+      },
+    },
+    "/auth/2fa/webauthn/register/verify": {
+      post: {
+        summary: "Finish adding a security key with the browser's attestation",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        description: "One try per challenge. Body: `{ name, response }`.",
+        responses: {
+          "201": { description: "Registered" },
+          "400": { description: "The key could not be verified" },
+        },
+      },
+    },
+    "/auth/2fa/webauthn/{id}/delete": {
+      post: {
+        summary: "Remove a security key (needs the password)",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        responses: {
+          "200": { description: "ok" },
+          "401": { description: "Wrong password" },
+          "404": { description: "No such key" },
+        },
+      },
+    },
+    "/auth/login/webauthn": {
+      post: {
+        summary: "Second login step with a security key",
+        description:
+          "Body: `{ challenge, response }` where `challenge` is the login token from /auth/login and `response` is the assertion. The challenge inside it is accepted once. Failures share the login rate limit.",
+        responses: {
+          "200": { description: "Signed in (cookies set)" },
+          "401": { description: "Challenge expired, or the key was not accepted" },
+          "429": { description: "Too many attempts" },
+        },
+      },
+    },
     "/auth/2fa/disable": {
       post: {
         summary: "Disable 2FA: requires the password and a TOTP or recovery code",

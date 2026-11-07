@@ -6,6 +6,7 @@ import { useToast } from "@/components/shared/Toast"
 import { ApiError, api } from "@/lib/api"
 import { useT } from "@/lib/i18n"
 import { QrCode } from "./QrCode"
+import { SecurityKeys } from "./SecurityKeys"
 
 const control =
   "min-h-10 w-full rounded-md border border-line-strong bg-ground px-3 text-sm text-ink placeholder:text-dim focus-visible:outline-2 disabled:opacity-50"
@@ -121,6 +122,8 @@ export function TwoFactor() {
           )}
         </div>
       )}
+
+      {stage.kind === "idle" && status?.enabled && <SecurityKeys />}
 
       {stage.kind === "setup" && (
         <div className="space-y-3">

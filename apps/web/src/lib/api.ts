@@ -1,5 +1,11 @@
 import type { DigestFrequency } from "@cronko/shared/digest"
 import type { DurationStats } from "@cronko/shared/run-stats"
+import type {
+  AuthenticationResponseJSON,
+  PublicKeyCredentialCreationOptionsJSON,
+  PublicKeyCredentialRequestOptionsJSON,
+  RegistrationResponseJSON,
+} from "@simplewebauthn/browser"
 export type ApiTokenInfo = {
   id: string
   name: string
@@ -168,8 +174,15 @@ export const api = {
     login: (body: { email: string; password: string }) =>
       post<
         | { twoFactorRequired?: undefined; token: string; email: string; expiresAt: string }
-        | { twoFactorRequired: true; challenge: string }
+        | {
+            twoFactorRequired: true
+            challenge: string
+            /** Present when the account has a security key. */
+            webauthn?: PublicKeyCredentialRequestOptionsJSON
+          }
       >("/auth/login", body),
+    loginWebauthn: (body: { challenge: string; response: AuthenticationResponseJSON }) =>
+      post<{ token: string; email: string; expiresAt: string }>("/auth/login/webauthn", body),
     loginTwoFactor: (body: { challenge: string; code: string }) =>
       post<{ token: string; email: string; expiresAt: string }>("/auth/login/2fa", body),
     logout: () => post<{ ok: boolean }>("/auth/logout"),
@@ -183,6 +196,19 @@ export const api = {
     enable: (code: string) => post<{ recoveryCodes: string[] }>("/auth/2fa/enable", { code }),
     disable: (body: { password: string; code: string }) =>
       post<{ ok: boolean }>("/auth/2fa/disable", body),
+    keys: {
+      list: () =>
+        get<{
+          available: boolean
+          credentials: { id: string; name: string; createdAt: string; lastUsedAt: string | null }[]
+        }>("/auth/2fa/webauthn"),
+      registerOptions: () =>
+        post<PublicKeyCredentialCreationOptionsJSON>("/auth/2fa/webauthn/register/options"),
+      registerVerify: (body: { name: string; response: RegistrationResponseJSON }) =>
+        post<{ id: string }>("/auth/2fa/webauthn/register/verify", body),
+      remove: (id: string, password: string) =>
+        post<{ ok: boolean }>(`/auth/2fa/webauthn/${encodeURIComponent(id)}/delete`, { password }),
+    },
   },
   stats: {
     get: () =>

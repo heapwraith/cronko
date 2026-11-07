@@ -195,6 +195,25 @@ export const recoveryCodes = sqliteTable(
  * Denylist of session JWT ids (`jti`) revoked at logout. Rows can be dropped once
  * `expiresAt` passes, because the token itself would be rejected by then anyway.
  */
+/** Security keys and passkeys registered as a second factor (public key as base64url). */
+export const webauthnCredentials = sqliteTable(
+  "webauthn_credentials",
+  {
+    // The credential id chosen by the authenticator (base64url), globally unique.
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    publicKey: text("public_key").notNull(),
+    counter: integer("counter").notNull().default(0),
+    transports: text("transports", { mode: "json" }).$type<string[] | null>(),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    lastUsedAt: integer("last_used_at", { mode: "timestamp" }),
+  },
+  (t) => [index("webauthn_credentials_user_idx").on(t.userId)],
+)
+
 export const revokedTokens = sqliteTable(
   "revoked_tokens",
   {

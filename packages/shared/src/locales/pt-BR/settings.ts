@@ -119,4 +119,22 @@ export const settings = {
   "settings.saved": "✓ Salvo",
   "settings.failedSave": "Falha ao salvar configurações",
   "settings.failedReset": "Falha ao restaurar configurações",
+  "settings.keys": "Chaves de segurança",
+  "settings.keysIntro":
+    "Uma chave física ou uma passkey vale como segundo fator ao entrar, junto do app autenticador (que continua valendo, e os códigos de recuperação também).",
+  "settings.keysNeedUrl":
+    "Defina PUBLIC_URL (ou WEBAUTHN_ORIGIN) no servidor para usar chaves de segurança.",
+  "settings.keysNone": "Nenhuma chave cadastrada.",
+  "settings.keysName": "Nome da chave",
+  "settings.keysNamePlaceholder": "ex.: YubiKey azul",
+  "settings.keysAdd": "Adicionar chave",
+  "settings.keysRemove": "Remover",
+  "settings.keysRemoveAsk": 'Remover a chave "{name}"? Confirme com a sua senha.',
+  "settings.keysLastUsed": "Último uso: {when}",
+  "settings.keysNeverUsed": "Nunca usada",
+  "settings.keysAdded": "Chave adicionada",
+  "settings.keysRemoved": "Chave removida",
+  "settings.keysCancelled": "O cadastro da chave foi cancelado ou expirou",
+  "settings.keysFailed": "Não foi possível concluir",
+  "settings.keysWrongPassword": "Senha incorreta",
 } as const

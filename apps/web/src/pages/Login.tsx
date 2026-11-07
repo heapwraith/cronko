@@ -1,3 +1,7 @@
+import {
+  type PublicKeyCredentialRequestOptionsJSON,
+  startAuthentication,
+} from "@simplewebauthn/browser"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
 import { useEffect, useId, useRef, useState, useTransition } from "react"
 import { useNavigate, useSearchParams } from "react-router"
@@ -34,6 +38,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   // Set once the password was accepted and the account needs a second factor.
   const [challenge, setChallenge] = useState<string | null>(null)
+  // Options for a security key, when the account has one (offered next to the code).
+  const [keyOptions, setKeyOptions] = useState<PublicKeyCredentialRequestOptionsJSON | null>(null)
   const [code, setCode] = useState("")
   const [recovery, setRecovery] = useState(false)
   const codeRef = useRef<HTMLInputElement>(null)
@@ -62,6 +68,32 @@ export default function LoginPage() {
     if (!checking && sso.passwordLogin) emailRef.current?.focus()
   }, [checking, sso.passwordLogin])
 
+  async function signInWithKey() {
+    if (!challenge || !keyOptions) return
+    setError(null)
+    setLoading(true)
+    try {
+      const response = await startAuthentication({ optionsJSON: keyOptions })
+      await api.auth.loginWebauthn({ challenge, response })
+      startTransition(() => navigate("/dashboard"))
+    } catch (err) {
+      if ((err as { name?: string } | null)?.name === "NotAllowedError") {
+        // Cancelled in the browser: the server never saw it, so the same step still works.
+        setError(t("auth.keyCancelled"))
+      } else if (err instanceof ApiError && err.status === 429) {
+        setError(t("auth.tooManyAttempts"))
+      } else {
+        // The server spends a challenge on every answer, so start over from the password.
+        setChallenge(null)
+        setKeyOptions(null)
+        setCode("")
+        setError(t("auth.keyFailed"))
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
@@ -74,6 +106,7 @@ export default function LoginPage() {
         const res = await api.auth.login({ email, password })
         if (res.twoFactorRequired) {
           setChallenge(res.challenge)
+          setKeyOptions(res.webauthn ?? null)
           setPassword("")
           setTimeout(() => codeRef.current?.focus(), 0)
           return
@@ -158,6 +191,17 @@ export default function LoginPage() {
                   className={`${field} font-mono`}
                 />
               </div>
+              {keyOptions && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="w-full"
+                  disabled={loading}
+                  onClick={signInWithKey}
+                >
+                  {t("auth.useKey")}
+                </Button>
+              )}
               <div className="flex flex-wrap justify-between gap-2 text-sm">
                 <button
                   type="button"
@@ -175,6 +219,7 @@ export default function LoginPage() {
                   className="text-dim underline underline-offset-2"
                   onClick={() => {
                     setChallenge(null)
+                    setKeyOptions(null)
                     setCode("")
                     setRecovery(false)
                     setError(null)

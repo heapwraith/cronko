@@ -31,6 +31,8 @@ const jwtChallengeSchema = z.object({
   exp: z.number(),
   iss: z.literal("cronko"),
   aud: z.literal("cronko-2fa"),
+  // The WebAuthn challenge issued with this login step, when the user has a security key.
+  wac: z.string().optional(),
 })
 
 export type JwtPayload = z.infer<typeof jwtPayloadSchema>
@@ -96,10 +98,22 @@ export async function verifyRefreshToken(token: string): Promise<JwtRefreshPaylo
  * Proof that the password step succeeded, valid for 5 minutes and only for the
  * 2FA step (its own audience: it is useless as an access or refresh token).
  */
-export async function generateTwoFactorChallenge(userId: string, email: string): Promise<string> {
+export async function generateTwoFactorChallenge(
+  userId: string,
+  email: string,
+  webauthnChallenge?: string,
+): Promise<string> {
   const now = Math.floor(Date.now() / 1000)
   return sign(
-    { sub: userId, email, iat: now, exp: now + 5 * 60, iss: "cronko", aud: "cronko-2fa" },
+    {
+      sub: userId,
+      email,
+      iat: now,
+      exp: now + 5 * 60,
+      iss: "cronko",
+      aud: "cronko-2fa",
+      ...(webauthnChallenge && { wac: webauthnChallenge }),
+    },
     env.JWT_SECRET,
     "HS256",
   )
