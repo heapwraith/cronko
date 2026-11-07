@@ -24,6 +24,7 @@
     "better-sqlite3": "^13.0.3",
     "drizzle-orm": "^0.45.4",
     "hono": "^4.13.16",
+    "jose": "^6.2.15",
     "mailparser": "^3.14.2",
     "nodemailer": "^10.3.1",
     "pino": "^10.4.0",
