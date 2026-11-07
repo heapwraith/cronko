@@ -728,6 +728,10 @@ export const translations = {
       "Exiba o status do seu monitor em qualquer lugar com uma badge SVG pública. Não requer autenticação.",
     "howto.badge.preview": "Pré-visualização ao vivo",
     "howto.badge.markdown": "Embed no README (Markdown)",
+    "howto.badge.tagTitle": "Badge de uma tag",
+    "howto.badge.tagP1":
+      "Resume todos os monitores com uma tag (vale o pior estado; pausados são ignorados). Só funciona enquanto existir uma página de status ativa para a tag. Troque prod pela sua tag.",
+    "howto.badge.shields": "Via shields.io (endpoint)",
     "howto.notifications.title": "Notificações",
     "howto.notifications.p1":
       "Configure canais na aba Notificações. Há alertas quando um monitor atrasa, cai, falha, passa da duração máxima e quando volta ao normal. Lá também ficam as janelas de manutenção e o histórico de entregas; o resumo diário ou semanal fica em Configurações.",
@@ -1496,6 +1500,10 @@ export const translations = {
       "Display your monitor's status anywhere with a public SVG badge. No authentication required.",
     "howto.badge.preview": "Live preview",
     "howto.badge.markdown": "Embed in README (Markdown)",
+    "howto.badge.tagTitle": "Tag badge",
+    "howto.badge.tagP1":
+      "Summarises every monitor with a tag (the worst state wins; paused ones are ignored). It only works while a status page for that tag is switched on. Replace prod with your tag.",
+    "howto.badge.shields": "Through shields.io (endpoint)",
     "howto.notifications.title": "Notifications",
     "howto.notifications.p1":
       "Set up channels on the Notifications page. Alerts go out when a monitor is late, goes down, fails, exceeds its max duration, and when it recovers. Maintenance windows and the delivery log live there too; the daily or weekly digest is under Settings.",

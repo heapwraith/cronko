@@ -299,11 +299,39 @@ const spec = {
     },
     "/badge/{token}": {
       get: {
-        summary: "Public SVG status badge",
-        parameters: [{ name: "token", in: "path", required: true, schema: { type: "string" } }],
+        summary: "Public status badge of one monitor (SVG; add .json or .shields.json for data)",
+        description:
+          "Addressed by the monitor's secret token. `.json` returns `{ label, status }`; `.shields.json` returns the shields.io endpoint schema. `?states=simple` uses the three-state wording (up, late, down, paused) instead of the detailed one (healthy, missed, failed, down, paused, pending).",
+        parameters: [
+          { name: "token", in: "path", required: true, schema: { type: "string" } },
+          {
+            name: "states",
+            in: "query",
+            required: false,
+            schema: { type: "string", enum: ["simple"] },
+          },
+        ],
         responses: {
-          "200": { description: "SVG badge", content: { "image/svg+xml": {} } },
+          "200": {
+            description: "Badge",
+            content: { "image/svg+xml": {}, "application/json": {} },
+          },
           "404": { description: "Monitor not found" },
+        },
+      },
+    },
+    "/badge/tag/{tag}": {
+      get: {
+        summary: "Public status badge of a tag (SVG; add .json or .shields.json for data)",
+        description:
+          "Aggregates the monitors that carry the tag: the worst state wins and paused monitors are ignored. Only available while a status page for that tag is switched on; an unknown, unpublished or empty tag returns 404. The JSON form adds `counts` and `total`, never names.",
+        parameters: [{ name: "tag", in: "path", required: true, schema: { type: "string" } }],
+        responses: {
+          "200": {
+            description: "Badge",
+            content: { "image/svg+xml": {}, "application/json": {} },
+          },
+          "404": { description: "Tag not published or without monitors" },
         },
       },
     },

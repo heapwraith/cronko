@@ -108,7 +108,7 @@ pnpm --filter @cronko/web dev     # web on :3000, proxies the API
 - Ping by e-mail (`<token>@your-domain`) for devices that can only send mail, with optional failure words per monitor
 - Daily or weekly digest to every channel: state, failures, new incidents and jobs that went silent
 - Mute a monitor's alerts for maintenance (1 h to 7 days); state and incidents are still tracked
-- Public SVG status badge (`/badge/:token`), CSV export of heartbeats
+- Public SVG status badges per monitor (`/badge/:token`) and per tag (`/badge/tag/:tag`, only while a status page for the tag is on), also as `.json` and shields.io endpoint (`.shields.json`); CSV export of heartbeats
 - Dashboard, dark/light theme, English and pt-BR, installable PWA
 - OpenAPI docs at `/docs`; health probes at `/health/live` and `/health/ready`
 - Scheduled automatic backups, online backup and restore (`node scripts/db.mjs backup|restore`)

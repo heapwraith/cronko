@@ -160,6 +160,12 @@ curl -fsS -X POST "${ping}/finish?exit=$?"`}</CodeBlock>
         </div>
         <Sub>{t("howto.badge.markdown")}</Sub>
         <CodeBlock>{`![Cronko](${baseUrl}/badge/${token})`}</CodeBlock>
+        <Sub>{t("howto.badge.tagTitle")}</Sub>
+        <P>{t("howto.badge.tagP1")}</P>
+        <CodeBlock>{`![Cronko](${baseUrl}/badge/tag/prod)`}</CodeBlock>
+        <CodeBlock>{`<img src="${baseUrl}/badge/tag/prod" alt="Cronko: prod">`}</CodeBlock>
+        <Sub>{t("howto.badge.shields")}</Sub>
+        <CodeBlock>{`![Cronko](https://img.shields.io/endpoint?url=${encodeURIComponent(`${baseUrl}/badge/tag/prod.shields.json`)})`}</CodeBlock>
       </Section>
 
       <Section title={t("howto.notifications.title")}>
