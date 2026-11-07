@@ -84,7 +84,7 @@ not verified in depth, so claims about them are unconfirmed. In order of value o
 7. ~~Badges per tag, JSON/Shields.io formats, three states.~~ Done (Unreleased).
 8. ~~Apprise integration (one URL covers dozens of services).~~ Done (Unreleased); untested against a live apprise-api.
 9. Proxy-header login and/or OIDC for self-hosters with SSO.
-10. Official GitHub Action and a clean OpenAPI for generated clients.
+10. ~~Official GitHub Action and a clean OpenAPI for generated clients.~~ Done (Unreleased); the action is untested on a real runner until its workflow runs in CI.
 
 Later: text search and bulk actions in the UI, Web Push, teams and roles, SMS/WhatsApp (paid and
 against the one-container model). To check: that `read` API tokens omit ping tokens from responses,

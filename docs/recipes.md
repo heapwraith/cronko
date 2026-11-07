@@ -128,7 +128,8 @@ Use the same timezone in the Cronko monitor as in `timeZone`.
 
 ## GitHub Actions (scheduled workflow)
 
-Add the ping URL as a repository secret named `CRONKO_PING_URL`.
+Add the ping URL as a repository secret named `CRONKO_PING_URL`. The plain version uses
+`cronko-run`; the official action below does the same in one step.
 
 ```yaml
 name: Nightly export
@@ -153,6 +154,42 @@ jobs:
         run: |
           "$RUNNER_TEMP/cronko-run" "$CRONKO_PING_URL" -- ./scripts/export.sh
 ```
+
+### The official action
+
+The repository ships a composite action, so there is nothing to install. It needs
+`sh` and `curl` (any Linux or macOS runner), and it masks the URL in the logs.
+
+```yaml
+- uses: actions/checkout@v4
+- name: Export
+  uses: heapwraith/cronko@v0.4.0
+  with:
+    url: ${{ secrets.CRONKO_PING_URL }}
+    command: ./scripts/export.sh
+```
+
+`command` is a script (several lines are fine); the step fails with the script's own exit
+code, and Cronko gets the start, the duration, the exit code and the last 10 KB of output.
+Other inputs: `shell` (`sh` by default, or `bash`), `timeout` (seconds per ping),
+`output-limit` and `fail-on-ping-error` (default `false`: if Cronko cannot be reached the
+job is **not** failed, only a warning is logged; set it to `true` to fail the step).
+
+To report a job you do not wrap, use `report` mode in a final step that always runs:
+
+```yaml
+- name: Report to Cronko
+  if: always()
+  uses: heapwraith/cronko@v0.4.0
+  with:
+    url: ${{ secrets.CRONKO_PING_URL }}
+    mode: report
+    status: ${{ job.status }} # success or failure; cancelled and skipped send nothing
+```
+
+`mode: start` sends a start ping, which makes Cronko measure the duration and flag a run
+that never finishes. Pin the action to a release tag (or a commit) as above. The URL can be
+a token URL or a slug URL (`…/ping/k/<ping-key>/<slug>`, see the README).
 
 GitHub can delay scheduled workflows by several minutes under load, or skip
 them. Give this monitor a grace period of at least 30 minutes.
