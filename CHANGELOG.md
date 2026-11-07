@@ -7,6 +7,10 @@ include breaking changes; they are called out below.
 
 ## [Unreleased]
 
+### Fixed
+
+- The progress bar at the top of the page was a fixed 3-second animation played on every navigation, whatever was loading. It now follows real work: it shows while a page chunk is loading or while a query with no data yet is fetching, after a 150 ms delay so quick loads never flash it, creeps without ever reaching full, and fills and fades when the work ends. Background refreshes of data already on screen (window focus, polling) do not show it.
+
 ### Security
 
 - A read-only API token no longer receives the monitors' ping tokens: every JSON answer to a `read` token has the `token` field removed. Before, `GET /api/monitors` handed them out, so a leaked read token let someone send pings for every monitor. Sessions and `write` tokens are unchanged (use the ping key to avoid exposing the tokens to CI).
