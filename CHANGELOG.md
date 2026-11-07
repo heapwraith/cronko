@@ -7,6 +7,14 @@ include breaking changes; they are called out below.
 
 ## [Unreleased]
 
+### Added
+
+- Badges: `GET /badge/tag/:tag` summarises a tag (worst state wins, paused ignored) and is public only while a status page for that tag is switched on; unknown, unpublished and empty tags all answer the same 404. Every badge also comes as `.json` and `.shields.json` (shields.io endpoint schema), and `?states=simple` gives the three-state wording (up, late, down, paused).
+
+### Changed
+
+- Badge colours now pass WCAG AA with the white text (the old green and amber were about 2.5:1 and 2.1:1), and badges are sized to their text.
+
 ## [0.4.0] - 2026-11-06
 
 Adds Prometheus metrics, scoped API tokens, importers, Healthchecks-style ping parity, TOTP
