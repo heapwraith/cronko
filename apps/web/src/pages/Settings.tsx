@@ -1,10 +1,12 @@
-import type { DigestFrequency } from "@cronko/shared/digest"
 import type { Locale } from "@cronko/shared/translations"
 import { formatDuration } from "@cronko/shared/utils"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { cloneElement, type ReactElement, useEffect, useId, useState } from "react"
+import { useEffect, useState } from "react"
 import { ApiTokens } from "@/components/settings/ApiTokens"
 import { BackupStatus } from "@/components/settings/BackupStatus"
+import { DigestSettings } from "@/components/settings/DigestSettings"
+import { control, Field, Group, NumberInput } from "@/components/settings/fields"
+import { DEFAULTS, type SettingsData } from "@/components/settings/model"
 import { PingKey } from "@/components/settings/PingKey"
 import { TwoFactor } from "@/components/settings/TwoFactor"
 import { Button } from "@/components/shared/Button"
@@ -15,106 +17,6 @@ import { useToast } from "@/components/shared/Toast"
 import { Toggle } from "@/components/shared/Toggle"
 import { ApiError, api } from "@/lib/api"
 import { useT } from "@/lib/i18n"
-
-type SettingsData = {
-  instanceName: string
-  timezone: string
-  schedulerTickMs: number
-  defaultGracePeriodSeconds: number
-  defaultIntervalSeconds: number
-  pingRateLimitPerMinute: number
-  maxHeartbeatsPerMonitor: number
-  heartbeatHistoryDays: number
-  digestFrequency: DigestFrequency
-  digestHour: number
-}
-
-const DEFAULTS: SettingsData = {
-  instanceName: "Cronko",
-  timezone: "UTC",
-  schedulerTickMs: 10000,
-  defaultGracePeriodSeconds: 120,
-  defaultIntervalSeconds: 86400,
-  pingRateLimitPerMinute: 60,
-  maxHeartbeatsPerMonitor: 500,
-  heartbeatHistoryDays: 90,
-  digestFrequency: "off",
-  digestHour: 9,
-}
-
-const HOURS = Array.from({ length: 24 }, (_, h) => `${String(h).padStart(2, "0")}:00`)
-
-const control =
-  "min-h-10 w-full rounded-md border border-line-strong bg-ground px-3 text-sm text-ink placeholder:text-dim focus-visible:outline-2 disabled:opacity-50"
-
-function Group({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="space-y-4 rounded-xl border border-line bg-panel p-5 shadow-[var(--shadow-card)]">
-      <h2 className="text-base font-semibold">{title}</h2>
-      {children}
-    </section>
-  )
-}
-
-/** Label, control, optional hint and a computed readout, wired for assistive tech. */
-function Field({
-  label,
-  hint,
-  readout,
-  children,
-}: {
-  label: string
-  hint?: string
-  readout?: string
-  children: ReactElement<{ id?: string; "aria-describedby"?: string }>
-}) {
-  const id = useId()
-  const hintId = `${id}-hint`
-  return (
-    <div>
-      <label
-        htmlFor={id}
-        className="mb-1.5 flex items-baseline justify-between gap-3 text-sm font-medium"
-      >
-        {label}
-        {readout && <span className="font-mono text-xs font-normal text-dim tnum">{readout}</span>}
-      </label>
-      {cloneElement(children, hint ? { id, "aria-describedby": hintId } : { id })}
-      {hint && (
-        <p id={hintId} className="mt-1 text-xs leading-relaxed text-dim">
-          {hint}
-        </p>
-      )}
-    </div>
-  )
-}
-
-function NumberInput({
-  value,
-  onChange,
-  fallback,
-  ...rest
-}: {
-  value: number
-  onChange: (n: number) => void
-  fallback: number
-  min?: number
-  max?: number
-  disabled?: boolean
-  id?: string
-  "aria-describedby"?: string
-}) {
-  return (
-    <input
-      {...rest}
-      type="number"
-      inputMode="numeric"
-      value={value}
-      onChange={(e) => onChange(Number.parseInt(e.target.value, 10) || fallback)}
-      className={`${control} font-mono tnum`}
-    />
-  )
-}
 
 export default function SettingsPage() {
   const { t, locale, setLocale } = useT()
@@ -360,50 +262,12 @@ export default function SettingsPage() {
             </Field>
           </Group>
 
-          <Group title={t("settings.digest")}>
-            <p className="text-sm text-dim">{t("settings.digestIntro")}</p>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label={t("settings.digestFrequency")}>
-                <select
-                  value={settings.digestFrequency}
-                  onChange={(e) => set("digestFrequency", e.target.value as DigestFrequency)}
-                  className={control}
-                >
-                  <option value="off">{t("settings.digestOff")}</option>
-                  <option value="daily">{t("settings.digestDaily")}</option>
-                  <option value="weekly">{t("settings.digestWeekly")}</option>
-                </select>
-              </Field>
-              <Field
-                label={t("settings.digestHour")}
-                hint={t("settings.digestHourHint", { tz: settings.timezone })}
-              >
-                <select
-                  value={settings.digestHour}
-                  onChange={(e) => set("digestHour", Number(e.target.value))}
-                  disabled={settings.digestFrequency === "off"}
-                  className={`${control} font-mono tnum`}
-                >
-                  {HOURS.map((label, h) => (
-                    <option key={label} value={h}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={sendTestDigest}
-                disabled={sendingDigest}
-              >
-                {t("settings.digestSendTest")}
-              </Button>
-              <span className="text-xs text-dim">{t("settings.digestSendTestHint")}</span>
-            </div>
-          </Group>
+          <DigestSettings
+            settings={settings}
+            onChange={set}
+            sending={sendingDigest}
+            onSendTest={sendTestDigest}
+          />
 
           <TwoFactor />
 
