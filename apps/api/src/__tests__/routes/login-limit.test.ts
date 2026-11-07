@@ -28,7 +28,8 @@ describe("login rate limit (real SQLite)", () => {
     for (let i = 0; i < 12; i++) {
       expect((await login("ops@example.com", "right-password")).status).toBe(200)
     }
-  })
+    // 12 bcrypt logins take several seconds on a CI runner with coverage on.
+  }, 60_000)
 
   it("blocks after 5 failures, even with the right password, and keeps other accounts open", async () => {
     for (let i = 0; i < 5; i++) {
@@ -37,5 +38,5 @@ describe("login rate limit (real SQLite)", () => {
     expect((await login("ops@example.com", "right-password")).status).toBe(429)
     // A different account from the same address is tracked separately.
     expect((await login("other@example.com", "whatever")).status).toBe(401)
-  })
+  }, 60_000)
 })

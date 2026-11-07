@@ -43,7 +43,8 @@ test("login → create monitor → failing ping → open the run", async ({ page
 
   // The run page shows the job output and the exit code.
   await expect(page).toHaveURL(/\/monitors\/[^/]+\/runs\/[^/]+$/)
-  await expect(page.getByText("ERROR disk full on /var/backups")).toBeVisible()
+  // The output can appear in more than one place on the run page.
+  await expect(page.getByText("ERROR disk full on /var/backups").first()).toBeVisible()
   await expect(page.getByText("falha").first()).toBeVisible()
   await expect(page.getByText("Nenhuma execução com sucesso antes desta.")).toBeVisible()
 })
