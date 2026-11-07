@@ -33,11 +33,18 @@ export function DeparturesTable({
   rows,
   caption,
   actions,
+  selection,
 }: {
   rows: MonitorRow[]
   caption: string
   /** Optional trailing cell (e.g. a delete button). */
   actions?: (row: MonitorRow) => ReactNode
+  /** Optional multi-select column (bulk actions). */
+  selection?: {
+    selected: ReadonlySet<string>
+    onToggle: (id: string) => void
+    onToggleAll: (ids: string[], select: boolean) => void
+  }
 }) {
   const { t, locale } = useT()
   const maintenanceUntil = useMaintenance()
@@ -60,6 +67,22 @@ export function DeparturesTable({
         <caption className="sr-only">{caption}</caption>
         <thead className="border-b border-line-strong bg-raised">
           <tr>
+            {selection && (
+              <th scope="col" className={`${th} w-10`}>
+                <input
+                  type="checkbox"
+                  aria-label={t("bulk.selectAll")}
+                  checked={rows.length > 0 && rows.every((r) => selection.selected.has(r.id))}
+                  onChange={(e) =>
+                    selection.onToggleAll(
+                      rows.map((r) => r.id),
+                      e.target.checked,
+                    )
+                  }
+                  className="h-4 w-4 accent-[var(--signal)]"
+                />
+              </th>
+            )}
             <th scope="col" className={`${th} hidden md:table-cell`}>
               {t("board.next")}
             </th>
@@ -97,6 +120,17 @@ export function DeparturesTable({
                 key={row.id}
                 className={`border-b border-line last:border-b-0 transition-colors hover:bg-raised ${TINT[row.status] ?? ""}`}
               >
+                {selection && (
+                  <td className={`${td} w-10`}>
+                    <input
+                      type="checkbox"
+                      aria-label={t("bulk.select", { name: row.name })}
+                      checked={selection.selected.has(row.id)}
+                      onChange={() => selection.onToggle(row.id)}
+                      className="h-4 w-4 accent-[var(--signal)]"
+                    />
+                  </td>
+                )}
                 <td className={`${td} hidden font-mono text-dim tnum md:table-cell`}>
                   {next(row)}
                 </td>

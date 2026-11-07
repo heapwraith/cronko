@@ -288,4 +288,22 @@ export const monitors = {
   "monitors.maxDuration": "Duração Máxima (ms, opcional)",
   "monitors.maxDurationHint":
     "Alertar se a duração do ping exceder este limite. Deixe vazio para desabilitar.",
+  "bulk.region": "Ações em lote",
+  "bulk.selectAll": "Selecionar todos os monitores listados",
+  "bulk.select": "Selecionar {name}",
+  "bulk.selected": "{count} selecionado(s)",
+  "bulk.pause": "Pausar",
+  "bulk.resume": "Retomar",
+  "bulk.mute": "Silenciar 1 h",
+  "bulk.unmute": "Reativar alertas",
+  "bulk.tag": "Tag",
+  "bulk.addTag": "Adicionar tag",
+  "bulk.removeTag": "Remover tag",
+  "bulk.delete": "Excluir",
+  "bulk.deleteTitle": "Excluir os monitores selecionados?",
+  "bulk.deleteMessage":
+    "{count} monitor(es) e todo o histórico deles serão excluídos. Isso não pode ser desfeito.",
+  "bulk.done": "Feito em {count} monitor(es)",
+  "bulk.partial": "{ok} ok, {failed} com falha",
+  "bulk.failed": "Não foi possível aplicar a ação",
 } as const

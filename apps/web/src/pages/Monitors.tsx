@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { Search } from "lucide-react"
 import { useEffect, useId, useState } from "react"
+import { BulkBar } from "@/components/monitors/BulkBar"
 import { DeleteMonitorButton } from "@/components/monitors/DeleteMonitorButton"
 import { DeparturesTable, sortBySeverity } from "@/components/monitors/DeparturesTable"
 import { TagFilter, useTagFilter } from "@/components/monitors/TagFilter"
@@ -28,10 +29,36 @@ export default function MonitorsPage() {
   }, [error, toast, t])
 
   const [tag, setTag] = useTagFilter()
+  // The search looks at the name, the slug and the tags.
+  const query = search.trim().toLowerCase()
   const rows = sortBySeverity(monitors).filter(
     (m) =>
-      m.name.toLowerCase().includes(search.trim().toLowerCase()) && (!tag || m.tags.includes(tag)),
+      (!query ||
+        m.name.toLowerCase().includes(query) ||
+        m.slug.toLowerCase().includes(query) ||
+        m.tags.some((tg) => tg.includes(query))) &&
+      (!tag || m.tags.includes(tag)),
   )
+
+  // Selection survives filtering, but only monitors that still exist stay selected.
+  const [selected, setSelected] = useState<ReadonlySet<string>>(new Set())
+  const live = new Set(monitors.map((m) => m.id))
+  const chosen = [...selected].filter((id) => live.has(id))
+  const toggle = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (!next.delete(id)) next.add(id)
+      return next
+    })
+  const toggleAll = (ids: string[], select: boolean) =>
+    setSelected((prev) => {
+      const next = new Set(prev)
+      for (const id of ids) {
+        if (select) next.add(id)
+        else next.delete(id)
+      }
+      return next
+    })
 
   return (
     <div className="space-y-6">
@@ -60,6 +87,19 @@ export default function MonitorsPage() {
         </div>
       </div>
 
+      {chosen.length > 0 && (
+        <BulkBar
+          ids={chosen}
+          onDone={(ok) =>
+            setSelected((prev) => {
+              const next = new Set(prev)
+              for (const id of ok) next.delete(id)
+              return next
+            })
+          }
+        />
+      )}
+
       {isPending ? (
         <SkeletonTable rows={6} cols={5} />
       ) : monitors.length === 0 ? (
@@ -71,6 +111,7 @@ export default function MonitorsPage() {
           rows={rows}
           caption={t("board.caption")}
           actions={(m) => <DeleteMonitorButton monitorId={m.id} name={m.name} />}
+          selection={{ selected, onToggle: toggle, onToggleAll: toggleAll }}
         />
       )}
     </div>

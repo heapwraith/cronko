@@ -213,6 +213,17 @@ export const api = {
     delete: (id: string) => del<{ ok: boolean }>(`/api/status-pages/${id}`),
   },
   monitors: {
+    bulk: (
+      body: { ids: string[] } & (
+        | { action: "pause" | "resume" | "delete" }
+        | { action: "mute"; minutes: number | null }
+        | { action: "addTag" | "removeTag"; tag: string }
+      ),
+    ) =>
+      post<{ succeeded: number; failed: { id: string; reason: string }[] }>(
+        "/api/monitors/bulk",
+        body,
+      ),
     list: () =>
       get<
         Array<{
