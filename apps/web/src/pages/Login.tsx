@@ -1,6 +1,6 @@
 import { Eye, EyeOff, Loader2 } from "lucide-react"
 import { useEffect, useId, useRef, useState, useTransition } from "react"
-import { useNavigate } from "react-router"
+import { useNavigate, useSearchParams } from "react-router"
 import { Button } from "@/components/shared/Button"
 import { CronkoLogo } from "@/components/shared/CronkoLogo"
 import { IconButton } from "@/components/shared/IconButton"
@@ -8,9 +8,24 @@ import { ThemeToggle } from "@/components/shared/ThemeToggle"
 import { ApiError, api } from "@/lib/api"
 import { useT } from "@/lib/i18n"
 
+const SSO_ERRORS = [
+  "denied",
+  "invalid_state",
+  "failed",
+  "not_allowed",
+  "provider_unavailable",
+  "rate_limited",
+  "untrusted_proxy",
+  "no_identity",
+] as const
+
 export default function LoginPage() {
   const { t } = useT()
   const navigate = useNavigate()
+  const [params] = useSearchParams()
+  // Which sign-in methods the server offers; the password form is the default until it answers.
+  const [sso, setSso] = useState({ oidc: false, proxy: false, passwordLogin: true })
+  const ssoError = params.get("sso_error")
   const [isPending, startTransition] = useTransition()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -37,8 +52,15 @@ export default function LoginPage() {
   }, [navigate])
 
   useEffect(() => {
-    if (!checking) emailRef.current?.focus()
-  }, [checking])
+    api.auth
+      .ssoConfig()
+      .then(setSso)
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (!checking && sso.passwordLogin) emailRef.current?.focus()
+  }, [checking, sso.passwordLogin])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -79,6 +101,17 @@ export default function LoginPage() {
   }
 
   if (checking) return <div className="min-h-screen bg-ground" />
+
+  const hasSso = sso.oidc || sso.proxy
+  const ssoMessage = ssoError
+    ? t(
+        SSO_ERRORS.includes(ssoError as (typeof SSO_ERRORS)[number])
+          ? `auth.sso.${ssoError}`
+          : "auth.sso.failed",
+      )
+    : null
+  const ssoLink =
+    "inline-flex min-h-11 w-full items-center justify-center rounded-md border border-line-strong bg-ground px-3 text-[15px] font-semibold text-ink hover:bg-panel focus-visible:outline-2"
 
   const field =
     "min-h-11 w-full rounded-md border border-line-strong bg-ground px-3 text-[15px] text-ink placeholder:text-dim disabled:opacity-50"
@@ -151,7 +184,7 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
-          ) : (
+          ) : sso.passwordLogin ? (
             <>
               <div>
                 <label htmlFor={emailId} className="mb-1.5 block text-sm font-semibold">
@@ -200,32 +233,54 @@ export default function LoginPage() {
                 </div>
               </div>
             </>
+          ) : (
+            <p className="text-sm text-dim">{t("auth.sso.only")}</p>
           )}
 
-          {error && (
+          {(error || ssoMessage) && (
             <p
               id={errorId}
               role="alert"
               className="rounded-md bg-[var(--chip-down-bg)] px-3 py-2 text-sm text-[var(--chip-down-fg)]"
             >
-              {error}
+              {error ?? ssoMessage}
             </p>
           )}
 
-          <Button type="submit" className="w-full" disabled={loading || isPending}>
-            {loading ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                {t("auth.signingIn")}
-              </>
-            ) : isPending ? (
-              t("auth.redirecting")
-            ) : challenge ? (
-              t("auth.verify")
-            ) : (
-              t("auth.signIn")
-            )}
-          </Button>
+          {!challenge && hasSso && (
+            <div className="space-y-2">
+              {sso.oidc && (
+                <a href="/auth/sso/oidc/start" className={ssoLink}>
+                  {t("auth.sso.signIn")}
+                </a>
+              )}
+              {sso.proxy && (
+                <a href="/auth/sso/proxy" className={ssoLink}>
+                  {t("auth.sso.proxy")}
+                </a>
+              )}
+              {sso.passwordLogin && (
+                <p className="pt-1 text-center text-xs text-dim">{t("auth.sso.or")}</p>
+              )}
+            </div>
+          )}
+
+          {(sso.passwordLogin || challenge) && (
+            <Button type="submit" className="w-full" disabled={loading || isPending}>
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  {t("auth.signingIn")}
+                </>
+              ) : isPending ? (
+                t("auth.redirecting")
+              ) : challenge ? (
+                t("auth.verify")
+              ) : (
+                t("auth.signIn")
+              )}
+            </Button>
+          )}
         </form>
 
         <p className="mt-8 text-center text-sm text-dim">{t("auth.selfHosted")}</p>

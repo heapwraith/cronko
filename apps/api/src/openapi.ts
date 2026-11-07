@@ -671,6 +671,52 @@ const spec = {
         },
       },
     },
+    "/auth/sso/config": {
+      get: {
+        summary: "Which sign-in methods are configured (public, nothing secret)",
+        responses: {
+          "200": { description: "{ data: { oidc, proxy, passwordLogin } }" },
+        },
+      },
+    },
+    "/auth/sso/oidc/start": {
+      get: {
+        summary: "Start the OIDC sign-in (redirects to the identity provider)",
+        description:
+          "Authorization code flow with PKCE (S256), state and nonce, kept in a short-lived Lax cookie. 404 unless OIDC is configured.",
+        responses: {
+          "302": { description: "Redirect to the provider, or to /login?sso_error=… on failure" },
+          "404": { description: "OIDC is not configured" },
+        },
+      },
+    },
+    "/auth/sso/oidc/callback": {
+      get: {
+        summary: "OIDC redirect URI: verifies state, code and ID token, then signs the user in",
+        description:
+          "Only an existing local user whose e-mail is verified by the provider is signed in. Success redirects to /, anything else to /login?sso_error=<code>.",
+        parameters: [
+          { name: "code", in: "query", required: false, schema: { type: "string" } },
+          { name: "state", in: "query", required: false, schema: { type: "string" } },
+          { name: "error", in: "query", required: false, schema: { type: "string" } },
+        ],
+        responses: {
+          "302": { description: "Redirect to / (signed in) or /login?sso_error=<code>" },
+          "404": { description: "OIDC is not configured" },
+        },
+      },
+    },
+    "/auth/sso/proxy": {
+      get: {
+        summary: "Sign in with the identity a trusted reverse proxy forwards in a header",
+        description:
+          "Honoured only when the TCP peer is inside TRUSTED_PROXY_IPS; the header of any other peer is ignored. 404 unless TRUSTED_PROXY_AUTH_HEADER is configured.",
+        responses: {
+          "302": { description: "Redirect to / (signed in) or /login?sso_error=<code>" },
+          "404": { description: "Trusted-proxy login is not configured" },
+        },
+      },
+    },
     "/auth/login": {
       post: {
         summary: "Login with email and password",

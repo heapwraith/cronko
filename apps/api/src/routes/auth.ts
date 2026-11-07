@@ -12,18 +12,24 @@ import { authenticate } from "../middleware/authenticate"
 import { logAuditEvent } from "../services/audit"
 import {
   generateAccessToken,
-  generateRefreshToken,
   generateTwoFactorChallenge,
   verifyAccessToken,
   verifyPassword,
   verifyRefreshToken,
   verifyTwoFactorChallenge,
 } from "../services/auth"
+import { setSessionCookies } from "../services/session"
+import { passwordLoginEnabled } from "../services/sso"
 import { verifySecondFactor } from "../services/totp"
+import { ssoRoute } from "./sso"
 import { twoFactorRoute } from "./two-factor"
 
 export const authRoute = new Hono()
 authRoute.route("/2fa", twoFactorRoute)
+authRoute.route("/sso", ssoRoute)
+
+const passwordLoginOff = (c: Context) =>
+  c.json({ error: "Password login is disabled; use SSO", code: "PASSWORD_LOGIN_DISABLED" }, 403)
 
 const twoFactorLoginSchema = z.object({
   challenge: z.string().min(1),
@@ -38,6 +44,7 @@ const loginSchema = z.object({
 const isProd = () => env.NODE_ENV === "production"
 
 authRoute.post("/login", zValidator("json", loginSchema), async (c) => {
+  if (!passwordLoginEnabled()) return passwordLoginOff(c)
   const { email, password } = c.req.valid("json")
 
   const ip = clientIp(c)
@@ -88,6 +95,7 @@ authRoute.post("/login", zValidator("json", loginSchema), async (c) => {
 
 /** Second step for accounts with 2FA: the challenge from /login plus a TOTP or recovery code. */
 authRoute.post("/login/2fa", zValidator("json", twoFactorLoginSchema), async (c) => {
+  if (!passwordLoginEnabled()) return passwordLoginOff(c)
   const { challenge, code } = c.req.valid("json")
   const ip = clientIp(c)
 
@@ -132,33 +140,13 @@ async function completeLogin(
   limitKey: string,
 ) {
   clearLoginFailures(limitKey)
-  const accessToken = await generateAccessToken(user.id, user.email)
-  const refreshToken = await generateRefreshToken(user.id, user.email)
-
-  setCookie(c, "cronko_token", accessToken, {
-    httpOnly: true,
-    secure: isProd(),
-    sameSite: "Strict",
-    path: "/",
-    maxAge: 15 * 60,
-  })
-
-  setCookie(c, "cronko_refresh", refreshToken, {
-    httpOnly: true,
-    secure: isProd(),
-    sameSite: "Strict",
-    path: "/",
-    maxAge: 7 * 24 * 60 * 60,
-  })
+  const { accessToken, expiresAt } = await setSessionCookies(c, user)
 
   logAuditEvent({
     userId: user.id,
     action: "login_success",
     ipAddress: ip,
   }).catch(() => {})
-
-  const now = Math.floor(Date.now() / 1000)
-  const expiresAt = new Date((now + 15 * 60) * 1000).toISOString()
 
   return c.json({
     data: {
