@@ -1,0 +1,63 @@
+name: Docker arm64 smoke
+
+# The release image is built for linux/amd64 and linux/arm64 (deploy.yml), but the
+# regular CI smoke test only covers amd64. Under QEMU this is slow, so it runs only
+# on pull requests that can change how the image builds or what native code it needs.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - Dockerfile
+      - package.json
+      - pnpm-lock.yaml
+      - packages/database/**
+      - .github/workflows/docker-arm64.yml
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  docker-arm64:
+    name: Docker image smoke test (arm64, QEMU)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+      - uses: docker/setup-buildx-action@v3
+      - name: Build image (linux/arm64)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/arm64
+          load: true
+          tags: cronko:ci-arm64
+          cache-from: type=gha,scope=arm64
+          cache-to: type=gha,scope=arm64,mode=max
+      - name: Boot under emulation and probe
+        run: |
+          docker run -d --name cronko-arm64 --platform linux/arm64 -p 3000:3000 \
+            -e JWT_SECRET=ci-secret-ci-secret-ci-secret-ci-secret \
+            -e ADMIN_EMAIL=admin@example.com -e ADMIN_PASSWORD=ci-password-123 \
+            cronko:ci-arm64
+          # Node under QEMU starts slowly: allow up to 5 minutes.
+          ok=0
+          for i in $(seq 1 100); do
+            if curl -fsS http://localhost:3000/health/live; then ok=1; break; fi
+            sleep 3
+          done
+          echo
+          test "$ok" = "1"
+          # Proves the native better-sqlite3 module loads and migrations ran.
+          curl -fsS http://localhost:3000/health/ready
+          echo
+      - name: Container logs
+        if: failure()
+        run: docker logs cronko-arm64

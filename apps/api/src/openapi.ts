@@ -106,6 +106,11 @@ const spec = {
       },
     },
     "/ping/{token}/start": {
+      get: {
+        summary: "Pulse start (GET) — begin a long-running job",
+        parameters: [{ name: "token", in: "path", required: true, schema: { type: "string" } }],
+        responses: { "200": { description: "ok" }, "404": { description: "Monitor not found" } },
+      },
       post: {
         summary: "Pulse start — begin a long-running job (GET is also accepted)",
         description:
@@ -147,8 +152,30 @@ const spec = {
           "413": { description: "Body too large" },
         },
       },
+      get: {
+        summary: "Log an event without changing the monitor (GET is also accepted)",
+        description:
+          "Stores the request body (up to 10 KB) as an event. It is not a ping: status, schedule, runs and statistics stay as they are. Listed by `GET /api/monitors/{id}/logs`.",
+        parameters: [
+          { name: "token", in: "path", required: true, schema: { type: "string" } },
+          {
+            name: "rid",
+            in: "query",
+            required: false,
+            schema: { type: "string", format: "uuid" },
+            description:
+              "Client-picked run id; pairs a start with its finish, fail or success. Invalid values get 400.",
+          },
+        ],
+        responses: {
+          "200": { description: "ok" },
+          "400": { description: "Invalid rid" },
+          "404": { description: "Monitor not found" },
+          "413": { description: "Body too large" },
+        },
+      },
     },
-    "/ping/{token}/{exitStatus}": {
+    "/ping/{token}/{exit}": {
       post: {
         summary: "Report a script's exit status: 0 is a success, any other value a failure",
         description:
@@ -156,7 +183,35 @@ const spec = {
         parameters: [
           { name: "token", in: "path", required: true, schema: { type: "string" } },
           {
-            name: "exitStatus",
+            name: "exit",
+            in: "path",
+            required: true,
+            schema: { type: "integer", minimum: 0, maximum: 255 },
+          },
+          {
+            name: "rid",
+            in: "query",
+            required: false,
+            schema: { type: "string", format: "uuid" },
+            description:
+              "Client-picked run id; pairs a start with its finish, fail or success. Invalid values get 400.",
+          },
+        ],
+        responses: {
+          "200": { description: "ok" },
+          "400": { description: "Invalid exit status or rid" },
+          "404": { description: "Monitor not found" },
+          "413": { description: "Body too large" },
+        },
+      },
+      get: {
+        summary: "Report a script's exit status: 0 is a success, any other value a failure",
+        description:
+          "Same as `/ping/{token}?exit=N`, Healthchecks style. The status is an integer from 0 to 255 (larger values get 400). GET is also accepted.",
+        parameters: [
+          { name: "token", in: "path", required: true, schema: { type: "string" } },
+          {
+            name: "exit",
             in: "path",
             required: true,
             schema: { type: "integer", minimum: 0, maximum: 255 },
@@ -179,6 +234,15 @@ const spec = {
       },
     },
     "/ping/{token}/fail": {
+      get: {
+        summary: "Report that the job ran and failed (GET)",
+        description: "Same as POST, without a request body.",
+        parameters: [
+          { name: "token", in: "path", required: true, schema: { type: "string" } },
+          { name: "exit", in: "query", required: false, schema: { type: "integer" } },
+        ],
+        responses: { "200": { description: "ok" }, "404": { description: "Monitor not found" } },
+      },
       post: {
         summary: "Report that the job ran and failed (alerts immediately)",
         description:
@@ -203,6 +267,20 @@ const spec = {
       },
     },
     "/ping/{token}/finish": {
+      get: {
+        summary: "Pulse finish (GET) — complete a long-running job",
+        description: "Same as POST, without a request body.",
+        parameters: [
+          { name: "token", in: "path", required: true, schema: { type: "string" } },
+          {
+            name: "d",
+            in: "query",
+            schema: { type: "integer", description: "Duration in ms (optional)" },
+          },
+          { name: "exit", in: "query", schema: { type: "integer", description: "Exit code" } },
+        ],
+        responses: { "200": { description: "ok" }, "404": { description: "Monitor not found" } },
+      },
       post: {
         summary: "Pulse finish — complete a long-running job with duration",
         description:
@@ -248,9 +326,101 @@ const spec = {
           },
         },
         responses: {
-          "200": { description: "token + email + expiresAt" },
+          "200": {
+            description:
+              "token + email + expiresAt (cookies set), or { twoFactorRequired: true, challenge } when the account has 2FA: no cookies are issued until /auth/login/2fa succeeds",
+          },
           "401": { description: "Invalid credentials" },
           "429": { description: "Too many login attempts" },
+        },
+      },
+    },
+    "/auth/login/2fa": {
+      post: {
+        summary: "Second login step: challenge from /auth/login plus a TOTP or recovery code",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["challenge", "code"],
+                properties: {
+                  challenge: { type: "string", description: "Valid for 5 minutes" },
+                  code: { type: "string", description: "6-digit TOTP code or a recovery code" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "token + email + expiresAt (cookies set)" },
+          "401": { description: "Invalid code or expired challenge" },
+          "429": { description: "Too many attempts (shared with the password step)" },
+        },
+      },
+    },
+    "/auth/2fa": {
+      get: {
+        summary:
+          "Two-factor status: { enabled, recoveryCodesRemaining } (sessions only, not API tokens)",
+        security: [{ bearerAuth: [] }],
+        responses: { "200": { description: "status" }, "403": { description: "API token used" } },
+      },
+    },
+    "/auth/2fa/setup": {
+      post: {
+        summary: "Start enrollment: returns { secret, otpauthUri }; inactive until /enable",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        responses: {
+          "200": { description: "secret and otpauth URI" },
+          "409": { description: "Already enabled" },
+        },
+      },
+    },
+    "/auth/2fa/enable": {
+      post: {
+        summary: "Confirm with a code from the app; returns the 10 recovery codes once",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["code"],
+                properties: { code: { type: "string" } },
+              },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "{ recoveryCodes: string[] }" },
+          "400": { description: "Wrong code or setup not started" },
+          "429": { description: "Too many attempts" },
+        },
+      },
+    },
+    "/auth/2fa/disable": {
+      post: {
+        summary: "Disable 2FA: requires the password and a TOTP or recovery code",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["password", "code"],
+                properties: { password: { type: "string" }, code: { type: "string" } },
+              },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "ok" },
+          "401": { description: "Wrong password or code" },
+          "429": { description: "Too many attempts" },
         },
       },
     },
@@ -265,8 +435,7 @@ const spec = {
     },
     "/auth/logout": {
       post: {
-        summary: "Logout — clear all auth cookies",
-        security: [{ bearerAuth: [] }],
+        summary: "Logout — clear the cookies and revoke the access and refresh tokens server-side",
         responses: { "200": { description: "ok" } },
       },
     },
@@ -461,6 +630,53 @@ const spec = {
         },
       },
     },
+    "/api/export": {
+      get: {
+        summary:
+          "Export configuration as JSON (monitors, tags, channels, status pages, maintenance windows)",
+        description:
+          "No heartbeat history and no ping tokens. Channel secrets (webhook URLs, bot tokens, keys) are replaced by [REDACTED] unless includeSecrets=true, which needs a session: API tokens get 403. Every export is audit-logged. The body can be sent as is to POST /api/import/cronko.",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "includeSecrets",
+            in: "query",
+            schema: { type: "boolean" },
+            description: "Include channel secrets in clear text (session only)",
+          },
+        ],
+        responses: {
+          "200": {
+            description:
+              "{ format: 'cronko-export', version, monitors, tags, channels, statusPages, maintenanceWindows }",
+          },
+          "403": { description: "includeSecrets with an API token" },
+        },
+      },
+    },
+    "/api/import/cronko": {
+      post: {
+        summary: "Import a Cronko export (monitors, channels, status pages, maintenance windows)",
+        description:
+          "Body: the JSON from GET /api/export. Monitors get new ping tokens. Existing monitor names, status page slugs, maintenance window names and channels with the same type and name are skipped; channels whose secrets were redacted are skipped too. Session only (API tokens cannot import).",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        parameters: [
+          {
+            name: "dryRun",
+            in: "query",
+            schema: { type: "boolean" },
+            description: "Report what would happen without creating anything",
+          },
+        ],
+        responses: {
+          "200": {
+            description:
+              "{ dryRun, created[], skipped[], channels, statusPages, maintenanceWindows } each with created[] and skipped[]",
+          },
+          "400": { description: "Not a Cronko export" },
+        },
+      },
+    },
     "/api/import/healthchecks": {
       post: {
         summary: "Import monitors from Healthchecks (saved API response or live Management API)",
@@ -627,6 +843,17 @@ const spec = {
         summary: "Update settings (includes digestFrequency off|daily|weekly and digestHour)",
         security: [{ bearerAuth: [] }, { csrf: [] }],
         responses: { "200": { description: "Settings updated" } },
+      },
+    },
+    "/api/settings/backup": {
+      get: {
+        summary: "Status of the last scheduled backup",
+        description:
+          "enabled is false when BACKUP_DIR is unset. last holds the time of the last attempt, whether it worked, the file name and size of the newest good backup, and the error of a failed attempt.",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          "200": { description: "{ enabled, last: {at, ok, file, sizeBytes, error} | null }" },
+        },
       },
     },
     "/api/settings/tokens": {

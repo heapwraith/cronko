@@ -9,6 +9,7 @@
     "lint": "biome check .",
     "typecheck": "pnpm -r typecheck",
     "test": "vitest run",
+    "test:coverage": "pnpm -r --no-bail run test:coverage",
     "db:generate": "cd packages/database && drizzle-kit generate",
     "db:migrate": "cd packages/database && drizzle-kit migrate",
     "db:studio": "cd packages/database && drizzle-kit studio",

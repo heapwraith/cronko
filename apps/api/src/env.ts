@@ -34,6 +34,10 @@ const envSchema = z
     SELF_HEARTBEAT_INTERVAL_SECONDS: z.coerce.number().int().min(10).default(300),
     // Bearer token that enables GET /metrics (Prometheus). Unset = the endpoint is off (404).
     METRICS_TOKEN: z.string().min(16).optional(),
+    // Scheduled SQLite backups. Unset BACKUP_DIR = off.
+    BACKUP_DIR: z.string().optional(),
+    BACKUP_INTERVAL_HOURS: z.coerce.number().min(0.01).default(24),
+    BACKUP_KEEP: z.coerce.number().int().min(1).default(7),
     // Extra origins allowed to make state-changing requests (reverse proxy / custom domain)
     // Honour X-Forwarded-For / X-Real-IP (only behind a reverse proxy you control)
     TRUST_PROXY: z.enum(["true", "false"]).default("false"),

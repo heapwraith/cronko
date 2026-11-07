@@ -166,9 +166,21 @@ export interface StatusPageAdmin extends Required<Omit<StatusPageInput, "descrip
 export const api = {
   auth: {
     login: (body: { email: string; password: string }) =>
-      post<{ token: string; email: string; expiresAt: string }>("/auth/login", body),
+      post<
+        | { twoFactorRequired?: undefined; token: string; email: string; expiresAt: string }
+        | { twoFactorRequired: true; challenge: string }
+      >("/auth/login", body),
+    loginTwoFactor: (body: { challenge: string; code: string }) =>
+      post<{ token: string; email: string; expiresAt: string }>("/auth/login/2fa", body),
     logout: () => post<{ ok: boolean }>("/auth/logout"),
     me: () => get<{ id: string; email: string }>("/auth/me"),
+  },
+  twoFactor: {
+    status: () => get<{ enabled: boolean; recoveryCodesRemaining: number }>("/auth/2fa"),
+    setup: () => post<{ secret: string; otpauthUri: string }>("/auth/2fa/setup"),
+    enable: (code: string) => post<{ recoveryCodes: string[] }>("/auth/2fa/enable", { code }),
+    disable: (body: { password: string; code: string }) =>
+      post<{ ok: boolean }>("/auth/2fa/disable", body),
   },
   stats: {
     get: () =>
@@ -441,6 +453,17 @@ export const api = {
         digestHour: number
       }>("/api/settings", body),
     sendTestDigest: () => post<{ queued: number }>("/api/settings/digest/test", {}),
+    backup: () =>
+      get<{
+        enabled: boolean
+        last: {
+          at: string
+          ok: boolean
+          file: string | null
+          sizeBytes: number | null
+          error: string | null
+        } | null
+      }>("/api/settings/backup"),
     tokens: {
       list: () => get<ApiTokenInfo[]>("/api/settings/tokens"),
       create: (body: { name: string; scope: "read" | "write"; expiresInDays?: number }) =>

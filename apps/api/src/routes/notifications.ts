@@ -63,7 +63,7 @@ const pagerDutyConfig = z.object({
   routingKey: z.string().regex(/^[A-Za-z0-9]{32}$/, "Expected 32 letters or digits"),
 })
 
-const createNotificationSchema = z.discriminatedUnion("type", [
+export const createNotificationSchema = z.discriminatedUnion("type", [
   z.object({
     name: z.string().min(1),
     type: z.literal("discord"),
