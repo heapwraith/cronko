@@ -1,0 +1,30 @@
+{
+  "monitors": [
+    {
+      "type": "job",
+      "key": "daily-backup",
+      "name": "Daily Database Backup",
+      "schedule": "0 2 * * *",
+      "timezone": "America/New_York",
+      "grace_seconds": 300,
+      "paused": false,
+      "tags": ["prod", "db"],
+      "notify": ["devops-team"],
+      "assertions": ["metric.duration < 30min"],
+      "failure_tolerance": 1
+    },
+    { "type": "heartbeat", "key": "worker-alive", "schedule": "every 5 minutes", "paused": true },
+    { "type": "job", "key": "nightly-report", "schedule": "at 14:30", "timezone": "Europe/Lisbon" },
+    {
+      "type": "job",
+      "key": "multi",
+      "name": "Multi schedule",
+      "schedules": ["every 1 hour", "every 2 hours"]
+    },
+    { "type": "check", "key": "website", "name": "Homepage", "schedule": "every 1 min" },
+    { "type": "site", "key": "site-1", "name": "Marketing site" },
+    { "type": "job", "key": "odd", "name": "Odd schedule", "schedule": "whenever it feels right" },
+    { "type": "job", "key": "no-schedule", "name": "No schedule" },
+    { "type": "job", "key": "long-grace", "schedule": "0 * * * *", "grace_seconds": 200000 }
+  ]
+}

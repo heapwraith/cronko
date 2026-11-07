@@ -309,6 +309,30 @@ curl -X POST "$CRONKO/api/import/kuma?dryRun=true" -H "Authorization: Bearer $TO
   -H "Content-Type: application/json" --data @kuma-backup.json
 ```
 
+### Importing from Cronitor or Dead Man's Snitch
+
+The same dry-run rules apply (`?dryRun=true`, existing names skipped, imported monitors get new
+ping URLs).
+
+**Cronitor** (`POST /api/import/cronitor`). Save the list with
+`curl -u API_KEY: https://cronitor.io/api/monitors -o monitors.json` and send that file.
+Cronitor is not called from Cronko: pagination was not verified, and a silent partial import
+is worse than a file you can check. `job` and `heartbeat` monitors are imported (`check` and
+`site` are active checks and are listed as skipped). The schedule can be a cron expression
+(with its `timezone`), `every N minutes|hours|days|s` or `at HH:MM` (a daily cron); the first
+entry of `schedules` is used on newer API versions. `grace_seconds` and `paused` carry over.
+Notification lists, assertions and tolerances are not imported and are named in the warnings.
+
+**Dead Man's Snitch** (`POST /api/import/dms`). Send the JSON array from `GET /v1/snitches`, or
+`{"apiKey": "..."}` and Cronko fetches it from `api.deadmanssnitch.com` (the key is sent as the
+HTTP Basic user and is never stored or logged). Intervals map as `15_minute` 15 min,
+`30_minute` 30 min, `hourly`, `daily`, `weekly` and `monthly` (taken as 30 days); the API has
+no grace period, so the default is used. Tags and the paused state carry over; notes and alert
+e-mails do not.
+
+These two importers follow each service's published API documentation; they were not run
+against a real account. Check a dry run before importing.
+
 ### Exporting and importing configuration
 
 `GET /api/export` returns your setup as JSON (`format: "cronko-export"`): monitors

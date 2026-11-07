@@ -144,6 +144,164 @@ export function mapKuma(monitorList: unknown[]): ImportCandidate[] {
   })
 }
 
+const UNIT_SECONDS: Record<string, number> = {
+  s: 1,
+  sec: 1,
+  secs: 1,
+  second: 1,
+  seconds: 1,
+  m: 60,
+  min: 60,
+  mins: 60,
+  minute: 60,
+  minutes: 60,
+  h: 3600,
+  hr: 3600,
+  hrs: 3600,
+  hour: 3600,
+  hours: 3600,
+  d: 86_400,
+  day: 86_400,
+  days: 86_400,
+}
+
+/**
+ * The three schedule forms Cronitor documents for jobs and heartbeats: a cron
+ * expression, an interval ("every 5 minutes", "every 30s") and a time of day ("at 14:30").
+ */
+export function parseCronitorSchedule(
+  expr: string,
+): { scheduleCron: string } | { expectedIntervalSeconds: number } | null {
+  const text = expr.trim()
+  const every = /^every\s+(\d+)\s*([a-z]+)$/i.exec(text)
+  if (every) {
+    const unit = UNIT_SECONDS[(every[2] ?? "").toLowerCase()]
+    return unit ? { expectedIntervalSeconds: Number(every[1]) * unit } : null
+  }
+  const at = /^at\s+(\d{1,2}):(\d{2})$/i.exec(text)
+  if (at) {
+    const [hour, minute] = [Number(at[1]), Number(at[2])]
+    return hour < 24 && minute < 60 ? { scheduleCron: `${minute} ${hour} * * *` } : null
+  }
+  return text.split(/\s+/).length === 5 ? { scheduleCron: text } : null
+}
+
+/**
+ * Cronitor monitors (`GET /api/monitors`). Jobs and heartbeats map to a dead-man's switch;
+ * `check` and `site` monitors are active checks and are skipped. The schedule is `schedule`
+ * or, in API version 2025-11-28 and later, the first entry of `schedules`.
+ */
+export function mapCronitor(monitors: unknown[]): ImportCandidate[] {
+  return monitors.map((raw, i) => {
+    if (!isRecord(raw)) return { source: `#${i + 1}`, skip: "not an object", warnings: [] }
+    const name =
+      (typeof raw.name === "string" && raw.name.trim()) ||
+      (typeof raw.key === "string" && raw.key.trim()) ||
+      ""
+    const source = name || `#${i + 1}`
+    const warnings: string[] = []
+    if (raw.type !== "job" && raw.type !== "heartbeat") {
+      return {
+        source,
+        skip: `type "${String(raw.type)}" is an active check; only jobs and heartbeats are imported`,
+        warnings,
+      }
+    }
+    if (!name) return { source, skip: "monitor has no name or key", warnings }
+
+    let expr: string | undefined
+    if (typeof raw.schedule === "string") expr = raw.schedule
+    else if (Array.isArray(raw.schedules) && typeof raw.schedules[0] === "string") {
+      expr = raw.schedules[0]
+      if (raw.schedules.length > 1) warnings.push("only the first schedule was imported")
+    }
+    if (!expr) return { source, skip: "monitor has no schedule", warnings }
+    const schedule = parseCronitorSchedule(expr)
+    if (!schedule) return { source, skip: `unsupported schedule "${expr}"`, warnings }
+
+    const input: Record<string, unknown> = { name, ...schedule }
+    if ("scheduleCron" in schedule && typeof raw.timezone === "string" && raw.timezone) {
+      input.timezone = raw.timezone
+    }
+    if (typeof raw.grace_seconds === "number") {
+      if (raw.grace_seconds > MAX_GRACE) {
+        warnings.push(`grace ${raw.grace_seconds}s reduced to ${MAX_GRACE}s`)
+        input.gracePeriodSeconds = MAX_GRACE
+      } else input.gracePeriodSeconds = raw.grace_seconds
+    }
+    if (Array.isArray(raw.tags)) {
+      const tags = raw.tags.filter((t): t is string => typeof t === "string")
+      if (tags.length) input.tags = tags
+    }
+
+    const dropped = ["assertions", "notify", "failure_tolerance", "schedule_tolerance"].filter(
+      (k) =>
+        raw[k] !== undefined &&
+        raw[k] !== null &&
+        raw[k] !== "" &&
+        !(Array.isArray(raw[k]) && raw[k].length === 0),
+    )
+    if (dropped.length) warnings.push(`not imported: ${dropped.join(", ")}`)
+    return { source, input, paused: raw.paused === true, warnings }
+  })
+}
+
+/** Dead Man's Snitch intervals, from its API reference. A month is taken as 30 days. */
+const DMS_INTERVAL_SECONDS: Record<string, number> = {
+  "15_minute": 900,
+  "30_minute": 1800,
+  hourly: 3600,
+  daily: 86_400,
+  weekly: 604_800,
+  monthly: 2_592_000,
+}
+
+/**
+ * Dead Man's Snitch snitches (`GET /v1/snitches`): `name`, `interval`, `tags`, `status`
+ * ("paused" marks a paused snitch). The API has no grace period, notes and e-mail
+ * alerts have no equivalent here, and the check-in token is not reused.
+ */
+export function mapDeadMansSnitch(snitches: unknown[]): ImportCandidate[] {
+  return snitches.map((raw, i) => {
+    if (!isRecord(raw)) return { source: `#${i + 1}`, skip: "not an object", warnings: [] }
+    const name = typeof raw.name === "string" ? raw.name.trim() : ""
+    const source = name || `#${i + 1}`
+    const warnings: string[] = []
+    if (!name) return { source, skip: "snitch has no name", warnings }
+    const interval =
+      typeof raw.interval === "string" ? DMS_INTERVAL_SECONDS[raw.interval] : undefined
+    if (!interval) return { source, skip: `unknown interval "${String(raw.interval)}"`, warnings }
+
+    const tags = Array.isArray(raw.tags)
+      ? raw.tags.filter((t): t is string => typeof t === "string")
+      : []
+    if (typeof raw.notes === "string" && raw.notes) warnings.push("notes are not imported")
+    if (Array.isArray(raw.alert_email) && raw.alert_email.length) {
+      warnings.push("alert e-mails are not imported; add notification channels in Cronko")
+    }
+    if (raw.interval === "monthly") warnings.push("monthly is imported as 30 days")
+    warnings.push("the check-in token is not reused; the new ping URL is on the monitor page")
+    return {
+      source,
+      input: {
+        name,
+        expectedIntervalSeconds: interval,
+        gracePeriodSeconds: DEFAULT_GRACE_PERIOD_SECONDS,
+        ...(tags.length && { tags }),
+      },
+      paused: raw.status === "paused",
+      warnings,
+    }
+  })
+}
+
+/** Accepts a bare array or `{ monitors: [...] }`. */
+export function extractList(doc: unknown, key: string): unknown[] | null {
+  if (Array.isArray(doc)) return doc
+  if (isRecord(doc) && Array.isArray(doc[key])) return doc[key]
+  return null
+}
+
 /** Validates each candidate like POST /api/monitors and creates it unless `dryRun`. */
 export async function runImport(
   candidates: ImportCandidate[],

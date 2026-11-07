@@ -1184,6 +1184,46 @@ const spec = {
         },
       },
     },
+    "/api/import/cronitor": {
+      post: {
+        summary: "Import jobs and heartbeats from a saved Cronitor monitor list",
+        description:
+          "Body: the saved response of GET https://cronitor.io/api/monitors (a bare array or {monitors: [...]}). Jobs and heartbeats are imported (cron, every N unit and at HH:MM schedules); checks and sites are active checks and are skipped. Names that already exist are skipped.",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        parameters: [
+          {
+            name: "dryRun",
+            in: "query",
+            schema: { type: "boolean" },
+            description: "Report what would happen without creating anything",
+          },
+        ],
+        responses: {
+          "200": { description: "{ data: { dryRun, created[], skipped[] } }" },
+          "400": { description: "Body is not in the expected shape" },
+        },
+      },
+    },
+    "/api/import/dms": {
+      post: {
+        summary: "Import snitches from Dead Man's Snitch",
+        description:
+          "Body: the JSON array of GET /v1/snitches, or {apiKey} to fetch it from api.deadmanssnitch.com. The intervals 15_minute, 30_minute, hourly, daily, weekly and monthly (30 days) are mapped; the grace period is the default. Names that already exist are skipped.",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        parameters: [
+          {
+            name: "dryRun",
+            in: "query",
+            schema: { type: "boolean" },
+            description: "Report what would happen without creating anything",
+          },
+        ],
+        responses: {
+          "200": { description: "{ data: { dryRun, created[], skipped[] } }" },
+          "400": { description: "Body is not in the expected shape" },
+        },
+      },
+    },
     "/api/import/kuma": {
       post: {
         summary: "Import push monitors from an Uptime Kuma backup JSON",
