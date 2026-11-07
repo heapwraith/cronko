@@ -12,6 +12,11 @@ export type NotificationChannelType =
   | "pushover"
   | "teams"
   | "pagerduty"
+  | "googlechat"
+  | "mattermost"
+  | "rocketchat"
+  | "gotify"
+  | "matrix"
 
 export type IncidentStatus = "open" | "resolved"
 
@@ -60,6 +65,8 @@ export interface NotificationChannel {
     | PushoverConfig
     | TeamsConfig
     | PagerDutyConfig
+    | GotifyConfig
+    | MatrixConfig
   createdAt: Date
 }
 
@@ -106,4 +113,17 @@ export interface TeamsConfig {
 /** PagerDuty Events API v2 integration (routing) key of a service. */
 export interface PagerDutyConfig {
   routingKey: string
+}
+
+/** Gotify server: the app token of an application created in its UI. */
+export interface GotifyConfig {
+  serverUrl: string
+  appToken: string
+}
+
+/** Matrix room: homeserver base URL, an access token for the sending user, and the room id. */
+export interface MatrixConfig {
+  homeserverUrl: string
+  accessToken: string
+  roomId: string
 }

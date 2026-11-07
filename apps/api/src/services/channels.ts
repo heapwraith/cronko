@@ -2,6 +2,8 @@ import type { notificationChannels } from "@cronko/database/schema"
 import type {
   DiscordConfig,
   EmailConfig,
+  GotifyConfig,
+  MatrixConfig,
   NtfyConfig,
   PagerDutyConfig,
   PushoverConfig,
@@ -46,6 +48,25 @@ async function post(
     })
   } catch (err) {
     // Never include the URL: webhook and bot URLs embed secrets.
+    const reason = err instanceof Error ? err.name : "error"
+    throw new DeliveryError(`${label}: request failed (${reason})`, true)
+  }
+  if (!res.ok) {
+    throw new DeliveryError(`${label}: HTTP ${res.status}`, isRetryableStatus(res.status))
+  }
+}
+
+/** Like `post`, with the method chosen (Matrix sends messages with PUT). */
+async function send(
+  method: "POST" | "PUT",
+  url: string,
+  init: { headers: Record<string, string>; body: string },
+  label: string,
+) {
+  let res: Response
+  try {
+    res = await fetch(url, { method, ...init, signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) })
+  } catch (err) {
     const reason = err instanceof Error ? err.name : "error"
     throw new DeliveryError(`${label}: request failed (${reason})`, true)
   }
@@ -134,6 +155,18 @@ export function teamsCard(text: string, link?: string) {
       },
     ],
   }
+}
+
+/** Gotify priorities: 8+ is a high-priority notification on most clients. */
+const GOTIFY_PRIORITY: Record<string, number> = {
+  down: 8,
+  failed: 7,
+  missed: 6,
+  slow: 4,
+  unusual: 4,
+  overlap: 4,
+  recovered: 3,
+  digest: 2,
 }
 
 /** ntfy priorities: 5 urgent, 4 high, 3 default. */
@@ -293,6 +326,46 @@ export async function deliver(
         `https://api.telegram.org/bot${cfg.botToken}/sendMessage`,
         { chat_id: cfg.chatId, text },
         "telegram",
+      )
+    }
+    case "googlechat":
+      return postJson((channel.config as { webhookUrl: string }).webhookUrl, { text }, "googlechat")
+    case "mattermost":
+      return postJson((channel.config as { webhookUrl: string }).webhookUrl, { text }, "mattermost")
+    case "rocketchat":
+      return postJson((channel.config as { webhookUrl: string }).webhookUrl, { text }, "rocketchat")
+    case "gotify": {
+      const cfg = channel.config as GotifyConfig
+      const link = text.match(/https?:\/\/\S+$/)?.[0]
+      return postJson(
+        `${cfg.serverUrl.replace(/\/+$/, "")}/message?token=${encodeURIComponent(cfg.appToken)}`,
+        {
+          title: `Cronko: ${monitorName ?? event}`,
+          message: link ? text.slice(0, -link.length).trim() : text,
+          priority: GOTIFY_PRIORITY[event] ?? 5,
+          ...(link && {
+            extras: { "client::notification": { click: { url: link } } },
+          }),
+        },
+        "gotify",
+      )
+    }
+    case "matrix": {
+      const cfg = channel.config as MatrixConfig
+      const txnId = crypto.randomUUID()
+      return send(
+        "PUT",
+        `${cfg.homeserverUrl.replace(/\/+$/, "")}/_matrix/client/v3/rooms/${encodeURIComponent(
+          cfg.roomId,
+        )}/send/m.room.message/${txnId}`,
+        {
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${cfg.accessToken}`,
+          },
+          body: JSON.stringify({ msgtype: "m.text", body: text }),
+        },
+        "matrix",
       )
     }
     case "email": {

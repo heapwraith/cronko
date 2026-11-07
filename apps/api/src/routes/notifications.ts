@@ -63,6 +63,15 @@ const pagerDutyConfig = z.object({
   routingKey: z.string().regex(/^[A-Za-z0-9]{32}$/, "Expected 32 letters or digits"),
 })
 
+const gotifyConfig = z.object({ serverUrl: httpUrl, appToken: z.string().min(1) })
+
+// Room ids look like !opaque:server.example (aliases like #room:server are not accepted).
+const matrixConfig = z.object({
+  homeserverUrl: httpUrl,
+  accessToken: z.string().min(1),
+  roomId: z.string().regex(/^![^:\s]+:\S+$/, "Use the room id, like !abc123:matrix.org"),
+})
+
 export const createNotificationSchema = z.discriminatedUnion("type", [
   z.object({
     name: z.string().min(1),
@@ -109,6 +118,31 @@ export const createNotificationSchema = z.discriminatedUnion("type", [
     type: z.literal("teams"),
     config: z.object({ webhookUrl: z.url() }),
   }),
+  z.object({
+    name: z.string().min(1),
+    type: z.literal("googlechat"),
+    config: z.object({ webhookUrl: z.url() }),
+  }),
+  z.object({
+    name: z.string().min(1),
+    type: z.literal("mattermost"),
+    config: z.object({ webhookUrl: z.url() }),
+  }),
+  z.object({
+    name: z.string().min(1),
+    type: z.literal("rocketchat"),
+    config: z.object({ webhookUrl: z.url() }),
+  }),
+  z.object({
+    name: z.string().min(1),
+    type: z.literal("gotify"),
+    config: gotifyConfig,
+  }),
+  z.object({
+    name: z.string().min(1),
+    type: z.literal("matrix"),
+    config: matrixConfig,
+  }),
 ])
 
 const updateNotificationSchema = z.object({
@@ -123,6 +157,8 @@ const updateNotificationSchema = z.object({
       ntfyConfig,
       pushoverConfig,
       pagerDutyConfig,
+      gotifyConfig,
+      matrixConfig,
     ])
     .optional(),
 })
