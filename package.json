@@ -4,7 +4,7 @@
   "version": "0.3.0",
   "packageManager": "pnpm@9.15.9",
   "scripts": {
-    "dev": "turbo dev",
+    "dev": "pnpm -r --parallel dev",
     "build": "pnpm -r build",
     "lint": "biome check .",
     "typecheck": "pnpm -r typecheck",
