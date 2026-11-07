@@ -161,12 +161,12 @@ The repository ships a composite action, so there is nothing to install. It need
 `sh` and `curl` (any Linux or macOS runner), and it masks the URL in the logs.
 
 ```yaml
-      - uses: actions/checkout@v4
-      - name: Export
-        uses: heapwraith/cronko@v0.4.0
-        with:
-          url: ${{ secrets.CRONKO_PING_URL }}
-          command: ./scripts/export.sh
+- uses: actions/checkout@v4
+- name: Export
+  uses: heapwraith/cronko@v0.4.0
+  with:
+    url: ${{ secrets.CRONKO_PING_URL }}
+    command: ./scripts/export.sh
 ```
 
 `command` is a script (several lines are fine); the step fails with the script's own exit
@@ -178,13 +178,13 @@ job is **not** failed, only a warning is logged; set it to `true` to fail the st
 To report a job you do not wrap, use `report` mode in a final step that always runs:
 
 ```yaml
-      - name: Report to Cronko
-        if: always()
-        uses: heapwraith/cronko@v0.4.0
-        with:
-          url: ${{ secrets.CRONKO_PING_URL }}
-          mode: report
-          status: ${{ job.status }}   # success or failure; cancelled and skipped send nothing
+- name: Report to Cronko
+  if: always()
+  uses: heapwraith/cronko@v0.4.0
+  with:
+    url: ${{ secrets.CRONKO_PING_URL }}
+    mode: report
+    status: ${{ job.status }} # success or failure; cancelled and skipped send nothing
 ```
 
 `mode: start` sends a start ping, which makes Cronko measure the duration and flag a run
