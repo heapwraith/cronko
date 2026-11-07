@@ -9,6 +9,7 @@ import { securityHeaders } from "./middleware/securityHeaders"
 import { registerOpenApi } from "./openapi"
 import { auditRoute } from "./routes/audit"
 import { authRoute } from "./routes/auth"
+import { badgeRoute } from "./routes/badge"
 import { exportRoute } from "./routes/export"
 import { importRoute } from "./routes/import"
 import { incidentsRoute } from "./routes/incidents"
@@ -74,46 +75,7 @@ app.route("/public/status", publicStatusRoute)
 app.use("/auth/*", csrf)
 app.route("/auth", authRoute)
 
-app.get("/badge/:token", async (c) => {
-  const { findMonitorByToken } = await import("@cronko/database/queries/monitors")
-  const token = c.req.param("token") ?? ""
-  const monitor = await findMonitorByToken(token)
-
-  if (!monitor) {
-    return c.text("monitor not found", 404)
-  }
-
-  const colors: Record<string, string> = {
-    healthy: "#10b981",
-    missed: "#f59e0b",
-    failed: "#dc2626",
-    down: "#ef4444",
-    paused: "#6b7280",
-    pending: "#3b82f6",
-  }
-  const labels: Record<string, string> = {
-    healthy: "healthy",
-    missed: "missed",
-    failed: "failed",
-    down: "down",
-    paused: "paused",
-    pending: "pending",
-  }
-
-  const color = colors[monitor.status] ?? "#6b7280"
-  const label = labels[monitor.status] ?? monitor.status
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="20">
-  <rect width="60" height="20" fill="#555" rx="3"/>
-  <rect x="60" width="60" height="20" fill="${color}" rx="3"/>
-  <text x="30" y="14" text-anchor="middle" fill="#fff" font-size="10" font-family="sans-serif">cronko</text>
-  <text x="90" y="14" text-anchor="middle" fill="#fff" font-size="10" font-family="sans-serif">${label}</text>
-</svg>`
-
-  return c.text(svg, 200, {
-    "Content-Type": "image/svg+xml",
-    "Cache-Control": "public, max-age=30",
-  })
-})
+app.route("/badge", badgeRoute)
 
 const api = new Hono<{ Variables: Variables }>()
 
