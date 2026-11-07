@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { cloneElement, type ReactElement, useEffect, useId, useState } from "react"
 import { ApiTokens } from "@/components/settings/ApiTokens"
 import { BackupStatus } from "@/components/settings/BackupStatus"
+import { PingKey } from "@/components/settings/PingKey"
 import { TwoFactor } from "@/components/settings/TwoFactor"
 import { Button } from "@/components/shared/Button"
 import { ConfirmModal } from "@/components/shared/ConfirmModal"
@@ -407,6 +408,8 @@ export default function SettingsPage() {
           <TwoFactor />
 
           <ApiTokens />
+
+          <PingKey />
 
           <BackupStatus />
 

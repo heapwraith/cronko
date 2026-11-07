@@ -12,6 +12,12 @@ export type NotificationChannelType =
   | "pushover"
   | "teams"
   | "pagerduty"
+  | "googlechat"
+  | "mattermost"
+  | "rocketchat"
+  | "gotify"
+  | "matrix"
+  | "apprise"
 
 export type IncidentStatus = "open" | "resolved"
 
@@ -60,6 +66,9 @@ export interface NotificationChannel {
     | PushoverConfig
     | TeamsConfig
     | PagerDutyConfig
+    | GotifyConfig
+    | MatrixConfig
+    | AppriseConfig
   createdAt: Date
 }
 
@@ -106,4 +115,29 @@ export interface TeamsConfig {
 /** PagerDuty Events API v2 integration (routing) key of a service. */
 export interface PagerDutyConfig {
   routingKey: string
+}
+
+/** Gotify server: the app token of an application created in its UI. */
+export interface GotifyConfig {
+  serverUrl: string
+  appToken: string
+}
+
+/** Matrix room: homeserver base URL, an access token for the sending user, and the room id. */
+export interface MatrixConfig {
+  homeserverUrl: string
+  accessToken: string
+  roomId: string
+}
+
+/**
+ * A user-hosted apprise-api server. Either `configKey` (stored configuration, stateful
+ * `/notify/{key}`) or `urls` (inline Apprise URLs, stateless `/notify`) is required.
+ */
+export interface AppriseConfig {
+  serverUrl: string
+  configKey?: string | undefined
+  /** Inline Apprise URLs (they carry tokens, so they are secrets). */
+  urls?: string | undefined
+  tag?: string | undefined
 }

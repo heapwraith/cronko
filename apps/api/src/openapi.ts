@@ -297,13 +297,423 @@ const spec = {
         responses: { "200": { description: "ok" }, "404": { description: "Monitor not found" } },
       },
     },
+    "/ping/k/{key}/{slug}": {
+      get: {
+        summary: "Ping a monitor by slug (success)",
+        description:
+          "Requires the instance ping key (Settings → Ping key). Same behaviour as the token URL; the slug is the monitor slug.",
+        parameters: [
+          { name: "key", in: "path", required: true, schema: { type: "string" } },
+          { name: "slug", in: "path", required: true, schema: { type: "string" } },
+          {
+            name: "create",
+            in: "query",
+            required: false,
+            schema: { type: "string", enum: ["1"] },
+            description:
+              "Create the monitor on its first ping (defaults: timeout 86400 s, grace 3600 s; tagged auto-created; limited per hour and in total).",
+          },
+          { name: "timeout", in: "query", required: false, schema: { type: "integer" } },
+          { name: "grace", in: "query", required: false, schema: { type: "integer" } },
+        ],
+        responses: {
+          "200": { description: "ok" },
+          "400": { description: "Invalid slug, rid, exit status, timeout or grace" },
+          "404": { description: "Wrong ping key, or unknown slug without create=1" },
+          "429": { description: "Rate limited, or the auto-create limit was reached" },
+        },
+      },
+      post: {
+        summary: "Ping a monitor by slug (success)",
+        description:
+          "Requires the instance ping key (Settings → Ping key). Same behaviour as the token URL; the slug is the monitor slug.",
+        parameters: [
+          { name: "key", in: "path", required: true, schema: { type: "string" } },
+          { name: "slug", in: "path", required: true, schema: { type: "string" } },
+          {
+            name: "create",
+            in: "query",
+            required: false,
+            schema: { type: "string", enum: ["1"] },
+            description:
+              "Create the monitor on its first ping (defaults: timeout 86400 s, grace 3600 s; tagged auto-created; limited per hour and in total).",
+          },
+          { name: "timeout", in: "query", required: false, schema: { type: "integer" } },
+          { name: "grace", in: "query", required: false, schema: { type: "integer" } },
+        ],
+        responses: {
+          "200": { description: "ok" },
+          "400": { description: "Invalid slug, rid, exit status, timeout or grace" },
+          "404": { description: "Wrong ping key, or unknown slug without create=1" },
+          "429": { description: "Rate limited, or the auto-create limit was reached" },
+        },
+      },
+    },
+    "/ping/k/{key}/{slug}/start": {
+      get: {
+        summary: "Report that a run started, by slug",
+        description:
+          "Requires the instance ping key (Settings → Ping key). Same behaviour as the token URL; the slug is the monitor slug.",
+        parameters: [
+          { name: "key", in: "path", required: true, schema: { type: "string" } },
+          { name: "slug", in: "path", required: true, schema: { type: "string" } },
+          {
+            name: "create",
+            in: "query",
+            required: false,
+            schema: { type: "string", enum: ["1"] },
+            description:
+              "Create the monitor on its first ping (defaults: timeout 86400 s, grace 3600 s; tagged auto-created; limited per hour and in total).",
+          },
+          { name: "timeout", in: "query", required: false, schema: { type: "integer" } },
+          { name: "grace", in: "query", required: false, schema: { type: "integer" } },
+        ],
+        responses: {
+          "200": { description: "ok" },
+          "400": { description: "Invalid slug, rid, exit status, timeout or grace" },
+          "404": { description: "Wrong ping key, or unknown slug without create=1" },
+          "429": { description: "Rate limited, or the auto-create limit was reached" },
+        },
+      },
+      post: {
+        summary: "Report that a run started, by slug",
+        description:
+          "Requires the instance ping key (Settings → Ping key). Same behaviour as the token URL; the slug is the monitor slug.",
+        parameters: [
+          { name: "key", in: "path", required: true, schema: { type: "string" } },
+          { name: "slug", in: "path", required: true, schema: { type: "string" } },
+          {
+            name: "create",
+            in: "query",
+            required: false,
+            schema: { type: "string", enum: ["1"] },
+            description:
+              "Create the monitor on its first ping (defaults: timeout 86400 s, grace 3600 s; tagged auto-created; limited per hour and in total).",
+          },
+          { name: "timeout", in: "query", required: false, schema: { type: "integer" } },
+          { name: "grace", in: "query", required: false, schema: { type: "integer" } },
+        ],
+        responses: {
+          "200": { description: "ok" },
+          "400": { description: "Invalid slug, rid, exit status, timeout or grace" },
+          "404": { description: "Wrong ping key, or unknown slug without create=1" },
+          "429": { description: "Rate limited, or the auto-create limit was reached" },
+        },
+      },
+    },
+    "/ping/k/{key}/{slug}/finish": {
+      get: {
+        summary: "Report that a run finished, by slug",
+        description:
+          "Requires the instance ping key (Settings → Ping key). Same behaviour as the token URL; the slug is the monitor slug.",
+        parameters: [
+          { name: "key", in: "path", required: true, schema: { type: "string" } },
+          { name: "slug", in: "path", required: true, schema: { type: "string" } },
+          {
+            name: "create",
+            in: "query",
+            required: false,
+            schema: { type: "string", enum: ["1"] },
+            description:
+              "Create the monitor on its first ping (defaults: timeout 86400 s, grace 3600 s; tagged auto-created; limited per hour and in total).",
+          },
+          { name: "timeout", in: "query", required: false, schema: { type: "integer" } },
+          { name: "grace", in: "query", required: false, schema: { type: "integer" } },
+        ],
+        responses: {
+          "200": { description: "ok" },
+          "400": { description: "Invalid slug, rid, exit status, timeout or grace" },
+          "404": { description: "Wrong ping key, or unknown slug without create=1" },
+          "429": { description: "Rate limited, or the auto-create limit was reached" },
+        },
+      },
+      post: {
+        summary: "Report that a run finished, by slug",
+        description:
+          "Requires the instance ping key (Settings → Ping key). Same behaviour as the token URL; the slug is the monitor slug.",
+        parameters: [
+          { name: "key", in: "path", required: true, schema: { type: "string" } },
+          { name: "slug", in: "path", required: true, schema: { type: "string" } },
+          {
+            name: "create",
+            in: "query",
+            required: false,
+            schema: { type: "string", enum: ["1"] },
+            description:
+              "Create the monitor on its first ping (defaults: timeout 86400 s, grace 3600 s; tagged auto-created; limited per hour and in total).",
+          },
+          { name: "timeout", in: "query", required: false, schema: { type: "integer" } },
+          { name: "grace", in: "query", required: false, schema: { type: "integer" } },
+        ],
+        responses: {
+          "200": { description: "ok" },
+          "400": { description: "Invalid slug, rid, exit status, timeout or grace" },
+          "404": { description: "Wrong ping key, or unknown slug without create=1" },
+          "429": { description: "Rate limited, or the auto-create limit was reached" },
+        },
+      },
+    },
+    "/ping/k/{key}/{slug}/fail": {
+      get: {
+        summary: "Report a failure, by slug",
+        description:
+          "Requires the instance ping key (Settings → Ping key). Same behaviour as the token URL; the slug is the monitor slug.",
+        parameters: [
+          { name: "key", in: "path", required: true, schema: { type: "string" } },
+          { name: "slug", in: "path", required: true, schema: { type: "string" } },
+          {
+            name: "create",
+            in: "query",
+            required: false,
+            schema: { type: "string", enum: ["1"] },
+            description:
+              "Create the monitor on its first ping (defaults: timeout 86400 s, grace 3600 s; tagged auto-created; limited per hour and in total).",
+          },
+          { name: "timeout", in: "query", required: false, schema: { type: "integer" } },
+          { name: "grace", in: "query", required: false, schema: { type: "integer" } },
+        ],
+        responses: {
+          "200": { description: "ok" },
+          "400": { description: "Invalid slug, rid, exit status, timeout or grace" },
+          "404": { description: "Wrong ping key, or unknown slug without create=1" },
+          "429": { description: "Rate limited, or the auto-create limit was reached" },
+        },
+      },
+      post: {
+        summary: "Report a failure, by slug",
+        description:
+          "Requires the instance ping key (Settings → Ping key). Same behaviour as the token URL; the slug is the monitor slug.",
+        parameters: [
+          { name: "key", in: "path", required: true, schema: { type: "string" } },
+          { name: "slug", in: "path", required: true, schema: { type: "string" } },
+          {
+            name: "create",
+            in: "query",
+            required: false,
+            schema: { type: "string", enum: ["1"] },
+            description:
+              "Create the monitor on its first ping (defaults: timeout 86400 s, grace 3600 s; tagged auto-created; limited per hour and in total).",
+          },
+          { name: "timeout", in: "query", required: false, schema: { type: "integer" } },
+          { name: "grace", in: "query", required: false, schema: { type: "integer" } },
+        ],
+        responses: {
+          "200": { description: "ok" },
+          "400": { description: "Invalid slug, rid, exit status, timeout or grace" },
+          "404": { description: "Wrong ping key, or unknown slug without create=1" },
+          "429": { description: "Rate limited, or the auto-create limit was reached" },
+        },
+      },
+    },
+    "/ping/k/{key}/{slug}/log": {
+      get: {
+        summary: "Log an event without changing the monitor, by slug",
+        description:
+          "Requires the instance ping key (Settings → Ping key). Same behaviour as the token URL; the slug is the monitor slug.",
+        parameters: [
+          { name: "key", in: "path", required: true, schema: { type: "string" } },
+          { name: "slug", in: "path", required: true, schema: { type: "string" } },
+          {
+            name: "create",
+            in: "query",
+            required: false,
+            schema: { type: "string", enum: ["1"] },
+            description:
+              "Create the monitor on its first ping (defaults: timeout 86400 s, grace 3600 s; tagged auto-created; limited per hour and in total).",
+          },
+          { name: "timeout", in: "query", required: false, schema: { type: "integer" } },
+          { name: "grace", in: "query", required: false, schema: { type: "integer" } },
+        ],
+        responses: {
+          "200": { description: "ok" },
+          "400": { description: "Invalid slug, rid, exit status, timeout or grace" },
+          "404": { description: "Wrong ping key, or unknown slug without create=1" },
+          "429": { description: "Rate limited, or the auto-create limit was reached" },
+        },
+      },
+      post: {
+        summary: "Log an event without changing the monitor, by slug",
+        description:
+          "Requires the instance ping key (Settings → Ping key). Same behaviour as the token URL; the slug is the monitor slug.",
+        parameters: [
+          { name: "key", in: "path", required: true, schema: { type: "string" } },
+          { name: "slug", in: "path", required: true, schema: { type: "string" } },
+          {
+            name: "create",
+            in: "query",
+            required: false,
+            schema: { type: "string", enum: ["1"] },
+            description:
+              "Create the monitor on its first ping (defaults: timeout 86400 s, grace 3600 s; tagged auto-created; limited per hour and in total).",
+          },
+          { name: "timeout", in: "query", required: false, schema: { type: "integer" } },
+          { name: "grace", in: "query", required: false, schema: { type: "integer" } },
+        ],
+        responses: {
+          "200": { description: "ok" },
+          "400": { description: "Invalid slug, rid, exit status, timeout or grace" },
+          "404": { description: "Wrong ping key, or unknown slug without create=1" },
+          "429": { description: "Rate limited, or the auto-create limit was reached" },
+        },
+      },
+    },
+    "/ping/k/{key}/{slug}/{exit}": {
+      get: {
+        summary: "Report an exit status (0 = success), by slug",
+        description:
+          "Requires the instance ping key (Settings → Ping key). Same behaviour as the token URL; the slug is the monitor slug.",
+        parameters: [
+          { name: "key", in: "path", required: true, schema: { type: "string" } },
+          { name: "slug", in: "path", required: true, schema: { type: "string" } },
+          {
+            name: "exit",
+            in: "path",
+            required: true,
+            schema: { type: "integer", minimum: 0, maximum: 255 },
+          },
+          {
+            name: "create",
+            in: "query",
+            required: false,
+            schema: { type: "string", enum: ["1"] },
+            description:
+              "Create the monitor on its first ping (defaults: timeout 86400 s, grace 3600 s; tagged auto-created; limited per hour and in total).",
+          },
+          { name: "timeout", in: "query", required: false, schema: { type: "integer" } },
+          { name: "grace", in: "query", required: false, schema: { type: "integer" } },
+        ],
+        responses: {
+          "200": { description: "ok" },
+          "400": { description: "Invalid slug, rid, exit status, timeout or grace" },
+          "404": { description: "Wrong ping key, or unknown slug without create=1" },
+          "429": { description: "Rate limited, or the auto-create limit was reached" },
+        },
+      },
+      post: {
+        summary: "Report an exit status (0 = success), by slug",
+        description:
+          "Requires the instance ping key (Settings → Ping key). Same behaviour as the token URL; the slug is the monitor slug.",
+        parameters: [
+          { name: "key", in: "path", required: true, schema: { type: "string" } },
+          { name: "slug", in: "path", required: true, schema: { type: "string" } },
+          {
+            name: "exit",
+            in: "path",
+            required: true,
+            schema: { type: "integer", minimum: 0, maximum: 255 },
+          },
+          {
+            name: "create",
+            in: "query",
+            required: false,
+            schema: { type: "string", enum: ["1"] },
+            description:
+              "Create the monitor on its first ping (defaults: timeout 86400 s, grace 3600 s; tagged auto-created; limited per hour and in total).",
+          },
+          { name: "timeout", in: "query", required: false, schema: { type: "integer" } },
+          { name: "grace", in: "query", required: false, schema: { type: "integer" } },
+        ],
+        responses: {
+          "200": { description: "ok" },
+          "400": { description: "Invalid slug, rid, exit status, timeout or grace" },
+          "404": { description: "Wrong ping key, or unknown slug without create=1" },
+          "429": { description: "Rate limited, or the auto-create limit was reached" },
+        },
+      },
+    },
+    "/api/settings/ping-key": {
+      get: {
+        summary: "The instance ping key (session only; API tokens get 403)",
+        responses: { "200": { description: "{ data: { key: string | null } }" } },
+      },
+    },
+    "/api/settings/ping-key/rotate": {
+      post: {
+        summary: "Generate or rotate the ping key (the old key stops working at once)",
+        responses: { "200": { description: "{ data: { key } }" } },
+      },
+    },
     "/badge/{token}": {
       get: {
-        summary: "Public SVG status badge",
-        parameters: [{ name: "token", in: "path", required: true, schema: { type: "string" } }],
+        summary: "Public status badge of one monitor (SVG; add .json or .shields.json for data)",
+        description:
+          "Addressed by the monitor's secret token. `.json` returns `{ label, status }`; `.shields.json` returns the shields.io endpoint schema. `?states=simple` uses the three-state wording (up, late, down, paused) instead of the detailed one (healthy, missed, failed, down, paused, pending).",
+        parameters: [
+          { name: "token", in: "path", required: true, schema: { type: "string" } },
+          {
+            name: "states",
+            in: "query",
+            required: false,
+            schema: { type: "string", enum: ["simple"] },
+          },
+        ],
         responses: {
-          "200": { description: "SVG badge", content: { "image/svg+xml": {} } },
+          "200": {
+            description: "Badge",
+            content: { "image/svg+xml": {}, "application/json": {} },
+          },
           "404": { description: "Monitor not found" },
+        },
+      },
+    },
+    "/badge/tag/{tag}": {
+      get: {
+        summary: "Public status badge of a tag (SVG; add .json or .shields.json for data)",
+        description:
+          "Aggregates the monitors that carry the tag: the worst state wins and paused monitors are ignored. Only available while a status page for that tag is switched on; an unknown, unpublished or empty tag returns 404. The JSON form adds `counts` and `total`, never names.",
+        parameters: [{ name: "tag", in: "path", required: true, schema: { type: "string" } }],
+        responses: {
+          "200": {
+            description: "Badge",
+            content: { "image/svg+xml": {}, "application/json": {} },
+          },
+          "404": { description: "Tag not published or without monitors" },
+        },
+      },
+    },
+    "/auth/sso/config": {
+      get: {
+        summary: "Which sign-in methods are configured (public, nothing secret)",
+        responses: {
+          "200": { description: "{ data: { oidc, proxy, passwordLogin } }" },
+        },
+      },
+    },
+    "/auth/sso/oidc/start": {
+      get: {
+        summary: "Start the OIDC sign-in (redirects to the identity provider)",
+        description:
+          "Authorization code flow with PKCE (S256), state and nonce, kept in a short-lived Lax cookie. 404 unless OIDC is configured.",
+        responses: {
+          "302": { description: "Redirect to the provider, or to /login?sso_error=… on failure" },
+          "404": { description: "OIDC is not configured" },
+        },
+      },
+    },
+    "/auth/sso/oidc/callback": {
+      get: {
+        summary: "OIDC redirect URI: verifies state, code and ID token, then signs the user in",
+        description:
+          "Only an existing local user whose e-mail is verified by the provider is signed in. Success redirects to /, anything else to /login?sso_error=<code>.",
+        parameters: [
+          { name: "code", in: "query", required: false, schema: { type: "string" } },
+          { name: "state", in: "query", required: false, schema: { type: "string" } },
+          { name: "error", in: "query", required: false, schema: { type: "string" } },
+        ],
+        responses: {
+          "302": { description: "Redirect to / (signed in) or /login?sso_error=<code>" },
+          "404": { description: "OIDC is not configured" },
+        },
+      },
+    },
+    "/auth/sso/proxy": {
+      get: {
+        summary: "Sign in with the identity a trusted reverse proxy forwards in a header",
+        description:
+          "Honoured only when the TCP peer is inside TRUSTED_PROXY_IPS; the header of any other peer is ignored. 404 unless TRUSTED_PROXY_AUTH_HEADER is configured.",
+        responses: {
+          "302": { description: "Redirect to / (signed in) or /login?sso_error=<code>" },
+          "404": { description: "Trusted-proxy login is not configured" },
         },
       },
     },

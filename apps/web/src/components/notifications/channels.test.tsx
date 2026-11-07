@@ -15,6 +15,16 @@ const ok: Record<string, Record<string, string>> = {
   ntfy: { topic: "cronko-alerts" },
   pushover: { userKey: "a".repeat(30), appToken: "B".repeat(30) },
   pagerduty: { routingKey: "c".repeat(32) },
+  googlechat: { webhookUrl: "https://chat.googleapis.com/v1/spaces/x/messages?key=k" },
+  mattermost: { webhookUrl: "https://mm.example.com/hooks/x" },
+  rocketchat: { webhookUrl: "https://rc.example.com/hooks/x/y" },
+  gotify: { serverUrl: "https://gotify.example.com", appToken: "AbC123" },
+  matrix: {
+    homeserverUrl: "https://matrix.example.com",
+    accessToken: "syt_x",
+    roomId: "!abc:matrix.example.com",
+  },
+  apprise: { serverUrl: "http://apprise:8000", configKey: "cronko" },
   email: { to: "ops@example.com" },
 }
 
@@ -31,6 +41,14 @@ describe("validateConfig", () => {
         required.map((f) => f.key).sort(),
       )
     }
+  })
+
+  it("accepts only a room id (not an alias) for Matrix", () => {
+    const base = { homeserverUrl: "https://m.example", accessToken: "t" }
+    expect(validateConfig("matrix", { ...base, roomId: "#room:m.example" })).toEqual({
+      roomId: "invalidRoomId",
+    })
+    expect(validateConfig("matrix", { ...base, roomId: "!abc:m.example" })).toEqual({})
   })
 
   it("requires https for chat webhooks but allows http for generic webhooks", () => {

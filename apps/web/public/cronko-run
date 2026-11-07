@@ -14,6 +14,8 @@
 # Needs:    POSIX sh, curl.
 # Env:      CRONKO_MAX_OUTPUT  bytes of output to send (default 10000, max 10000)
 #           CRONKO_TIMEOUT     seconds per ping request (default 10)
+#           CRONKO_FAIL_ON_PING_ERROR  set to 1 to exit 75 when the job succeeded but
+#                              Cronko could not be reached (default: keep the job's code)
 
 set -u
 
@@ -83,6 +85,9 @@ set -- -fsS -m "$timeout" --retry 2 -o /dev/null -X POST
 [ -s "$tmp/tail" ] && set -- "$@" -H "Content-Type: text/plain" --data-binary "@$tmp/tail"
 
 # The URL carries the monitor token, so it is never printed.
-curl "$@" "$target" 2>/dev/null || echo "cronko-run: could not report to Cronko" >&2
+if ! curl "$@" "$target" 2>/dev/null; then
+  echo "cronko-run: could not report to Cronko" >&2
+  [ "$code" -eq 0 ] && [ "${CRONKO_FAIL_ON_PING_ERROR:-}" = "1" ] && exit 75
+fi
 
 exit "$code"

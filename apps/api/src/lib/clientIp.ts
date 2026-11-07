@@ -19,3 +19,12 @@ export function clientIp(c: Context): string {
     return "unknown"
   }
 }
+
+/** The TCP peer address, ignoring every forwarded header (what a trusted-proxy check needs). */
+export function peerAddress(c: Context): string | undefined {
+  try {
+    return getConnInfo(c).remote.address
+  } catch {
+    return undefined
+  }
+}

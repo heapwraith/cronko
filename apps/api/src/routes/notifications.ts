@@ -63,6 +63,36 @@ const pagerDutyConfig = z.object({
   routingKey: z.string().regex(/^[A-Za-z0-9]{32}$/, "Expected 32 letters or digits"),
 })
 
+const gotifyConfig = z.object({ serverUrl: httpUrl, appToken: z.string().min(1) })
+
+// Room ids look like !opaque:server.example (aliases like #room:server are not accepted).
+const matrixConfig = z.object({
+  homeserverUrl: httpUrl,
+  accessToken: z.string().min(1),
+  roomId: z.string().regex(/^![^:\s]+:\S+$/, "Use the room id, like !abc123:matrix.org"),
+})
+
+const appriseConfig = z
+  .object({
+    serverUrl: httpUrl,
+    configKey: z
+      .string()
+      .regex(/^[\w-]{1,64}$/, "Use letters, digits, - or _")
+      .optional()
+      .or(z.literal("")),
+    urls: z.string().max(2000).optional(),
+    tag: z.string().max(64).optional(),
+  })
+  .superRefine((cfg, ctx) => {
+    if (!cfg.configKey && !cfg.urls?.trim()) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["configKey"],
+        message: "Provide a config key or at least one Apprise URL",
+      })
+    }
+  })
+
 export const createNotificationSchema = z.discriminatedUnion("type", [
   z.object({
     name: z.string().min(1),
@@ -109,6 +139,36 @@ export const createNotificationSchema = z.discriminatedUnion("type", [
     type: z.literal("teams"),
     config: z.object({ webhookUrl: z.url() }),
   }),
+  z.object({
+    name: z.string().min(1),
+    type: z.literal("googlechat"),
+    config: z.object({ webhookUrl: z.url() }),
+  }),
+  z.object({
+    name: z.string().min(1),
+    type: z.literal("mattermost"),
+    config: z.object({ webhookUrl: z.url() }),
+  }),
+  z.object({
+    name: z.string().min(1),
+    type: z.literal("rocketchat"),
+    config: z.object({ webhookUrl: z.url() }),
+  }),
+  z.object({
+    name: z.string().min(1),
+    type: z.literal("gotify"),
+    config: gotifyConfig,
+  }),
+  z.object({
+    name: z.string().min(1),
+    type: z.literal("matrix"),
+    config: matrixConfig,
+  }),
+  z.object({
+    name: z.string().min(1),
+    type: z.literal("apprise"),
+    config: appriseConfig,
+  }),
 ])
 
 const updateNotificationSchema = z.object({
@@ -123,6 +183,9 @@ const updateNotificationSchema = z.object({
       ntfyConfig,
       pushoverConfig,
       pagerDutyConfig,
+      gotifyConfig,
+      matrixConfig,
+      appriseConfig,
     ])
     .optional(),
 })

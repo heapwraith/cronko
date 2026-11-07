@@ -16,7 +16,7 @@ with it is the entry ticket and the differentiators below are the reason to swit
 | Explicit `/fail` signal                            | yes               | yes             | no                       |
 | Ping by e-mail                                     | yes               | yes             | no                       |
 | Per-check event log with output                    | yes               | yes             | partial                  |
-| Notification channels                              | 9                 | many            | many                     |
+| Notification channels                              | 15                | many            | many                     |
 | Public status pages                                | yes (per tag)     | badges          | yes                      |
 | Active HTTP/TCP checks                             | no (out of scope) | no              | yes                      |
 | Single container, one SQLite file                  | yes               | no              | yes                      |
@@ -77,14 +77,14 @@ not verified in depth, so claims about them are unconfirmed. In order of value o
 
 1. ~~Ping API parity: `/log`, `/<exit-status>` in the path, and `rid=<uuid>` to pair concurrent start/finish runs.~~ Done (Unreleased).
 2. ~~Generic webhook with a custom template and headers (covers many missing channels at once).~~ Done (Unreleased).
-3. Cheap channels: Google Chat, Mattermost/Rocket.Chat, Gotify, Matrix, Opsgenie.
+3. ~~Cheap channels: Google Chat, Mattermost/Rocket.Chat, Gotify, Matrix.~~ Done (Unreleased). Opsgenie was left out on purpose: Atlassian has announced its end of sale, which I could not re-verify.
 4. ~~2FA (TOTP, later WebAuthn): the UI is internet-facing and holds ping tokens.~~ TOTP done (Settings, recovery codes, login code step; see README). WebAuthn is still open.
 5. ~~Scheduled automatic SQLite backup and a JSON export of monitors and channels.~~ Done (unreleased): `BACKUP_DIR`, `GET /api/export`, `POST /api/import/cronko`.
-6. Ping by slug with a project key and `?create=1` (provisioning from CI/IaC).
-7. Badges per tag, JSON/Shields.io formats, three states.
-8. Apprise integration (one URL covers dozens of services).
-9. Proxy-header login and/or OIDC for self-hosters with SSO.
-10. Official GitHub Action and a clean OpenAPI for generated clients.
+6. ~~Ping by slug with a project key and `?create=1` (provisioning from CI/IaC).~~ Done (Unreleased).
+7. ~~Badges per tag, JSON/Shields.io formats, three states.~~ Done (Unreleased).
+8. ~~Apprise integration (one URL covers dozens of services).~~ Done (Unreleased); untested against a live apprise-api.
+9. ~~Proxy-header login and/or OIDC for self-hosters with SSO.~~ Done (Unreleased); only tested against a fake provider, not a real IdP.
+10. ~~Official GitHub Action and a clean OpenAPI for generated clients.~~ Done (Unreleased); the action is untested on a real runner until its workflow runs in CI.
 
 Later: text search and bulk actions in the UI, Web Push, teams and roles, SMS/WhatsApp (paid and
 against the one-container model). To check: that `read` API tokens omit ping tokens from responses,

@@ -1,0 +1,55 @@
+name: Cronko ping
+description: Report a GitHub Actions job or step to Cronko (cron job monitor). Wrap a command or send a start / success / failure ping.
+author: heapwraith
+branding:
+  icon: activity
+  color: green
+
+inputs:
+  url:
+    description: "Cronko ping URL (…/ping/<token>). It is a secret: pass it from `secrets`, it is masked in the logs."
+    required: true
+  mode:
+    description: "`wrap` runs `command` and reports start, duration, exit code and the output tail; `report` sends one success or failure ping; `start` sends a start ping."
+    required: false
+    default: wrap
+  command:
+    description: "Script to run in `wrap` mode."
+    required: false
+    default: ""
+  shell:
+    description: "Shell used to run `command` in `wrap` mode (sh, bash...)."
+    required: false
+    default: sh
+  status:
+    description: "`report` mode: success, failure, cancelled or skipped. Pass the job status with `if: always()`. Cancelled and skipped send nothing."
+    required: false
+    default: success
+  timeout:
+    description: Seconds to wait for each ping request.
+    required: false
+    default: "10"
+  output-limit:
+    description: "`wrap` mode: bytes of output sent to Cronko (max 10000)."
+    required: false
+    default: "10000"
+  fail-on-ping-error:
+    description: Fail the step when Cronko cannot be reached. Off by default, so a monitoring outage never fails your job.
+    required: false
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - name: Report to Cronko
+      shell: sh
+      env:
+        CRONKO_URL: ${{ inputs.url }}
+        CRONKO_MODE: ${{ inputs.mode }}
+        CRONKO_COMMAND: ${{ inputs.command }}
+        CRONKO_SHELL: ${{ inputs.shell }}
+        CRONKO_STATUS: ${{ inputs.status }}
+        CRONKO_TIMEOUT: ${{ inputs.timeout }}
+        CRONKO_MAX_OUTPUT: ${{ inputs.output-limit }}
+        CRONKO_FAIL_ON_PING_ERROR: ${{ inputs.fail-on-ping-error }}
+      run: sh "$GITHUB_ACTION_PATH/action/run.sh"

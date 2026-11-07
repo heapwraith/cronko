@@ -1,0 +1,98 @@
+name: Action test
+
+# Exercises the composite action in this repository (action.yml) against a local
+# fake Cronko, so a change to the action or to cronko-run cannot ship broken.
+on:
+  pull_request:
+    paths:
+      - action.yml
+      - action/**
+      - apps/web/public/cronko-run
+      - .github/workflows/action-test.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  action:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start a fake Cronko that logs every request
+        run: |
+          cat > "$RUNNER_TEMP/fake.py" <<'PY'
+          import http.server, sys
+          log = open(sys.argv[1], "a", buffering=1)
+          class H(http.server.BaseHTTPRequestHandler):
+              def _hit(self):
+                  n = int(self.headers.get("content-length") or 0)
+                  body = self.rfile.read(n).decode() if n else ""
+                  log.write(f"{self.command} {self.path} {body!r}\n")
+                  self.send_response(200); self.end_headers(); self.wfile.write(b"{}")
+              do_GET = do_POST = _hit
+              def log_message(self, *a): pass
+          http.server.HTTPServer(("127.0.0.1", 8099), H).serve_forever()
+          PY
+          : > "$RUNNER_TEMP/hits.log"
+          nohup python3 "$RUNNER_TEMP/fake.py" "$RUNNER_TEMP/hits.log" >/dev/null 2>&1 &
+          for _ in 1 2 3 4 5 6 7 8 9 10; do
+            curl -fsS -o /dev/null http://127.0.0.1:8099/ping/probe && break
+            sleep 0.5
+          done
+          : > "$RUNNER_TEMP/hits.log"
+
+      - name: start
+        uses: ./
+        with:
+          url: http://127.0.0.1:8099/ping/ci
+          mode: start
+
+      - name: wrap a command with special characters
+        uses: ./
+        with:
+          url: http://127.0.0.1:8099/ping/ci
+          command: |
+            echo "hello from the action"
+            echo 'quotes " and $dollar and `ticks`'
+
+      - name: report success
+        uses: ./
+        with:
+          url: http://127.0.0.1:8099/ping/ci
+          mode: report
+          status: success
+
+      - name: report failure
+        uses: ./
+        with:
+          url: http://127.0.0.1:8099/ping/ci
+          mode: report
+          status: failure
+
+      - name: a failing command fails the step but is still reported
+        id: failing
+        continue-on-error: true
+        uses: ./
+        with:
+          url: http://127.0.0.1:8099/ping/ci
+          command: exit 3
+
+      - name: an unreachable Cronko does not fail the job
+        uses: ./
+        with:
+          url: http://127.0.0.1:9/ping/ci
+          command: echo still fine
+
+      - name: Check what the fake Cronko received
+        run: |
+          cat "$RUNNER_TEMP/hits.log"
+          test "${{ steps.failing.outcome }}" = "failure"
+          grep -q "^POST /ping/ci/start " "$RUNNER_TEMP/hits.log"
+          grep -q "^POST /ping/ci?d=[0-9]*&exit=0 .*hello from the action" "$RUNNER_TEMP/hits.log"
+          grep -q 'dollar and `ticks`' "$RUNNER_TEMP/hits.log"
+          grep -q "^POST /ping/ci " "$RUNNER_TEMP/hits.log"
+          grep -q "^POST /ping/ci/fail " "$RUNNER_TEMP/hits.log"
+          grep -q "^POST /ping/ci/fail?d=[0-9]*&exit=3 " "$RUNNER_TEMP/hits.log"

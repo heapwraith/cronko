@@ -81,4 +81,41 @@ describe("notification channel validation (HTTP, real SQLite)", () => {
     expect((await pd("a1".repeat(16))).status).toBe(201)
     expect((await pd("too-short")).status).toBe(400)
   })
+  it("validates the chat webhooks, Gotify and Matrix configs", async () => {
+    for (const type of ["googlechat", "mattermost", "rocketchat"]) {
+      expect(
+        (await create({ name: type, type, config: { webhookUrl: "https://chat.example/h" } }))
+          .status,
+      ).toBe(201)
+      expect((await create({ name: type, type, config: { webhookUrl: "nope" } })).status).toBe(400)
+    }
+    const gotify = (serverUrl: string, appToken: string) =>
+      create({ name: "g", type: "gotify", config: { serverUrl, appToken } })
+    expect((await gotify("https://gotify.example", "AbC123")).status).toBe(201)
+    expect((await gotify("not a url", "AbC123")).status).toBe(400)
+    expect((await gotify("https://gotify.example", "")).status).toBe(400)
+
+    const matrix = (roomId: string) =>
+      create({
+        name: "m",
+        type: "matrix",
+        config: { homeserverUrl: "https://matrix.example", accessToken: "syt_x", roomId },
+      })
+    expect((await matrix("!abc:matrix.example")).status).toBe(201)
+    expect((await matrix("#alias:matrix.example")).status).toBe(400)
+    expect((await matrix("abc")).status).toBe(400)
+  })
+  it("requires a config key or inline urls for Apprise", async () => {
+    const apprise = (config: Record<string, unknown>) =>
+      create({
+        name: "a",
+        type: "apprise",
+        config: { serverUrl: "https://apprise.example", ...config },
+      })
+    expect((await apprise({ configKey: "cronko" })).status).toBe(201)
+    expect((await apprise({ urls: "tgram://bot/chat" })).status).toBe(201)
+    expect((await apprise({})).status).toBe(400)
+    expect((await apprise({ configKey: "", urls: "  " })).status).toBe(400)
+    expect((await apprise({ configKey: "bad key!" })).status).toBe(400)
+  })
 })

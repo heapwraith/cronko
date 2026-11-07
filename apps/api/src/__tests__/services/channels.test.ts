@@ -157,3 +157,167 @@ describe("webhook and ntfy channels", () => {
     expect(fetch).not.toHaveBeenCalled()
   })
 })
+
+describe("chat and push channels (Google Chat, Mattermost, Rocket.Chat, Gotify, Matrix)", () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it.each(["googlechat", "mattermost", "rocketchat"])(
+    "%s posts {text} to its incoming webhook",
+    async (type) => {
+      const fetch = stubFetch()
+      await deliver(
+        channel(type, { webhookUrl: "https://chat.example/hook/abc" }),
+        "down",
+        "etl caiu",
+        "etl",
+      )
+      const [url, init] = fetch.mock.calls[0] ?? []
+      expect(url).toBe("https://chat.example/hook/abc")
+      expect(init?.method).toBe("POST")
+      expect(JSON.parse(String(init?.body))).toEqual({ text: "etl caiu" })
+    },
+  )
+
+  it("gotify posts title, message, priority and the click link to /message", async () => {
+    const fetch = stubFetch()
+    await deliver(
+      channel("gotify", { serverUrl: "https://gotify.example/", appToken: "tok en" }),
+      "down",
+      "etl caiu https://cronko.example/monitors/1",
+      "etl",
+    )
+    const [url, init] = fetch.mock.calls[0] ?? []
+    expect(url).toBe("https://gotify.example/message?token=tok%20en")
+    expect(JSON.parse(String(init?.body))).toEqual({
+      title: "Cronko: etl",
+      message: "etl caiu",
+      priority: 8,
+      extras: { "client::notification": { click: { url: "https://cronko.example/monitors/1" } } },
+    })
+  })
+
+  it("matrix PUTs an m.text message with a bearer token and a fresh transaction id", async () => {
+    const fetch = stubFetch()
+    const cfg = {
+      homeserverUrl: "https://matrix.example/",
+      accessToken: "syt_secret",
+      roomId: "!abc:matrix.example",
+    }
+    await deliver(channel("matrix", cfg), "failed", "etl falhou", "etl")
+    await deliver(channel("matrix", cfg), "failed", "etl falhou", "etl")
+    const [url, init] = fetch.mock.calls[0] ?? []
+    expect(String(url)).toMatch(
+      /^https:\/\/matrix\.example\/_matrix\/client\/v3\/rooms\/!abc%3Amatrix\.example\/send\/m\.room\.message\/[0-9a-f-]{36}$/,
+    )
+    expect(init?.method).toBe("PUT")
+    expect(new Headers(init?.headers).get("authorization")).toBe("Bearer syt_secret")
+    expect(JSON.parse(String(init?.body))).toEqual({ msgtype: "m.text", body: "etl falhou" })
+    expect(String(fetch.mock.calls[1]?.[0])).not.toBe(String(url))
+  })
+
+  it("marks 5xx as retryable and 4xx as permanent without leaking the token", async () => {
+    stubFetch(503)
+    const retry = await deliver(
+      channel("gotify", { serverUrl: "https://g.example", appToken: "SECRET" }),
+      "down",
+      "x",
+    ).catch((e) => e)
+    expect(retry).toBeInstanceOf(DeliveryError)
+    expect(retry.retryable).toBe(true)
+    expect(retry.message).not.toContain("SECRET")
+
+    stubFetch(403)
+    const permanent = await deliver(
+      channel("matrix", {
+        homeserverUrl: "https://m.example",
+        accessToken: "SECRET",
+        roomId: "!a:b",
+      }),
+      "down",
+      "x",
+    ).catch((e) => e)
+    expect(permanent.retryable).toBe(false)
+    expect(permanent.message).not.toContain("SECRET")
+  })
+})
+
+describe("apprise channel", () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it("stateful: posts to /notify/{key} with title, body, type and tag", async () => {
+    const fetch = stubFetch()
+    await deliver(
+      channel("apprise", {
+        serverUrl: "https://apprise.example/",
+        configKey: "cronko",
+        tag: "ops",
+        urls: "ignored://when-a-key-is-set",
+      }),
+      "down",
+      "etl caiu",
+      "etl",
+    )
+    const [url, init] = fetch.mock.calls[0] ?? []
+    expect(url).toBe("https://apprise.example/notify/cronko")
+    expect(JSON.parse(String(init?.body))).toEqual({
+      title: "Cronko: etl",
+      body: "etl caiu",
+      type: "failure",
+      tag: "ops",
+    })
+  })
+
+  it("stateless: posts to /notify with the inline urls joined by commas", async () => {
+    const fetch = stubFetch()
+    await deliver(
+      channel("apprise", {
+        serverUrl: "https://apprise.example",
+        urls: "tgram://bot/chat  mailto://u:p@mail.test,\nslack://a/b/c",
+      }),
+      "recovered",
+      "etl voltou",
+      "etl",
+    )
+    const [url, init] = fetch.mock.calls[0] ?? []
+    expect(url).toBe("https://apprise.example/notify")
+    expect(JSON.parse(String(init?.body))).toEqual({
+      title: "Cronko: etl",
+      body: "etl voltou",
+      type: "success",
+      urls: "tgram://bot/chat,mailto://u:p@mail.test,slack://a/b/c",
+    })
+  })
+
+  it("maps events to Apprise types", async () => {
+    const types: Record<string, string> = {}
+    for (const event of ["down", "failed", "missed", "slow", "unusual", "recovered", "digest"]) {
+      const fetch = stubFetch()
+      await deliver(
+        channel("apprise", { serverUrl: "https://a.example", configKey: "k" }),
+        event,
+        "x",
+      )
+      types[event] = JSON.parse(String(fetch.mock.calls[0]?.[1]?.body)).type
+    }
+    expect(types).toEqual({
+      down: "failure",
+      failed: "failure",
+      missed: "failure",
+      slow: "warning",
+      unusual: "warning",
+      recovered: "success",
+      digest: "info",
+    })
+  })
+
+  it("does not leak the urls in a delivery error", async () => {
+    stubFetch(500)
+    const err = await deliver(
+      channel("apprise", { serverUrl: "https://a.example", urls: "tgram://SECRET/chat" }),
+      "down",
+      "x",
+    ).catch((e) => e)
+    expect(err.retryable).toBe(true)
+    expect(err.message).not.toContain("SECRET")
+  })
+})

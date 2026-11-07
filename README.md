@@ -99,7 +99,7 @@ pnpm --filter @cronko/web dev     # web on :3000, proxies the API
 - Pulse (`/start` + `/finish`) with duration, exit code and optional output
 - Explicit `/fail` signal and non-zero exit codes: a distinct `failed` state with an immediate alert
 - Max-duration alerts, incident history, audit log
-- Alerts to Discord, Telegram, e-mail (SMTP), Slack, Microsoft Teams, ntfy, Pushover, PagerDuty and any webhook
+- Alerts to Discord, Telegram, e-mail (SMTP), Slack, Microsoft Teams, Google Chat, Mattermost, Rocket.Chat, Gotify, Matrix, Apprise, ntfy, Pushover, PagerDuty and any webhook
 - Run analytics: each run is compared with the runs before it (median, p95); runs much slower than usual and runs that started before the previous one finished are flagged, with optional alerts per monitor
 - Tags per monitor, with a tag filter on the dashboard and monitor list (`?tag=` in the API)
 - Public status pages per tag (`/status/<slug>`, no login): current state, 90 days of daily availability and recent incidents, never tokens or job output
@@ -108,7 +108,7 @@ pnpm --filter @cronko/web dev     # web on :3000, proxies the API
 - Ping by e-mail (`<token>@your-domain`) for devices that can only send mail, with optional failure words per monitor
 - Daily or weekly digest to every channel: state, failures, new incidents and jobs that went silent
 - Mute a monitor's alerts for maintenance (1 h to 7 days); state and incidents are still tracked
-- Public SVG status badge (`/badge/:token`), CSV export of heartbeats
+- Public SVG status badges per monitor (`/badge/:token`) and per tag (`/badge/tag/:tag`, only while a status page for the tag is on), also as `.json` and shields.io endpoint (`.shields.json`); CSV export of heartbeats
 - Dashboard, dark/light theme, English and pt-BR, installable PWA
 - OpenAPI docs at `/docs`; health probes at `/health/live` and `/health/ready`
 - Scheduled automatic backups, online backup and restore (`node scripts/db.mjs backup|restore`)
@@ -144,6 +144,32 @@ and an `appToken`. Microsoft Teams takes the `webhookUrl` of a Workflows flow
 ("Post to a channel when a webhook request is received"), since Office 365
 connectors are retired. PagerDuty takes the `routingKey` of an Events API v2
 integration: problems trigger an incident (one per monitor) and recovery resolves it.
+Google Chat, Mattermost and Rocket.Chat take the `webhookUrl` of an incoming webhook.
+Gotify takes the `serverUrl` and the `appToken` of an application (high-priority
+events use priority 7-8). Matrix takes the `homeserverUrl`, an `accessToken` of the
+sending user and the `roomId` (like `!abc123:matrix.org`, not the `#alias`); the user
+must already be in the room, and encrypted rooms are not supported because messages
+are sent unencrypted.
+
+**Apprise** reaches dozens of services through your own
+[apprise-api](https://github.com/caronc/apprise-api). Give Cronko the `serverUrl`
+and either the `configKey` of a configuration saved in apprise-api (`POST /notify/{key}`)
+or inline `urls` (`POST /notify`); the Apprise URLs carry tokens, so treat them as
+secrets. Events map to Apprise types (down, failed and missed are `failure`; slow,
+unusual and overlap are `warning`; recovered is `success`; the rest `info`). To run
+apprise-api next to Cronko, add a service to `docker-compose.yml`:
+
+```yaml
+apprise:
+  image: caronc/apprise:latest
+  restart: unless-stopped
+  volumes:
+    - apprise_config:/config
+```
+
+and use `http://apprise:8000` as the server URL (declare the `apprise_config` volume).
+The request shape is written from Apprise's documentation and was not tested against
+a running apprise-api.
 
 ### Webhook headers and body template
 
@@ -290,6 +316,62 @@ curl -b "cronko_token=$SESSION" "$CRONKO/api/export" -o cronko.json
 curl -b "cronko_token=$SESSION" -X POST "$CRONKO/api/import/cronko?dryRun=true" \
   -H "Content-Type: application/json" --data @cronko.json
 ```
+
+### Ping by slug (provisioning from CI)
+
+Every monitor is pinged by its secret token. For scripts that already know the monitor's
+readable **slug**, generate the instance **ping key** in Settings → Ping key and use:
+
+```sh
+curl -fsS "$CRONKO/ping/k/$PING_KEY/nightly-backup"            # success
+curl -fsS "$CRONKO/ping/k/$PING_KEY/nightly-backup/start"      # also /finish, /fail, /log, /<exit>
+curl -fsS "$CRONKO/ping/k/$PING_KEY/nightly-backup?create=1&timeout=86400&grace=3600"
+```
+
+The slug is the monitor name in lowercase with dashes (`Nightly backup` is `nightly-backup`).
+`rid`, `d`, `exit` and POST bodies work as on the token URL. With `?create=1` an unknown slug
+is created on its first ping, using `timeout` (expected interval in seconds, default 86400) and
+`grace` (seconds, default 3600); such monitors get the `auto-created` tag, are written to the
+audit log, and are capped at 20 per hour and 100 in total. Without `create=1` an unknown slug is
+a 404 and nothing is created.
+
+The key is a secret: anyone holding it can ping any monitor and create monitors (within the
+limits). It is stored as is next to the per-monitor tokens, because the UI has to show it
+again; rotating it (Settings → Ping key) stops the old one immediately. It is never available
+to API tokens. Wrong keys are counted per client address (30 a minute), which slows guessing
+down but never blocks a correct key.
+
+### Single sign-on (OIDC and trusted proxy)
+
+Both options are **off by default** and both only sign in a user that **already exists**
+(matched by e-mail): Cronko never registers anyone, so the local user list is the allowlist.
+A successful SSO sign-in gives the same session as a password login and is written to the audit
+log with its method. SSO does not ask for the local TOTP code (the identity provider owns the
+second factor); the password login keeps its own 2FA.
+**OIDC** (authorization code with PKCE, `state` and `nonce`):
+
+| Variable                                                                                             | Meaning                                                                                         |
+| ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `OIDC_ISSUER`                                                                                        | Issuer URL; `/.well-known/openid-configuration` must live under it                              |
+| `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`                                                               | The client registered for Cronko                                                                |
+| `OIDC_REDIRECT_URL`                                                                                  | Optional. Default: `PUBLIC_URL` + `/auth/sso/oidc/callback` (register this URL at the provider) |
+| The ID token must be signed with an asymmetric key published in the provider's JWKS, and its         |
+| issuer, audience, expiry and nonce are checked. `email` must be present with `email_verified: true`. |
+| Cronko asks for the `openid email` scopes only. Failed sign-ins share the password login's limit     |
+| (5 in 15 minutes per address).                                                                       |
+| **Trusted proxy** (Authelia, Authentik, oauth2-proxy, Cloudflare Access...): set                     |
+| `TRUSTED_PROXY_AUTH_HEADER` (for example `Remote-Email`) **and** `TRUSTED_PROXY_IPS`                 |
+| (comma-separated IPs or CIDRs of your proxies). The header is honoured only when the TCP peer        |
+| that connected to Cronko is in that list; a forwarded header such as `X-Forwarded-For` never         |
+| makes a peer trusted. **If Cronko is reachable without going through the proxy from an address       |
+| in that list, anyone there can sign in as anyone**: keep Cronko on a network only the proxy can      |
+| reach. The login page then offers "Continue with your organization login", which opens               |
+| `/auth/sso/proxy`.                                                                                   |
+| `PASSWORD_LOGIN_DISABLED=true` hides the password form and answers 403 to `/auth/login`. Cronko      |
+| refuses to start with it unless OIDC or trusted-proxy login is configured, so you cannot lock        |
+| yourself out by mistake. If the identity provider is down, remove the variable and restart.          |
+| These flows were tested against a fake provider written for the tests, not against a real            |
+| Keycloak, Authentik or Google: try a sign-in on a real one before relying on it.                     |
 
 ### API tokens
 

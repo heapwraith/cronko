@@ -7,6 +7,16 @@ include breaking changes; they are called out below.
 
 ## [Unreleased]
 
+### Added
+
+- Five notification channels: Google Chat, Mattermost and Rocket.Chat (incoming webhooks), Gotify (server URL and app token, priorities by event) and Matrix (homeserver, access token and room id; plain, unencrypted messages). No migration.
+- Apprise channel: notifies through a self-hosted apprise-api, with a saved configuration key or inline URLs, an optional tag and event-to-type mapping.
+- Badges: `GET /badge/tag/:tag` summarises a tag (worst state wins, paused ignored) and is public only while a status page for that tag is switched on; unknown, unpublished and empty tags all answer the same 404. Every badge also comes as `.json` and `.shields.json` (shields.io endpoint schema), and `?states=simple` gives the three-state wording (up, late, down, paused).
+
+### Changed
+
+- Badge colours now pass WCAG AA with the white text (the old green and amber were about 2.5:1 and 2.1:1), and badges are sized to their text.
+
 ## [0.4.0] - 2026-11-06
 
 Adds Prometheus metrics, scoped API tokens, importers, Healthchecks-style ping parity, TOTP
@@ -17,6 +27,7 @@ If you enable 2FA, rotating `JWT_SECRET` invalidates the enrolled secrets (see t
 
 ### Added
 
+- Ping by slug: `/ping/k/<ping-key>/<slug>` (with `/start`, `/finish`, `/fail`, `/log`, `/<exit>`) using one instance-wide ping key managed in Settings → Ping key (shown on demand, rotatable, constant-time check, never available to API tokens). `?create=1` creates the monitor on its first ping (`timeout`, `grace`; tagged `auto-created`; audit-logged; 20 per hour and 100 in total). Wrong keys are rate limited per address. No migration (stored in settings).
 - Ping API parity with Healthchecks: `/ping/:token/log` stores an event (optional body, up to 10 KB) without changing state, schedule, runs or statistics, and `GET /api/monitors/:id/logs` lists them; `/ping/:token/<exit-status>` (0-255) is a success for 0 and a failure otherwise, like `?exit=`; `rid=<uuid>` on `/start` pairs it with the `/finish`, `/fail` or success ping carrying the same id, so concurrent runs are timed correctly (and are not flagged as overlapping). A `rid` that is not a UUID gets `400`; without `rid` nothing changes. Log events are API only for now (no UI). Migration `0018`.
 - Generic webhook: optional custom request headers (`Name: value` per line) and an optional body template with `{{event}}`, `{{status}}` (`up`/`down`), `{{message}}`, `{{url}}`, `{{sentAt}}` and `{{monitor.name}}`. Placeholders are plain substitution, never code; unknown ones are rejected when the channel is saved, and values are JSON-escaped unless a non-JSON `Content-Type` header is set. Header values are secrets: the API returns them masked (`****` plus the last four characters) and keeps the stored value when the masked text is sent back. Without either field the payload is the same fixed JSON as before. Same delivery path as before (no new network rules). No migration.
 - Configuration export and import: `GET /api/export` returns monitors (no history, no ping tokens), tags, channels, status pages and maintenance windows as JSON. Channel secrets are `[REDACTED]` unless `?includeSecrets=true`, which needs a session (API tokens get `403`); every export is audit-logged. `POST /api/import/cronko` reads that format with `?dryRun=true`, reuses the monitor importer and skips what already exists and channels whose secrets were redacted. No migration.
