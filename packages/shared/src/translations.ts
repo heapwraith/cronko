@@ -551,6 +551,21 @@ export const translations = {
     "settings.tokensRevoke": "Revogar",
     "settings.tokensRevoked": "Token revogado",
     "settings.tokensRevokeFailed": "Não foi possível revogar o token",
+    "settings.pingKey": "Chave de ping",
+    "settings.pingKeyIntro":
+      "Com a chave, um job chama o monitor pelo slug (legível) em vez do token secreto, e pode criar o monitor no primeiro ping com ?create=1. Quem tem a chave pode pingar qualquer monitor e criar até 20 por hora (100 no total): trate-a como uma senha.",
+    "settings.pingKeyNone": "Ainda não há chave. Gere uma para usar os pings por slug.",
+    "settings.pingKeyGenerate": "Gerar chave",
+    "settings.pingKeyRotate": "Trocar chave",
+    "settings.pingKeyShow": "Mostrar",
+    "settings.pingKeyHide": "Ocultar",
+    "settings.pingKeyExample": "Exemplos (troque <slug> pelo slug do monitor):",
+    "settings.pingKeyCreated": "Chave gerada",
+    "settings.pingKeyRotated": "Chave trocada: a anterior parou de funcionar",
+    "settings.pingKeyFailed": "Não foi possível gerar a chave",
+    "settings.pingKeyRotateTitle": "Trocar a chave de ping?",
+    "settings.pingKeyRotateMessage":
+      "A chave atual para de funcionar na hora. Os jobs que usam /ping/k/… precisam ser atualizados.",
     "settings.twoFactor": "Verificação em duas etapas",
     "settings.twoFactorIntro":
       "Além da senha, o login pede um código de 6 dígitos de um app autenticador (Google Authenticator, Aegis, 1Password...). Tokens de API continuam funcionando sem o código.",
@@ -1301,6 +1316,21 @@ export const translations = {
     "settings.tokensRevoke": "Revoke",
     "settings.tokensRevoked": "Token revoked",
     "settings.tokensRevokeFailed": "Could not revoke the token",
+    "settings.pingKey": "Ping key",
+    "settings.pingKeyIntro":
+      "With the key a job pings a monitor by its readable slug instead of the secret token, and can create the monitor on its first ping with ?create=1. Anyone holding it can ping any monitor and create up to 20 per hour (100 in total): treat it like a password.",
+    "settings.pingKeyNone": "No key yet. Generate one to use pings by slug.",
+    "settings.pingKeyGenerate": "Generate key",
+    "settings.pingKeyRotate": "Rotate key",
+    "settings.pingKeyShow": "Show",
+    "settings.pingKeyHide": "Hide",
+    "settings.pingKeyExample": "Examples (replace <slug> with the monitor's slug):",
+    "settings.pingKeyCreated": "Key generated",
+    "settings.pingKeyRotated": "Key rotated: the previous one no longer works",
+    "settings.pingKeyFailed": "Could not generate the key",
+    "settings.pingKeyRotateTitle": "Rotate the ping key?",
+    "settings.pingKeyRotateMessage":
+      "The current key stops working at once. Jobs that use /ping/k/… must be updated.",
     "settings.twoFactor": "Two-factor authentication",
     "settings.twoFactorIntro":
       "Besides your password, sign-in asks for a 6-digit code from an authenticator app (Google Authenticator, Aegis, 1Password...). API tokens keep working without the code.",
