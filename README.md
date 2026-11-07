@@ -102,6 +102,7 @@ pnpm --filter @cronko/web dev     # web on :3000, proxies the API
 - Alerts to Discord, Telegram, e-mail (SMTP), Slack, Microsoft Teams, Google Chat, Mattermost, Rocket.Chat, Gotify, Matrix, Apprise, ntfy, Pushover, PagerDuty and any webhook
 - Run analytics: each run is compared with the runs before it (median, p95); runs much slower than usual and runs that started before the previous one finished are flagged, with optional alerts per monitor
 - Tags per monitor, with a tag filter on the dashboard and monitor list (`?tag=` in the API)
+- Search (name, slug, tags) and bulk actions on the monitor list: pause, resume, mute, tag, delete (`POST /api/monitors/bulk`)
 - Public status pages per tag (`/status/<slug>`, no login): current state, 90 days of daily availability and recent incidents, never tokens or job output
 - Recurring maintenance windows (days, start time, duration and timezone) for all monitors, a tag or one monitor: alerts are held back while one runs
 - Scoped API tokens (read or write) for scripts and CI, managed in Settings
