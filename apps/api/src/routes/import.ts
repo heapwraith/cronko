@@ -3,7 +3,10 @@ import { logAuditEvent } from "../services/audit"
 import { extractExport, importCronko } from "../services/cronko-export"
 import {
   extractHealthchecksChecks,
+  extractList,
   type ImportCandidate,
+  mapCronitor,
+  mapDeadMansSnitch,
   mapHealthchecks,
   mapKuma,
   runImport,
@@ -89,6 +92,49 @@ importRoute.post("/kuma", async (c) => {
     return c.json(bad("Send the Uptime Kuma backup JSON (it has a monitorList)"), 400)
   }
   return c.json({ data: await finish(c, "kuma", mapKuma(body.monitorList), dryRun) })
+})
+
+/**
+ * Body is the Cronitor monitor list: the response of `GET https://cronitor.io/api/monitors`
+ * saved to a file (a bare array or `{"monitors": [...]}`). Cronitor is not called from
+ * here, because its pagination was not verified and a silent partial import is worse.
+ */
+importRoute.post("/cronitor", async (c) => {
+  const dryRun = isDryRun(c.req.query("dryRun"))
+  const list = extractList(await c.req.json().catch(() => null), "monitors")
+  if (!list) return c.json(bad('Send the saved Cronitor monitor list ({"monitors": [...]})'), 400)
+  return c.json({ data: await finish(c, "cronitor", mapCronitor(list), dryRun) })
+})
+
+/**
+ * Body is the Dead Man's Snitch list (`GET /v1/snitches`, a JSON array), or
+ * `{"apiKey": "..."}` to fetch it from api.deadmanssnitch.com (HTTP Basic, key as user).
+ */
+importRoute.post("/dms", async (c) => {
+  const dryRun = isDryRun(c.req.query("dryRun"))
+  const body = await c.req.json().catch(() => null)
+  let doc: unknown = body
+  if (body && typeof body === "object" && typeof body.apiKey === "string" && body.apiKey) {
+    let res: Response
+    try {
+      res = await fetch("https://api.deadmanssnitch.com/v1/snitches", {
+        headers: { Authorization: `Basic ${Buffer.from(`${body.apiKey}:`).toString("base64")}` },
+        signal: AbortSignal.timeout(15_000),
+      })
+    } catch {
+      return c.json({ error: "Could not reach Dead Man's Snitch", code: "UPSTREAM_ERROR" }, 502)
+    }
+    if (!res.ok) {
+      return c.json(
+        { error: `Dead Man's Snitch answered ${res.status}`, code: "UPSTREAM_ERROR" },
+        res.status === 401 ? 401 : 502,
+      )
+    }
+    doc = await res.json().catch(() => null)
+  }
+  const list = extractList(doc, "snitches")
+  if (!list) return c.json(bad('Send the snitch list (a JSON array) or {"apiKey": "..."}'), 400)
+  return c.json({ data: await finish(c, "dms", mapDeadMansSnitch(list), dryRun) })
 })
 
 /** Body is a Cronko export (`GET /api/export`), bare or wrapped as `{ "data": ... }`. */
