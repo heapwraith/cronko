@@ -470,5 +470,9 @@ export const api = {
         post<ApiTokenInfo & { token: string }>("/api/settings/tokens", body),
       revoke: (id: string) => del<{ id: string }>(`/api/settings/tokens/${id}`),
     },
+    pingKey: {
+      get: () => get<{ key: string | null }>("/api/settings/ping-key"),
+      rotate: () => post<{ key: string }>("/api/settings/ping-key/rotate", {}),
+    },
   },
 }

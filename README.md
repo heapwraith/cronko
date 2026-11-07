@@ -317,6 +317,30 @@ curl -b "cronko_token=$SESSION" -X POST "$CRONKO/api/import/cronko?dryRun=true" 
   -H "Content-Type: application/json" --data @cronko.json
 ```
 
+### Ping by slug (provisioning from CI)
+
+Every monitor is pinged by its secret token. For scripts that already know the monitor's
+readable **slug**, generate the instance **ping key** in Settings → Ping key and use:
+
+```sh
+curl -fsS "$CRONKO/ping/k/$PING_KEY/nightly-backup"            # success
+curl -fsS "$CRONKO/ping/k/$PING_KEY/nightly-backup/start"      # also /finish, /fail, /log, /<exit>
+curl -fsS "$CRONKO/ping/k/$PING_KEY/nightly-backup?create=1&timeout=86400&grace=3600"
+```
+
+The slug is the monitor name in lowercase with dashes (`Nightly backup` is `nightly-backup`).
+`rid`, `d`, `exit` and POST bodies work as on the token URL. With `?create=1` an unknown slug
+is created on its first ping, using `timeout` (expected interval in seconds, default 86400) and
+`grace` (seconds, default 3600); such monitors get the `auto-created` tag, are written to the
+audit log, and are capped at 20 per hour and 100 in total. Without `create=1` an unknown slug is
+a 404 and nothing is created.
+
+The key is a secret: anyone holding it can ping any monitor and create monitors (within the
+limits). It is stored as is next to the per-monitor tokens, because the UI has to show it
+again; rotating it (Settings → Ping key) stops the old one immediately. It is never available
+to API tokens. Wrong keys are counted per client address (30 a minute), which slows guessing
+down but never blocks a correct key.
+
 ### API tokens
 
 For scripts and CI, create a token in Settings → API tokens (name, scope, optional

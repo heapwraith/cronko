@@ -24,6 +24,7 @@ import { API_TOKEN_SCOPES, generateApiToken } from "../services/api-tokens"
 import { logAuditEvent } from "../services/audit"
 import { backupEnabled, getBackupStatus } from "../services/backup"
 import { loadDigestConfig, resetDigestClock, sendDigest } from "../services/digest"
+import { getPingKey, rotatePingKey } from "../services/ping-key"
 import { restartScheduler } from "../services/scheduler"
 
 export const settingsRoute = new Hono()
@@ -278,3 +279,16 @@ settingsRoute.post("/", zValidator("json", updateSettingsSchema), async (c) => {
 settingsRoute.get("/backup", (c) =>
   c.json({ data: { enabled: backupEnabled(), last: getBackupStatus() } }),
 )
+
+// The ping key lets jobs ping by slug (/ping/k/<key>/<slug>). Session only, like API tokens.
+settingsRoute.get("/ping-key", async (c) => c.json({ data: { key: await getPingKey() } }))
+
+settingsRoute.post("/ping-key/rotate", async (c) => {
+  const key = await rotatePingKey()
+  logAuditEvent({
+    userId: sessionUserId(c),
+    action: "ping_key.rotated",
+    resourceType: "settings",
+  }).catch(() => {})
+  return c.json({ data: { key } })
+})
