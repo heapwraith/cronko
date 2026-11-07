@@ -16,7 +16,7 @@ with it is the entry ticket and the differentiators below are the reason to swit
 | Explicit `/fail` signal                            | yes               | yes             | no                       |
 | Ping by e-mail                                     | yes               | yes             | no                       |
 | Per-check event log with output                    | yes               | yes             | partial                  |
-| Notification channels                              | 14                | many            | many                     |
+| Notification channels                              | 15                | many            | many                     |
 | Public status pages                                | yes (per tag)     | badges          | yes                      |
 | Active HTTP/TCP checks                             | no (out of scope) | no              | yes                      |
 | Single container, one SQLite file                  | yes               | no              | yes                      |
@@ -82,7 +82,7 @@ not verified in depth, so claims about them are unconfirmed. In order of value o
 5. ~~Scheduled automatic SQLite backup and a JSON export of monitors and channels.~~ Done (unreleased): `BACKUP_DIR`, `GET /api/export`, `POST /api/import/cronko`.
 6. Ping by slug with a project key and `?create=1` (provisioning from CI/IaC).
 7. Badges per tag, JSON/Shields.io formats, three states.
-8. Apprise integration (one URL covers dozens of services).
+8. ~~Apprise integration (one URL covers dozens of services).~~ Done (Unreleased); untested against a live apprise-api.
 9. Proxy-header login and/or OIDC for self-hosters with SSO.
 10. Official GitHub Action and a clean OpenAPI for generated clients.
 

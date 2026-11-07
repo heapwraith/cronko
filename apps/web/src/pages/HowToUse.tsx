@@ -181,6 +181,7 @@ curl -fsS -X POST "${ping}/finish?exit=$?"`}</CodeBlock>
               "rocketchat",
               "gotify",
               "matrix",
+              "apprise",
             ] as const
           ).map((k) => (
             <li key={k}>

@@ -10,6 +10,7 @@ include breaking changes; they are called out below.
 ### Added
 
 - Five notification channels: Google Chat, Mattermost and Rocket.Chat (incoming webhooks), Gotify (server URL and app token, priorities by event) and Matrix (homeserver, access token and room id; plain, unencrypted messages). No migration.
+- Apprise channel: notifies through a self-hosted apprise-api, with a saved configuration key or inline URLs, an optional tag and event-to-type mapping.
 
 ## [0.4.0] - 2026-11-06
 

@@ -453,6 +453,13 @@ export const translations = {
     "notifications.err.invalidKey": "Deve ter 30 letras ou números.",
     "notifications.routingKey": "Integration key (Events API v2)",
     "notifications.err.invalidRoutingKey": "Deve ter 32 letras ou números.",
+    "notifications.appriseKey": "Chave da configuração salva",
+    "notifications.appriseKeyHint":
+      "Use a chave de uma configuração salva no apprise-api, ou informe URLs abaixo.",
+    "notifications.appriseUrls": "URLs do Apprise",
+    "notifications.appriseUrlsHint":
+      "Uma por linha ou separadas por vírgula. Contêm tokens: ficam guardadas como segredo do canal.",
+    "notifications.appriseTag": "Tag (opcional)",
     "notifications.homeserver": "Homeserver",
     "notifications.accessToken": "Token de acesso (usuário que envia)",
     "notifications.roomId": "ID da sala",
@@ -733,6 +740,8 @@ export const translations = {
     "howto.notifications.rocketchat": "Webhook de entrada do Rocket.Chat (self-hosted).",
     "howto.notifications.gotify": "Servidor Gotify (self-hosted) com o token de uma aplicação.",
     "howto.notifications.matrix": "Mensagem numa sala Matrix, com homeserver, token e ID da sala.",
+    "howto.notifications.apprise":
+      "Qualquer serviço suportado pelo Apprise, via um apprise-api seu.",
     "howto.notifications.webhook":
       "Webhook genérico — recebe um JSON com evento, monitor e mensagem.",
     "howto.notifications.ntfy": "ntfy — push no celular via ntfy.sh ou servidor próprio.",
@@ -1213,6 +1222,13 @@ export const translations = {
     "notifications.err.invalidKey": "Must be 30 letters or digits.",
     "notifications.routingKey": "Integration key (Events API v2)",
     "notifications.err.invalidRoutingKey": "Must be 32 letters or digits.",
+    "notifications.appriseKey": "Saved configuration key",
+    "notifications.appriseKeyHint":
+      "Use the key of a configuration saved in apprise-api, or fill in URLs below.",
+    "notifications.appriseUrls": "Apprise URLs",
+    "notifications.appriseUrlsHint":
+      "One per line or comma-separated. They contain tokens, so they are stored as channel secrets.",
+    "notifications.appriseTag": "Tag (optional)",
     "notifications.homeserver": "Homeserver",
     "notifications.accessToken": "Access token (sending user)",
     "notifications.roomId": "Room ID",
@@ -1492,6 +1508,7 @@ export const translations = {
     "howto.notifications.rocketchat": "Rocket.Chat incoming webhook (self-hosted).",
     "howto.notifications.gotify": "Gotify server (self-hosted) with an application token.",
     "howto.notifications.matrix": "Message in a Matrix room, with homeserver, token and room ID.",
+    "howto.notifications.apprise": "Any service Apprise supports, through your own apprise-api.",
     "howto.notifications.webhook":
       "Generic webhook — receives JSON with event, monitor and message.",
     "howto.notifications.ntfy": "ntfy — phone push via ntfy.sh or your own server.",

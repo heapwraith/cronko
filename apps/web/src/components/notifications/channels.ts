@@ -25,6 +25,7 @@ export type ChannelType =
   | "rocketchat"
   | "gotify"
   | "matrix"
+  | "apprise"
 
 export type Channel = {
   id: string
@@ -262,6 +263,43 @@ export const CHANNELS: Record<
         labelKey: "notifications.roomId",
         placeholder: "!abc123:matrix.example.com",
         validate: roomId,
+      },
+    ],
+  },
+  apprise: {
+    label: "Apprise",
+    icon: Send,
+    fields: [
+      {
+        key: "serverUrl",
+        labelKey: "notifications.serverUrl",
+        placeholder: "http://apprise:8000",
+        type: "url",
+        validate: httpUrl,
+      },
+      {
+        key: "configKey",
+        labelKey: "notifications.appriseKey",
+        hintKey: "notifications.appriseKeyHint",
+        placeholder: "cronko",
+        optional: true,
+        validate: () => null,
+      },
+      {
+        key: "urls",
+        labelKey: "notifications.appriseUrls",
+        hintKey: "notifications.appriseUrlsHint",
+        placeholder: "tgram://bottoken/chatid",
+        multiline: true,
+        optional: true,
+        validate: () => null,
+      },
+      {
+        key: "tag",
+        labelKey: "notifications.appriseTag",
+        placeholder: "ops",
+        optional: true,
+        validate: () => null,
       },
     ],
   },

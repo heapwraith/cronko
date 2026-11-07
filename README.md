@@ -99,7 +99,7 @@ pnpm --filter @cronko/web dev     # web on :3000, proxies the API
 - Pulse (`/start` + `/finish`) with duration, exit code and optional output
 - Explicit `/fail` signal and non-zero exit codes: a distinct `failed` state with an immediate alert
 - Max-duration alerts, incident history, audit log
-- Alerts to Discord, Telegram, e-mail (SMTP), Slack, Microsoft Teams, Google Chat, Mattermost, Rocket.Chat, Gotify, Matrix, ntfy, Pushover, PagerDuty and any webhook
+- Alerts to Discord, Telegram, e-mail (SMTP), Slack, Microsoft Teams, Google Chat, Mattermost, Rocket.Chat, Gotify, Matrix, Apprise, ntfy, Pushover, PagerDuty and any webhook
 - Run analytics: each run is compared with the runs before it (median, p95); runs much slower than usual and runs that started before the previous one finished are flagged, with optional alerts per monitor
 - Tags per monitor, with a tag filter on the dashboard and monitor list (`?tag=` in the API)
 - Public status pages per tag (`/status/<slug>`, no login): current state, 90 days of daily availability and recent incidents, never tokens or job output
@@ -150,6 +150,26 @@ events use priority 7-8). Matrix takes the `homeserverUrl`, an `accessToken` of 
 sending user and the `roomId` (like `!abc123:matrix.org`, not the `#alias`); the user
 must already be in the room, and encrypted rooms are not supported because messages
 are sent unencrypted.
+
+**Apprise** reaches dozens of services through your own
+[apprise-api](https://github.com/caronc/apprise-api). Give Cronko the `serverUrl`
+and either the `configKey` of a configuration saved in apprise-api (`POST /notify/{key}`)
+or inline `urls` (`POST /notify`); the Apprise URLs carry tokens, so treat them as
+secrets. Events map to Apprise types (down, failed and missed are `failure`; slow,
+unusual and overlap are `warning`; recovered is `success`; the rest `info`). To run
+apprise-api next to Cronko, add a service to `docker-compose.yml`:
+
+```yaml
+apprise:
+  image: caronc/apprise:latest
+  restart: unless-stopped
+  volumes:
+    - apprise_config:/config
+```
+
+and use `http://apprise:8000` as the server URL (declare the `apprise_config` volume).
+The request shape is written from Apprise's documentation and was not tested against
+a running apprise-api.
 
 ### Webhook headers and body template
 

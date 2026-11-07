@@ -24,6 +24,7 @@ const ok: Record<string, Record<string, string>> = {
     accessToken: "syt_x",
     roomId: "!abc:matrix.example.com",
   },
+  apprise: { serverUrl: "http://apprise:8000", configKey: "cronko" },
   email: { to: "ops@example.com" },
 }
 
