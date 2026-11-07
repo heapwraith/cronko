@@ -9,6 +9,7 @@ include breaking changes; they are called out below.
 
 ### Added
 
+- Web Push channel: alerts straight to a browser or phone. The device subscribes from Notifications (VAPID keys are generated on first use), messages are encrypted, and expired subscriptions are not retried. The service worker shows the alert and opens the run. Needs HTTPS. No migration.
 - Five notification channels: Google Chat, Mattermost and Rocket.Chat (incoming webhooks), Gotify (server URL and app token, priorities by event) and Matrix (homeserver, access token and room id; plain, unencrypted messages). No migration.
 - Apprise channel: notifies through a self-hosted apprise-api, with a saved configuration key or inline URLs, an optional tag and event-to-type mapping.
 - Badges: `GET /badge/tag/:tag` summarises a tag (worst state wins, paused ignored) and is public only while a status page for that tag is switched on; unknown, unpublished and empty tags all answer the same 404. Every badge also comes as `.json` and `.shields.json` (shields.io endpoint schema), and `?states=simple` gives the three-state wording (up, late, down, paused).
