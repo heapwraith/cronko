@@ -48,6 +48,17 @@ curl -fsS "https://cronko.example.com/ping/TOKEN/finish?exit=$?"  # or pass d=<m
 # or report a failure explicitly, with the job output as the body (up to 10 KB)
 ./job.sh 2>&1 | tail -c 5000 | curl -fsS --data-binary @- -H 'content-type: text/plain' \
   "https://cronko.example.com/ping/TOKEN/fail?exit=1"
+
+# Healthchecks-style: the exit status in the path (0 = success, 1-255 = failure)
+./job.sh; curl -fsS "https://cronko.example.com/ping/TOKEN/$?"
+
+# attach a progress note without touching the monitor's state (see GET /api/monitors/:id/logs)
+curl -fsS --data-raw "step 3 of 5" -H 'content-type: text/plain' https://cronko.example.com/ping/TOKEN/log
+
+# concurrent runs: give each run an id so its /finish (or /fail) closes the right /start
+RID=$(uuidgen)
+curl -fsS "https://cronko.example.com/ping/TOKEN/start?rid=$RID"
+./job.sh; S=$?; curl -fsS "https://cronko.example.com/ping/TOKEN/$S?rid=$RID"
 ```
 
 Cronko is not an observability platform and does not run active checks
@@ -125,11 +136,36 @@ Notification channels are configured in the UI: Discord/Slack take a
 `webhookUrl`, Telegram a `botToken` and `chatId`, e-mail a recipient `to`.
 ntfy takes a `topic` (plus optional `serverUrl` for a self-hosted server and an
 access `token`). A generic webhook takes a `url` and receives
-`{ "event", "monitor", "message", "sentAt" }` as JSON. Pushover takes a `userKey`
+`{ "event", "monitor", "message", "sentAt" }` as JSON, unless you set a body
+template (see below). Pushover takes a `userKey`
 and an `appToken`. Microsoft Teams takes the `webhookUrl` of a Workflows flow
 ("Post to a channel when a webhook request is received"), since Office 365
 connectors are retired. PagerDuty takes the `routingKey` of an Events API v2
 integration: problems trigger an incident (one per monitor) and recovery resolves it.
+
+### Webhook headers and body template
+
+A generic webhook channel accepts two optional fields. `headers` is one
+`Name: value` per line (for tokens and API keys); values are secrets, so the API
+only returns them masked and keeps the stored value when you save the form
+without changing them. `bodyTemplate` replaces the default JSON body. It supports
+only `{{event}}`, `{{status}}` (`up` or `down`), `{{message}}` (the alert text
+without its link), `{{url}}` (link to Cronko), `{{sentAt}}` and `{{monitor.name}}`.
+Unknown placeholders are rejected when you save. Values are JSON-escaped unless
+you set a non-JSON `Content-Type` header, in which case they are inserted as is.
+
+Slack-compatible endpoint (also Mattermost and Rocket.Chat incoming webhooks):
+
+```text
+body template: {"text": "*{{monitor.name}}* is {{status}}: {{message}} <{{url}}|open>"}
+```
+
+Gotify (`POST /message`, token in a header):
+
+```text
+headers:       X-Gotify-Key: <app token>
+body template: {"title": "Cronko: {{monitor.name}}", "message": "{{message}}", "priority": 5}
+```
 
 ### Ping by e-mail
 

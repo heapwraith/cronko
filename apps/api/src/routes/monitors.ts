@@ -2,6 +2,7 @@ import { db } from "@cronko/database"
 import {
   findHeartbeatsByMonitor,
   findLatestHeartbeats,
+  findPingLogsByMonitor,
   findRunContext,
   findRunSamples,
 } from "@cronko/database/queries/heartbeats"
@@ -426,4 +427,16 @@ monitorsRoute.get("/:id/heartbeats", async (c) => {
   }
 
   return c.json({ data: heartbeats })
+})
+
+// Events sent to /ping/:token/log: output kept next to the runs, not part of them.
+monitorsRoute.get("/:id/logs", async (c) => {
+  const id = c.req.param("id") ?? ""
+  const limit = Math.min(Math.max(1, parseInt(c.req.query("limit") ?? "100", 10) || 100), 500)
+  const before = c.req.query("before")
+  const logs = await findPingLogsByMonitor(id, {
+    limit,
+    ...(before !== undefined && { before }),
+  })
+  return c.json({ data: logs })
 })

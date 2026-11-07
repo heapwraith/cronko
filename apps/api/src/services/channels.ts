@@ -10,6 +10,7 @@ import type {
 } from "@cronko/shared"
 import { createTransport, type Transporter } from "nodemailer"
 import { env } from "../env"
+import { isJsonContentType, parseHeaders, renderTemplate } from "./webhook-template"
 
 export type ChannelRow = typeof notificationChannels.$inferSelect
 
@@ -181,6 +182,45 @@ function smtp(): Transporter | undefined {
   return transporter
 }
 
+/**
+ * Generic webhook. Without a template the payload is the fixed JSON body; with one, the
+ * rendered template is sent instead. Custom headers apply to both.
+ */
+async function deliverWebhook(
+  cfg: WebhookConfig,
+  event: string,
+  text: string,
+  monitorName: string | undefined,
+) {
+  const sentAt = new Date().toISOString()
+  const custom = parseHeaders(cfg.headers).headers
+  const hasContentType = Object.keys(custom).some((k) => k.toLowerCase() === "content-type")
+  const headers = { ...(!hasContentType && { "content-type": "application/json" }), ...custom }
+  if (!cfg.bodyTemplate?.trim()) {
+    return post(
+      cfg.url,
+      {
+        headers,
+        body: JSON.stringify({ event, monitor: monitorName ?? null, message: text, sentAt }),
+      },
+      "webhook",
+    )
+  }
+  const url = text.match(/https?:\/\/\S+$/)?.[0] ?? ""
+  const body = renderTemplate(
+    cfg.bodyTemplate,
+    {
+      event,
+      message: (url ? text.slice(0, -url.length) : text).trim(),
+      url,
+      monitorName: monitorName ?? "",
+      sentAt,
+    },
+    isJsonContentType(headers),
+  )
+  return post(cfg.url, { headers, body }, "webhook")
+}
+
 /** Send one message through one channel. Throws DeliveryError on failure. */
 export async function deliver(
   channel: ChannelRow,
@@ -190,11 +230,7 @@ export async function deliver(
 ): Promise<void> {
   switch (channel.type) {
     case "webhook":
-      return postJson(
-        (channel.config as WebhookConfig).url,
-        { event, monitor: monitorName ?? null, message: text, sentAt: new Date().toISOString() },
-        "webhook",
-      )
+      return deliverWebhook(channel.config as WebhookConfig, event, text, monitorName)
     case "pushover": {
       const cfg = channel.config as PushoverConfig
       const link = text.match(/https?:\/\/\S+$/)?.[0]

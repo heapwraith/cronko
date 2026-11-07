@@ -1,6 +1,8 @@
 import {
   createHeartbeat,
+  createPingLog,
   findLatestHeartbeat,
+  findOpenStartByRunId,
   updateHeartbeatDuration,
 } from "@cronko/database/queries/heartbeats"
 import { findMonitorByToken } from "@cronko/database/queries/monitors"
@@ -17,6 +19,10 @@ export async function processHeartbeat(
     exitCode?: number
     body?: string
     pulseType?: "start" | "finish"
+    /** Client-picked run id (?rid=): pairs a start with its finish across concurrent runs. */
+    runId?: string
+    /** /log: record the event only, without touching state, schedule or run history. */
+    logOnly?: boolean
     /** Explicit failure signal (/fail). A non-zero exit code also counts. */
     failed?: boolean
   },
@@ -32,6 +38,19 @@ export async function processHeartbeat(
   }
 
   const heartbeatId = crypto.randomUUID()
+
+  if (options.logOnly) {
+    await createPingLog({
+      id: heartbeatId,
+      monitorId: monitor.id,
+      ...(options.sourceIp !== undefined && { sourceIp: options.sourceIp }),
+      ...(options.userAgent !== undefined && { userAgent: options.userAgent }),
+      ...(options.body !== undefined && { body: options.body }),
+      ...(options.runId !== undefined && { runId: options.runId }),
+    })
+    return { ok: true, data: { ok: true, monitorId: monitor.id, logged: true } }
+  }
+
   let stored = false
 
   const prevPulse = await findLatestHeartbeat(monitor.id)
@@ -39,7 +58,9 @@ export async function processHeartbeat(
 
   // A start while the previous start never reported its finish means two runs overlap.
   // Past two intervals the old start is treated as abandoned (crashed), not running.
+  // With a run id, concurrent runs are intended and told apart by it, so none is an overlap.
   const overlapped =
+    options.runId === undefined &&
     options.pulseType === "start" &&
     prevPulse?.kind === "start" &&
     prevPulse.durationMs === null &&
@@ -49,10 +70,15 @@ export async function processHeartbeat(
   }
 
   // The /start this /finish closes, if one is still open.
-  const openStart =
-    options.pulseType === "finish" && prevPulse?.kind === "start" && prevPulse.durationMs === null
-      ? prevPulse
-      : null
+  // With a run id it is the start with that id, however many runs started since.
+  let openStart: typeof prevPulse | null = null
+  if (options.pulseType === "finish") {
+    if (options.runId !== undefined) {
+      openStart = (await findOpenStartByRunId(monitor.id, options.runId)) ?? null
+    } else if (prevPulse?.kind === "start" && prevPulse.durationMs === null) {
+      openStart = prevPulse
+    }
+  }
   // Without ?d=, a /finish is timed from its /start.
   const durationMs =
     options.durationMs ??
@@ -70,6 +96,7 @@ export async function processHeartbeat(
       body: options.body ?? "pulse:finish",
       receivedAt: now,
       kind: "finish",
+      ...(options.runId !== undefined && { runId: options.runId }),
       // The finish row is what the UI shows for the run, so it carries the flag too.
       overlapped: openStart.overlapped,
     })
@@ -85,6 +112,7 @@ export async function processHeartbeat(
       ...(options.exitCode !== undefined && { exitCode: options.exitCode }),
       ...(options.body !== undefined && { body: options.body }),
       receivedAt: now,
+      ...(options.runId !== undefined && { runId: options.runId }),
       ...(options.pulseType === "start" && { kind: "start" as const }),
       ...(overlapped && { overlapped: true }),
     })

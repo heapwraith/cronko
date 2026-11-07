@@ -63,18 +63,38 @@ export function ChannelFields({
                 <span className="ml-1.5 font-normal text-dim">({t("notifications.optional")})</span>
               )}
             </label>
-            <input
-              id={id}
-              type={f.type ?? "text"}
-              value={values[f.key] ?? ""}
-              onChange={(e) => onValue(f.key, e.target.value)}
-              placeholder={f.placeholder}
-              autoComplete={f.autoComplete ?? "off"}
-              spellCheck={false}
-              aria-invalid={!!err}
-              aria-describedby={err ? `${id}-err` : undefined}
-              className={`${input} font-mono ${err ? "border-down" : "border-line-strong"}`}
-            />
+            {f.multiline ? (
+              <textarea
+                id={id}
+                rows={3}
+                value={values[f.key] ?? ""}
+                onChange={(e) => onValue(f.key, e.target.value)}
+                placeholder={f.placeholder}
+                autoComplete="off"
+                spellCheck={false}
+                aria-invalid={!!err}
+                aria-describedby={err ? `${id}-err` : f.hintKey ? `${id}-hint` : undefined}
+                className={`${input} py-2 font-mono ${err ? "border-down" : "border-line-strong"}`}
+              />
+            ) : (
+              <input
+                id={id}
+                type={f.type ?? "text"}
+                value={values[f.key] ?? ""}
+                onChange={(e) => onValue(f.key, e.target.value)}
+                placeholder={f.placeholder}
+                autoComplete={f.autoComplete ?? "off"}
+                spellCheck={false}
+                aria-invalid={!!err}
+                aria-describedby={err ? `${id}-err` : undefined}
+                className={`${input} font-mono ${err ? "border-down" : "border-line-strong"}`}
+              />
+            )}
+            {f.hintKey && !err && (
+              <p id={`${id}-hint`} className="mt-1 text-xs text-dim">
+                {t(f.hintKey)}
+              </p>
+            )}
             {err && (
               <p id={`${id}-err`} className="mt-1 text-xs font-medium text-down">
                 {err}

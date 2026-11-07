@@ -15,7 +15,7 @@ import {
   sql,
 } from "drizzle-orm"
 import { db } from "../index"
-import { heartbeats } from "../schema"
+import { heartbeats, pingLogs } from "../schema"
 
 export async function findHeartbeatsByMonitor(
   monitorId: string,
@@ -72,6 +72,7 @@ export async function createHeartbeat(input: {
   receivedAt?: Date
   kind?: "start" | "finish"
   overlapped?: boolean
+  runId?: string
 }) {
   await db.insert(heartbeats).values({
     id: input.id,
@@ -84,7 +85,62 @@ export async function createHeartbeat(input: {
     body: input.body ?? null,
     kind: input.kind ?? null,
     overlapped: input.overlapped ?? false,
+    runId: input.runId ?? null,
   })
+}
+
+/** The /start with this run id that no /finish has closed yet. */
+export async function findOpenStartByRunId(monitorId: string, runId: string) {
+  return db
+    .select()
+    .from(heartbeats)
+    .where(
+      and(
+        eq(heartbeats.monitorId, monitorId),
+        eq(heartbeats.runId, runId),
+        eq(heartbeats.kind, "start"),
+        isNull(heartbeats.durationMs),
+      ),
+    )
+    .orderBy(desc(heartbeats.receivedAt))
+    .limit(1)
+    .get()
+}
+
+export async function createPingLog(input: {
+  id: string
+  monitorId: string
+  receivedAt?: Date
+  sourceIp?: string
+  userAgent?: string
+  body?: string
+  runId?: string
+}) {
+  await db.insert(pingLogs).values({
+    id: input.id,
+    monitorId: input.monitorId,
+    receivedAt: input.receivedAt ?? new Date(),
+    sourceIp: input.sourceIp ?? null,
+    userAgent: input.userAgent ?? null,
+    body: input.body ?? null,
+    runId: input.runId ?? null,
+  })
+}
+
+export async function findPingLogsByMonitor(
+  monitorId: string,
+  options: { limit: number; before?: string },
+) {
+  const where = options.before
+    ? and(eq(pingLogs.monitorId, monitorId), lt(pingLogs.receivedAt, new Date(options.before)))
+    : eq(pingLogs.monitorId, monitorId)
+  return db
+    .select()
+    .from(pingLogs)
+    .where(where)
+    .orderBy(desc(pingLogs.receivedAt))
+    .limit(Math.min(options.limit, 500))
+    .all()
 }
 
 /**
@@ -120,6 +176,7 @@ export async function updateHeartbeatDuration(id: string, durationMs: number) {
 
 export async function deleteHeartbeatsOlderThan(cutoff: Date) {
   await db.delete(heartbeats).where(lte(heartbeats.receivedAt, cutoff))
+  await db.delete(pingLogs).where(lte(pingLogs.receivedAt, cutoff))
 }
 
 type LatestHeartbeat = { receivedAt: Date; durationMs: number | null; exitCode: number | null }

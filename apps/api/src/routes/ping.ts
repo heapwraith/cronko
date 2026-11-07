@@ -8,7 +8,11 @@ export const pingRoute = new Hono()
 
 const MAX_BODY_LENGTH = 10_000
 
-type PingKind = "success" | "start" | "finish" | "fail"
+type PingKind = "success" | "start" | "finish" | "fail" | "log"
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+// Healthchecks reports an exit status as a 0-255 integer in the path.
+const MAX_EXIT_STATUS = 255
 
 // "/:token/*" also matches "/:token", so one registration counts every ping once.
 pingRoute.use("/:token/*", rateLimit)
@@ -46,13 +50,25 @@ async function readBody(c: Context): Promise<{ body?: string; tooLarge?: true }>
 
 function handle(kind: PingKind) {
   return async (c: Context) => {
+    const rid = c.req.query("rid")
+    if (rid !== undefined && !UUID.test(rid)) {
+      return c.json({ error: "rid must be a UUID", code: "INVALID_RID" }, 400)
+    }
+    const runId = rid?.toLowerCase()
+
+    const exitParam = c.req.param("exit")
+    const pathExit = exitParam === undefined ? undefined : Number.parseInt(exitParam, 10)
+    if (pathExit !== undefined && pathExit > MAX_EXIT_STATUS) {
+      return c.json({ error: "Exit status must be 0-255", code: "INVALID_EXIT_STATUS" }, 400)
+    }
+
     const { body, tooLarge } = await readBody(c)
     if (tooLarge) return c.json({ error: "Body too large", code: "PAYLOAD_TOO_LARGE" }, 413)
 
     // A negative duration is a client clock glitch, not data.
     const rawDuration = intParam(c.req.query("d"))
     const durationMs = rawDuration !== undefined && rawDuration >= 0 ? rawDuration : undefined
-    let exitCode = intParam(c.req.query("exit"))
+    let exitCode = pathExit ?? intParam(c.req.query("exit"))
     // An explicit failure with no exit code is reported as 1 so history shows it.
     if (kind === "fail") exitCode ??= 1
 
@@ -63,8 +79,13 @@ function handle(kind: PingKind) {
       ...(durationMs !== undefined && { durationMs }),
       ...(exitCode !== undefined && { exitCode }),
       ...(body !== undefined && { body }),
+      ...(runId !== undefined && { runId }),
+      ...(kind === "log" && { logOnly: true }),
       ...(kind === "start" && { pulseType: "start" as const }),
-      ...(kind === "finish" && { pulseType: "finish" as const }),
+      // With a run id, a success or failure closes the start that has the same id.
+      ...((kind === "finish" || (runId !== undefined && kind !== "start" && kind !== "log")) && {
+        pulseType: "finish" as const,
+      }),
       ...(kind === "fail" && { failed: true }),
     })
 
@@ -78,6 +99,8 @@ for (const [suffix, kind] of [
   ["/start", "start"],
   ["/finish", "finish"],
   ["/fail", "fail"],
+  ["/log", "log"],
+  ["/:exit{[0-9]+}", "success"],
 ] as const) {
   pingRoute.get(`/:token${suffix}`, handle(kind))
   pingRoute.post(`/:token${suffix}`, handle(kind))
