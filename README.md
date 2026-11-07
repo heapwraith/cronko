@@ -408,13 +408,31 @@ then a code (or a recovery code). Disabling needs the password and a code.
   `UPDATE users SET totp_secret = NULL, totp_enabled_at = NULL, totp_last_step = NULL;`
   (and `DELETE FROM recovery_codes;`).
 
+#### Security keys (WebAuthn)
+
+Once the authenticator app is on, Settings → Two-factor authentication → Security keys lets you
+register hardware keys or passkeys. At sign-in the second step then offers **Use a security key**
+next to the code field; the code and the recovery codes keep working, so a lost key never locks you
+out. Removing a key asks for the password, and turning the authenticator app off removes the keys.
+
+- It needs a known address: set `PUBLIC_URL` (or `WEBAUTHN_ORIGIN`, and `WEBAUTHN_RP_ID` if the
+  relying party is a parent domain). Without one the section only says so, because a wrong origin
+  would make registered keys useless. Changing the host later invalidates the keys.
+- The key is a second factor, not a replacement for the password: touching it is enough, and
+  PIN or fingerprint is not demanded. Attestation is not checked (any authenticator is accepted).
+- Each login challenge is accepted once, the signature counter must not go backwards, and
+  failures share the login rate limit. API tokens cannot manage keys.
+- Tested against a software authenticator that produces real signed registrations and assertions
+  (a bad signature, origin, relying party, a replay and a cloned counter are all refused), **not**
+  against physical keys or a browser: try your own key after enabling it.
+
 ## Security
 
 - Passwords: bcrypt (12 rounds). Sessions: HS256 JWT, 15-minute access token and
   7-day refresh token in `HttpOnly`, `SameSite=Strict` cookies (`Secure` in production).
 - CSRF: state-changing requests with a cookie session must be same-origin
   (`Sec-Fetch-Site`, falling back to `Origin`); `Authorization` clients are exempt.
-- Optional TOTP two-factor login with hashed single-use recovery codes (see above).
+- Optional TOTP two-factor login with hashed single-use recovery codes, plus optional security keys (see above).
 - Logout revokes the access and refresh tokens server-side (denylist by `jti`), not only the cookies.
 - Login limited to 5 attempts per 15 minutes per IP and e-mail (password and 2FA code share the count); pings are rate limited per token.
 - Public status pages expose only names, states, availability and incident times; never tokens or job output.
