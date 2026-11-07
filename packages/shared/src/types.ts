@@ -18,6 +18,7 @@ export type NotificationChannelType =
   | "gotify"
   | "matrix"
   | "apprise"
+  | "webpush"
 
 export type IncidentStatus = "open" | "resolved"
 
@@ -69,6 +70,7 @@ export interface NotificationChannel {
     | GotifyConfig
     | MatrixConfig
     | AppriseConfig
+    | WebPushConfig
   createdAt: Date
 }
 
@@ -140,4 +142,10 @@ export interface AppriseConfig {
   /** Inline Apprise URLs (they carry tokens, so they are secrets). */
   urls?: string | undefined
   tag?: string | undefined
+}
+
+/** A browser's push subscription (what PushManager.subscribe().toJSON() returns). */
+export interface WebPushConfig {
+  endpoint: string
+  keys: { p256dh: string; auth: string }
 }

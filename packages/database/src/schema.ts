@@ -115,6 +115,7 @@ export const notificationChannels = sqliteTable("notification_channels", {
       "gotify",
       "matrix",
       "apprise",
+      "webpush",
     ],
   }).notNull(),
   enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
