@@ -174,6 +174,8 @@ export const api = {
       post<{ token: string; email: string; expiresAt: string }>("/auth/login/2fa", body),
     logout: () => post<{ ok: boolean }>("/auth/logout"),
     me: () => get<{ id: string; email: string }>("/auth/me"),
+    ssoConfig: () =>
+      get<{ oidc: boolean; proxy: boolean; passwordLogin: boolean }>("/auth/sso/config"),
   },
   twoFactor: {
     status: () => get<{ enabled: boolean; recoveryCodesRemaining: number }>("/auth/2fa"),
