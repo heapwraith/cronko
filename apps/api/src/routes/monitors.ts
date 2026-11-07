@@ -32,7 +32,7 @@ import {
   isUnusuallySlow,
 } from "@cronko/shared/run-stats"
 import { isValidSchedule, isValidTimezone, schedulePeriodSeconds } from "@cronko/shared/schedule"
-import { MAX_TAGS, normalizeTags } from "@cronko/shared/tags"
+import { MAX_TAGS, normalizeTag, normalizeTags } from "@cronko/shared/tags"
 import { zValidator } from "@hono/zod-validator"
 import type { InferSelectModel } from "drizzle-orm"
 import { eq } from "drizzle-orm"
@@ -356,6 +356,102 @@ monitorsRoute.post(
     return c.json({ data: monitor })
   },
 )
+
+const MAX_BULK = 200
+
+/** One action applied to up to 200 monitors; each id succeeds or fails on its own. */
+const bulkSchema = z.discriminatedUnion("action", [
+  z.object({ action: z.literal("pause") }),
+  z.object({ action: z.literal("resume") }),
+  z.object({ action: z.literal("delete") }),
+  z.object({
+    action: z.literal("mute"),
+    minutes: z
+      .number()
+      .int()
+      .min(1)
+      .max(60 * 24 * 30)
+      .nullable(),
+  }),
+  z.object({ action: z.literal("addTag"), tag: z.string().min(1).max(64) }),
+  z.object({ action: z.literal("removeTag"), tag: z.string().min(1).max(64) }),
+])
+const bulkRequestSchema = z.intersection(
+  z.object({ ids: z.array(z.string().min(1).max(100)).min(1).max(MAX_BULK) }),
+  bulkSchema,
+)
+
+monitorsRoute.post("/bulk", zValidator("json", bulkRequestSchema), async (c) => {
+  const body = c.req.valid("json")
+  const ids = [...new Set(body.ids)]
+  const failed: { id: string; reason: string }[] = []
+  let succeeded = 0
+
+  // A bad tag fails the whole request up front instead of once per monitor.
+  const tag = "tag" in body ? normalizeTag(body.tag) : ""
+  if ("tag" in body && !tag) return c.json({ error: "Invalid tag", code: "VALIDATION_ERROR" }, 400)
+
+  for (const id of ids) {
+    try {
+      const monitor = await findMonitorById(id)
+      if (!monitor) {
+        failed.push({ id, reason: "not_found" })
+        continue
+      }
+      switch (body.action) {
+        case "pause":
+          await pauseMonitor(id)
+          break
+        case "resume":
+          await resumeMonitor(id)
+          break
+        case "delete":
+          await deleteMonitor(id)
+          break
+        case "mute":
+          await setMonitorMutedUntil(
+            id,
+            body.minutes === null ? null : new Date(Date.now() + body.minutes * 60_000),
+          )
+          break
+        case "addTag":
+          if (monitor.tags.includes(tag)) break
+          if (monitor.tags.length >= MAX_TAGS) {
+            failed.push({ id, reason: "too_many_tags" })
+            continue
+          }
+          await updateMonitor(id, { tags: [...monitor.tags, tag], now: new Date() })
+          break
+        case "removeTag":
+          if (monitor.tags.includes(tag)) {
+            await updateMonitor(id, {
+              tags: monitor.tags.filter((t) => t !== tag),
+              now: new Date(),
+            })
+          }
+          break
+      }
+      succeeded++
+    } catch {
+      failed.push({ id, reason: "error" })
+    }
+  }
+
+  logAuditEvent({
+    userId: (c.get("jwtPayload") as { sub: string })?.sub,
+    action: "monitor.bulk",
+    resourceType: "monitor",
+    metadata: {
+      action: body.action,
+      requested: ids.length,
+      succeeded,
+      ...("tag" in body && { tag }),
+      ...(body.action === "delete" && { ids }),
+    },
+  }).catch(() => {})
+
+  return c.json({ data: { succeeded, failed } })
+})
 
 monitorsRoute.post(
   "/reorder",

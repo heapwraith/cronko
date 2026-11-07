@@ -913,6 +913,19 @@ const spec = {
         },
       },
     },
+    "/api/monitors/bulk": {
+      post: {
+        summary: "Apply one action to up to 200 monitors",
+        description:
+          "Body: `{ ids: string[], action }` where action is `pause`, `resume`, `delete`, `mute` (with `minutes`, null to unmute), `addTag` or `removeTag` (with `tag`). Each id succeeds or fails on its own: the response is `{ data: { succeeded, failed: [{ id, reason }] } }` with reasons `not_found`, `too_many_tags` or `error`. Needs a session or a write token.",
+        responses: {
+          "200": { description: "Result per request" },
+          "400": {
+            description: "Empty or oversized id list, unknown action, invalid tag or minutes",
+          },
+        },
+      },
+    },
     "/api/monitors/{id}": {
       get: {
         summary: "Get a single monitor with recent heartbeats",
