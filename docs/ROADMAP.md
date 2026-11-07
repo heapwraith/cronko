@@ -80,7 +80,7 @@ not verified in depth, so claims about them are unconfirmed. In order of value o
 3. Cheap channels: Google Chat, Mattermost/Rocket.Chat, Gotify, Matrix, Opsgenie.
 4. ~~2FA (TOTP, later WebAuthn): the UI is internet-facing and holds ping tokens.~~ TOTP done (Settings, recovery codes, login code step; see README). WebAuthn is still open.
 5. ~~Scheduled automatic SQLite backup and a JSON export of monitors and channels.~~ Done (unreleased): `BACKUP_DIR`, `GET /api/export`, `POST /api/import/cronko`.
-6. Ping by slug with a project key and `?create=1` (provisioning from CI/IaC).
+6. ~~Ping by slug with a project key and `?create=1` (provisioning from CI/IaC).~~ Done (Unreleased).
 7. Badges per tag, JSON/Shields.io formats, three states.
 8. Apprise integration (one URL covers dozens of services).
 9. Proxy-header login and/or OIDC for self-hosters with SSO.
