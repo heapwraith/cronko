@@ -91,4 +91,6 @@ export const howto = {
     "PagerDuty — abre um incidente com severidade e resolve sozinho quando o job volta.",
   "howto.notifications.teams":
     'Microsoft Teams — webhook de um fluxo do Workflows ("Post to a channel when a webhook request is received").',
+  "howto.notifications.webpush":
+    "Web Push — alertas direto no navegador ou no celular, sem app de terceiros.",
 } as const

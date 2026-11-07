@@ -6,6 +6,7 @@ import {
   MessageSquare,
   Send,
   Siren,
+  Smartphone,
   Users,
   Webhook,
 } from "lucide-react"
@@ -26,6 +27,7 @@ export type ChannelType =
   | "gotify"
   | "matrix"
   | "apprise"
+  | "webpush"
 
 export type Channel = {
   id: string
@@ -265,6 +267,12 @@ export const CHANNELS: Record<
         validate: roomId,
       },
     ],
+  },
+  webpush: {
+    label: "Web Push",
+    icon: Smartphone,
+    // No fields: the browser produces the subscription (see lib/webpush.ts).
+    fields: [],
   },
   apprise: {
     label: "Apprise",

@@ -18,6 +18,7 @@ import {
   unknownPlaceholders,
   unmaskHeaders,
 } from "../services/webhook-template"
+import { getVapidKeys } from "../services/webpush"
 
 export const notificationsRoute = new Hono()
 
@@ -92,6 +93,12 @@ const appriseConfig = z
       })
     }
   })
+
+// A browser push subscription: an https endpoint and the two keys the browser generated.
+const webPushConfig = z.object({
+  endpoint: z.url({ protocol: /^https$/ }).max(2048),
+  keys: z.object({ p256dh: z.string().min(10).max(200), auth: z.string().min(8).max(100) }),
+})
 
 export const createNotificationSchema = z.discriminatedUnion("type", [
   z.object({
@@ -169,6 +176,11 @@ export const createNotificationSchema = z.discriminatedUnion("type", [
     type: z.literal("apprise"),
     config: appriseConfig,
   }),
+  z.object({
+    name: z.string().min(1),
+    type: z.literal("webpush"),
+    config: webPushConfig,
+  }),
 ])
 
 const updateNotificationSchema = z.object({
@@ -186,8 +198,14 @@ const updateNotificationSchema = z.object({
       gotifyConfig,
       matrixConfig,
       appriseConfig,
+      webPushConfig,
     ])
     .optional(),
+})
+
+/** The key a browser needs to subscribe. Public by design; generated on first use. */
+notificationsRoute.get("/webpush/key", async (c) => {
+  return c.json({ data: { publicKey: (await getVapidKeys()).publicKey } })
 })
 
 notificationsRoute.get("/deliveries", async (c) => {

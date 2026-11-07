@@ -10,10 +10,12 @@ import type {
   PushoverConfig,
   TelegramConfig,
   WebhookConfig,
+  WebPushConfig,
 } from "@cronko/shared"
 import { createTransport, type Transporter } from "nodemailer"
 import { env } from "../env"
 import { isJsonContentType, parseHeaders, renderTemplate } from "./webhook-template"
+import { buildPushPayload, PushError, sendWebPush } from "./webpush"
 
 export type ChannelRow = typeof notificationChannels.$inferSelect
 
@@ -411,6 +413,16 @@ export async function deliver(
       )
       return postJson(url, payload, "apprise")
     }
+    case "webpush":
+      try {
+        return await sendWebPush(
+          channel.config as WebPushConfig,
+          buildPushPayload(event, text, monitorName),
+        )
+      } catch (err) {
+        if (err instanceof PushError) throw new DeliveryError(err.message, err.retryable)
+        throw err
+      }
     case "email": {
       const mailer = smtp()
       if (!mailer) throw new DeliveryError("email: SMTP is not configured", false)

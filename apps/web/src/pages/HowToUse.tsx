@@ -188,6 +188,7 @@ curl -fsS -X POST "${ping}/finish?exit=$?"`}</CodeBlock>
               "gotify",
               "matrix",
               "apprise",
+              "webpush",
             ] as const
           ).map((k) => (
             <li key={k}>

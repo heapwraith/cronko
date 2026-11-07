@@ -128,4 +128,9 @@ export const notifications = {
   "notifications.chatIdRequired": "ID do Chat é obrigatório",
   "notifications.emailRequired": "Email é obrigatório",
   "notifications.emailInvalid": "Deve ser um email válido",
+  "notifications.pushHint":
+    "Ao criar, o navegador pede permissão e este aparelho passa a receber os alertas, mesmo com o Cronko fechado. Precisa de HTTPS (ou localhost) e de um navegador com suporte; para outro aparelho, crie o canal nele.",
+  "notifications.pushUnsupported":
+    "Este navegador não suporta notificações push (ou a página não está em HTTPS).",
+  "notifications.pushDenied": "A permissão de notificações não foi concedida.",
 } as const

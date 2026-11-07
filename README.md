@@ -99,7 +99,7 @@ pnpm --filter @cronko/web dev     # web on :3000, proxies the API
 - Pulse (`/start` + `/finish`) with duration, exit code and optional output
 - Explicit `/fail` signal and non-zero exit codes: a distinct `failed` state with an immediate alert
 - Max-duration alerts, incident history, audit log
-- Alerts to Discord, Telegram, e-mail (SMTP), Slack, Microsoft Teams, Google Chat, Mattermost, Rocket.Chat, Gotify, Matrix, Apprise, ntfy, Pushover, PagerDuty and any webhook
+- Alerts to Discord, Telegram, e-mail (SMTP), Slack, Microsoft Teams, Google Chat, Mattermost, Rocket.Chat, Gotify, Matrix, Apprise, Web Push, ntfy, Pushover, PagerDuty and any webhook
 - Run analytics: each run is compared with the runs before it (median, p95); runs much slower than usual and runs that started before the previous one finished are flagged, with optional alerts per monitor
 - Tags per monitor, with a tag filter on the dashboard and monitor list (`?tag=` in the API)
 - Search (name, slug, tags) and bulk actions on the monitor list: pause, resume, mute, tag, delete (`POST /api/monitors/bulk`)
@@ -171,6 +171,24 @@ apprise:
 and use `http://apprise:8000` as the server URL (declare the `apprise_config` volume).
 The request shape is written from Apprise's documentation and was not tested against
 a running apprise-api.
+
+**Web Push** sends alerts straight to a browser, desktop or phone, with no third-party app. In
+Notifications, add a channel of type **Web Push** on the device that should receive alerts: the
+browser asks for permission, subscribes, and the subscription is stored as the channel, so each
+device gets its own channel (and its own test button). It works with Cronko closed, as long as the
+browser is running. It needs HTTPS (or `localhost`) and a browser with push support; on iOS the site
+must be added to the home screen first.
+
+- Cronko makes a VAPID key pair on first use and keeps it in the settings table. The public key is
+  served to the browser; the private one never leaves the server. Deleting the `vapid_*` settings
+  invalidates every subscription.
+- A subscription the push service reports as gone (404/410) is not retried: the delivery log shows
+  "subscription expired or removed", so remove that channel and add it again.
+- Messages are encrypted end to end between Cronko and the browser; the push service sees only the
+  endpoint. The endpoint is a capability URL, so it is stored like the other channel secrets and
+  never written to logs or error messages.
+- It was tested against a local HTTPS push service (real encryption and VAPID signature), not
+  against Google, Mozilla or Apple push services or a real browser: send a test from the channel row first.
 
 ### Webhook headers and body template
 

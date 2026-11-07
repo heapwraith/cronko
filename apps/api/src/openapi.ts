@@ -1400,6 +1400,15 @@ const spec = {
         responses: { "200": { description: "Deleted" }, "404": { description: "Not found" } },
       },
     },
+    "/api/notifications/webpush/key": {
+      get: {
+        summary: "The VAPID public key a browser needs to subscribe to Web Push",
+        description:
+          "Public by design; the key pair is generated on first use. A Web Push channel is created with type `webpush` and the browser's `PushSubscription` (`endpoint` over https plus `keys.p256dh` and `keys.auth`).",
+        security: [{ bearerAuth: [] }],
+        responses: { "200": { description: "{ data: { publicKey } }" } },
+      },
+    },
     "/api/notifications/deliveries": {
       get: {
         summary: "Delivery log: recent alert deliveries with status, attempts and last error",

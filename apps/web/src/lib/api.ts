@@ -406,6 +406,7 @@ export const api = {
     },
   },
   notifications: {
+    webPushKey: () => get<{ publicKey: string }>("/api/notifications/webpush/key"),
     list: () =>
       get<
         Array<{

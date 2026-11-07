@@ -39,3 +39,39 @@ self.addEventListener("fetch", (event) => {
     )
   }
 })
+
+// Web Push: the server sends { title, body, url, tag, event } (see services/webpush.ts).
+self.addEventListener("push", (event) => {
+  let data = {}
+  try {
+    data = event.data ? event.data.json() : {}
+  } catch {
+    data = { body: event.data ? event.data.text() : "" }
+  }
+  const title = data.title || "Cronko"
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: data.body || "",
+      icon: "/icon.svg",
+      badge: "/icon.svg",
+      // The same monitor replaces its previous notification instead of piling up.
+      tag: data.tag || "cronko",
+      renotify: true,
+      data: { url: data.url || "/" },
+    }),
+  )
+})
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close()
+  const target = new URL(event.notification.data?.url || "/", self.location.origin)
+  // Only ever open this site: the URL comes from the payload.
+  const url = target.origin === self.location.origin ? target.href : self.location.origin
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+      const open = clients.find((c) => c.url.startsWith(self.location.origin))
+      if (open) return open.focus().then(() => open.navigate?.(url))
+      return self.clients.openWindow(url)
+    }),
+  )
+})
