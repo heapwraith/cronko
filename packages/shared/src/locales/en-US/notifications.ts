@@ -126,4 +126,9 @@ export const notifications = {
   "notifications.chatIdRequired": "Chat ID is required",
   "notifications.emailRequired": "Email is required",
   "notifications.emailInvalid": "Must be a valid email address",
+  "notifications.pushHint":
+    "When you create it, the browser asks for permission and this device starts receiving alerts, even with Cronko closed. It needs HTTPS (or localhost) and a browser that supports it; for another device, create the channel there.",
+  "notifications.pushUnsupported":
+    "This browser does not support push notifications (or the page is not on HTTPS).",
+  "notifications.pushDenied": "Notification permission was not granted.",
 } as const

@@ -25,6 +25,8 @@ const ok: Record<string, Record<string, string>> = {
     roomId: "!abc:matrix.example.com",
   },
   apprise: { serverUrl: "http://apprise:8000", configKey: "cronko" },
+  // The browser makes the subscription, so there is nothing to type.
+  webpush: {},
   email: { to: "ops@example.com" },
 }
 

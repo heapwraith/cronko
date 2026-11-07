@@ -103,6 +103,9 @@ export function ChannelFields({
           </div>
         )
       })}
+      {type === "webpush" && (
+        <p className="text-sm text-dim sm:col-span-2">{t("notifications.pushHint")}</p>
+      )}
     </div>
   )
 }
