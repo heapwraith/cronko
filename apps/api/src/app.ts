@@ -90,6 +90,30 @@ api.use("*", async (c, next) => {
 
 api.use("*", authenticate)
 api.use("*", csrf)
+
+// A read-only token must not hand out the secrets that let someone send pings: the
+// per-monitor ping token is removed from every JSON answer it receives. (A write token
+// can create monitors and keeps seeing them; sessions are unaffected.)
+function withoutPingTokens(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(withoutPingTokens)
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(([key]) => key !== "token")
+        .map(([key, v]) => [key, withoutPingTokens(v)]),
+    )
+  }
+  return value
+}
+api.use("*", async (c, next) => {
+  await next()
+  if (c.get("apiToken")?.scope !== "read") return
+  if (!c.res.headers.get("content-type")?.includes("application/json")) return
+  const data = await c.res.clone().json()
+  const headers = new Headers(c.res.headers)
+  headers.delete("content-length")
+  c.res = new Response(JSON.stringify(withoutPingTokens(data)), { status: c.res.status, headers })
+})
 api.route("/monitors", monitorsRoute)
 api.route("/incidents", incidentsRoute)
 api.route("/notifications", notificationsRoute)

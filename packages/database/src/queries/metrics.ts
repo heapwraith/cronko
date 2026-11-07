@@ -7,6 +7,9 @@ export type MonitorMetricsRow = {
   lastPingAt: number | null
   lastDurationMs: number | null
   openIncidents: number
+  expectedIntervalSeconds: number
+  gracePeriodSeconds: number
+  paused: number
 }
 
 /** One row per monitor with the numbers exported on /metrics. Timestamps are unix seconds. */
@@ -14,6 +17,9 @@ export function findMonitorMetrics(): MonitorMetricsRow[] {
   return sqliteClient
     .prepare(
       `SELECT m.name AS name, m.slug AS slug, m.status AS status,
+        m.expected_interval_seconds AS expectedIntervalSeconds,
+        m.grace_period_seconds AS gracePeriodSeconds,
+        m.paused AS paused,
         (SELECT MAX(h.received_at) FROM heartbeats h WHERE h.monitor_id = m.id) AS lastPingAt,
         (SELECT h.duration_ms FROM heartbeats h
           WHERE h.monitor_id = m.id AND h.duration_ms IS NOT NULL

@@ -45,6 +45,18 @@ export function renderMetrics(): string {
     }
   }
 
+  family("cronko_monitor_expected_interval_seconds", "Interval the monitor expects between pings.")
+  for (const m of monitors) {
+    out.push(`cronko_monitor_expected_interval_seconds{${id(m)}} ${m.expectedIntervalSeconds}`)
+  }
+
+  family("cronko_monitor_grace_seconds", "Grace period before a late monitor is reported.")
+  for (const m of monitors)
+    out.push(`cronko_monitor_grace_seconds{${id(m)}} ${m.gracePeriodSeconds}`)
+
+  family("cronko_monitor_paused", "1 when the monitor is paused (its status is kept), else 0.")
+  for (const m of monitors) out.push(`cronko_monitor_paused{${id(m)}} ${m.paused ? 1 : 0}`)
+
   family("cronko_monitor_open_incidents", "Open incidents per monitor.")
   for (const m of monitors) out.push(`cronko_monitor_open_incidents{${id(m)}} ${m.openIncidents}`)
 

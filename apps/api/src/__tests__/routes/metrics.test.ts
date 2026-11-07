@@ -60,6 +60,8 @@ describe("GET /metrics (HTTP, real SQLite)", () => {
     const etl = await mk('nightly "etl"', "etl")
     await mk("backup", "backup")
     await monitors.transitionMonitorStatus(etl.id, "pending", "down")
+    const idle = await mk("idle", "idle")
+    await monitors.pauseMonitor(idle.id)
     await incidents.createIncident({ id: "i1", monitorId: etl.id, startedAt: now })
     await db.insert(heartbeats).values([
       { id: "h1", monitorId: etl.id, receivedAt: new Date(1_700_000_000_000), durationMs: 1000 },
@@ -115,6 +117,13 @@ describe("GET /metrics (HTTP, real SQLite)", () => {
     expect(text).toContain(
       'cronko_monitor_open_incidents{monitor="nightly \\"etl\\"",slug="etl"} 1',
     )
+    // interval, grace and the paused flag (a paused monitor keeps its status)
+    expect(text).toContain(
+      'cronko_monitor_expected_interval_seconds{monitor="nightly \\"etl\\"",slug="etl"} 600',
+    )
+    expect(text).toContain('cronko_monitor_grace_seconds{monitor="idle",slug="idle"} 60')
+    expect(text).toContain('cronko_monitor_paused{monitor="idle",slug="idle"} 1')
+    expect(text).toContain('cronko_monitor_paused{monitor="nightly \\"etl\\"",slug="etl"} 0')
     expect(text).toContain("cronko_open_incidents 1\n")
     expect(text).toContain('cronko_notification_deliveries{status="pending"} 2')
     expect(text).toContain('cronko_notification_deliveries{status="failed"} 1')

@@ -7,6 +7,10 @@ include breaking changes; they are called out below.
 
 ## [Unreleased]
 
+### Security
+
+- A read-only API token no longer receives the monitors' ping tokens: every JSON answer to a `read` token has the `token` field removed. Before, `GET /api/monitors` handed them out, so a leaked read token let someone send pings for every monitor. Sessions and `write` tokens are unchanged (use the ping key to avoid exposing the tokens to CI).
+
 ### Added
 
 - Bulk actions on the monitor list: tick monitors (or "select all" of what the search shows) and pause, resume, mute for an hour, unmute, add or remove a tag, or delete them in one go. The API is `POST /api/monitors/bulk` (up to 200 ids; each id succeeds or fails on its own; one audit event per request, with the ids listed for deletions). The search box now also matches the slug and the tags.
