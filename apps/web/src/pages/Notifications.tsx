@@ -21,6 +21,7 @@ import { useToast } from "@/components/shared/Toast"
 import { Toggle } from "@/components/shared/Toggle"
 import { ApiError, api } from "@/lib/api"
 import { useT } from "@/lib/i18n"
+import { PushDenied, pushSupported, subscribeThisDevice } from "@/lib/webpush"
 
 const th = "px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-dim"
 const td = "px-3 py-4 align-middle"
@@ -93,13 +94,26 @@ export default function NotificationsPage() {
     setErrors(translated)
     if (Object.keys(translated).length > 0) return
 
-    const config = Object.fromEntries(
-      channelMeta(draft.type).fields.map((f) => [f.key, (draft.values[f.key] ?? "").trim()]),
-    )
     setSaving(true)
     try {
+      // Web Push has no fields: this browser makes the subscription.
+      let config: Record<string, unknown> = Object.fromEntries(
+        channelMeta(draft.type).fields.map((f) => [f.key, (draft.values[f.key] ?? "").trim()]),
+      )
+      if (draft.type === "webpush" && editingId === null) {
+        if (!pushSupported()) {
+          toast(t("notifications.pushUnsupported"), "error")
+          return
+        }
+        const { publicKey } = await api.notifications.webPushKey()
+        config = await subscribeThisDevice(publicKey)
+      }
       if (editingId) {
-        await api.notifications.update(editingId, { name: draft.name.trim(), config })
+        await api.notifications.update(editingId, {
+          name: draft.name.trim(),
+          // A push subscription belongs to one browser: only its name can be edited.
+          ...(draft.type !== "webpush" && { config }),
+        })
         toast(t("notifications.channelUpdated"), "success")
       } else {
         await api.notifications.create({
@@ -112,6 +126,10 @@ export default function NotificationsPage() {
       await refresh()
       closeForm()
     } catch (e) {
+      if (e instanceof PushDenied) {
+        toast(t("notifications.pushDenied"), "error")
+        return
+      }
       const fromServer = e instanceof ApiError && e.status === 400 ? serverFieldErrors(e.body) : {}
       if (Object.keys(fromServer).length > 0) setErrors(fromServer)
       else

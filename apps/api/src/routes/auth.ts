@@ -21,6 +21,7 @@ import {
 import { setSessionCookies } from "../services/session"
 import { passwordLoginEnabled } from "../services/sso"
 import { verifySecondFactor } from "../services/totp"
+import { beginAuthentication, finishAuthentication } from "../services/webauthn"
 import { ssoRoute } from "./sso"
 import { twoFactorRoute } from "./two-factor"
 
@@ -82,10 +83,14 @@ authRoute.post("/login", zValidator("json", loginSchema), async (c) => {
   if (user.totpEnabledAt) {
     // Password alone is not a login. The failure counter is deliberately NOT reset
     // here, otherwise guessing codes would never run out of attempts.
+    // With a registered security key, the same step also offers it (the challenge is signed
+    // into the login token, so it cannot be swapped for one the attacker chose).
+    const webauthn = await beginAuthentication(user.id)
     return c.json({
       data: {
         twoFactorRequired: true,
-        challenge: await generateTwoFactorChallenge(user.id, user.email),
+        challenge: await generateTwoFactorChallenge(user.id, user.email, webauthn?.challenge),
+        ...(webauthn && { webauthn }),
       },
     })
   }
@@ -129,6 +134,54 @@ authRoute.post("/login/2fa", zValidator("json", twoFactorLoginSchema), async (c)
       () => {},
     )
   }
+  return completeLogin(c, user, ip, limitKey)
+})
+
+const webauthnLoginSchema = z.object({
+  challenge: z.string().min(1),
+  response: z.looseObject({ id: z.string().min(1), type: z.literal("public-key") }),
+})
+
+/** Second step with a security key instead of a code: the challenge from /login plus the assertion. */
+authRoute.post("/login/webauthn", zValidator("json", webauthnLoginSchema), async (c) => {
+  if (!passwordLoginEnabled()) return passwordLoginOff(c)
+  const { challenge, response } = c.req.valid("json")
+  const ip = clientIp(c)
+
+  let payload: Awaited<ReturnType<typeof verifyTwoFactorChallenge>>
+  try {
+    payload = await verifyTwoFactorChallenge(challenge)
+  } catch {
+    return c.json({ error: "Challenge expired or invalid", code: "UNAUTHORIZED" }, 401)
+  }
+  if (!payload.wac)
+    return c.json({ error: "No security key for this login", code: "UNAUTHORIZED" }, 401)
+
+  const limitKey = loginKey(ip, payload.email)
+  if (isLoginBlocked(limitKey)) {
+    return c.json({ error: "Too many attempts. Try again later.", code: "RATE_LIMITED" }, 429)
+  }
+
+  const user = await findUserById(payload.sub)
+  const ok =
+    !!user?.totpEnabledAt &&
+    (await finishAuthentication(
+      user,
+      payload.wac,
+      new Date(payload.exp * 1000),
+      response as unknown as Parameters<typeof finishAuthentication>[3],
+    ))
+  if (!user || !ok) {
+    recordLoginFailure(limitKey)
+    logAuditEvent({
+      ...(user && { userId: user.id }),
+      action: "login_failure",
+      metadata: { email: payload.email, reason: "invalid_security_key" },
+      ipAddress: ip,
+    }).catch(() => {})
+    return c.json({ error: "Security key not accepted", code: "INVALID_CODE" }, 401)
+  }
+  logAuditEvent({ userId: user.id, action: "2fa_security_key_used", ipAddress: ip }).catch(() => {})
   return completeLogin(c, user, ip, limitKey)
 })
 

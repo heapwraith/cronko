@@ -99,9 +99,10 @@ pnpm --filter @cronko/web dev     # web on :3000, proxies the API
 - Pulse (`/start` + `/finish`) with duration, exit code and optional output
 - Explicit `/fail` signal and non-zero exit codes: a distinct `failed` state with an immediate alert
 - Max-duration alerts, incident history, audit log
-- Alerts to Discord, Telegram, e-mail (SMTP), Slack, Microsoft Teams, Google Chat, Mattermost, Rocket.Chat, Gotify, Matrix, Apprise, ntfy, Pushover, PagerDuty and any webhook
+- Alerts to Discord, Telegram, e-mail (SMTP), Slack, Microsoft Teams, Google Chat, Mattermost, Rocket.Chat, Gotify, Matrix, Apprise, Web Push, ntfy, Pushover, PagerDuty and any webhook
 - Run analytics: each run is compared with the runs before it (median, p95); runs much slower than usual and runs that started before the previous one finished are flagged, with optional alerts per monitor
 - Tags per monitor, with a tag filter on the dashboard and monitor list (`?tag=` in the API)
+- Search (name, slug, tags) and bulk actions on the monitor list: pause, resume, mute, tag, delete (`POST /api/monitors/bulk`)
 - Public status pages per tag (`/status/<slug>`, no login): current state, 90 days of daily availability and recent incidents, never tokens or job output
 - Recurring maintenance windows (days, start time, duration and timezone) for all monitors, a tag or one monitor: alerts are held back while one runs
 - Scoped API tokens (read or write) for scripts and CI, managed in Settings
@@ -170,6 +171,24 @@ apprise:
 and use `http://apprise:8000` as the server URL (declare the `apprise_config` volume).
 The request shape is written from Apprise's documentation and was not tested against
 a running apprise-api.
+
+**Web Push** sends alerts straight to a browser, desktop or phone, with no third-party app. In
+Notifications, add a channel of type **Web Push** on the device that should receive alerts: the
+browser asks for permission, subscribes, and the subscription is stored as the channel, so each
+device gets its own channel (and its own test button). It works with Cronko closed, as long as the
+browser is running. It needs HTTPS (or `localhost`) and a browser with push support; on iOS the site
+must be added to the home screen first.
+
+- Cronko makes a VAPID key pair on first use and keeps it in the settings table. The public key is
+  served to the browser; the private one never leaves the server. Deleting the `vapid_*` settings
+  invalidates every subscription.
+- A subscription the push service reports as gone (404/410) is not retried: the delivery log shows
+  "subscription expired or removed", so remove that channel and add it again.
+- Messages are encrypted end to end between Cronko and the browser; the push service sees only the
+  endpoint. The endpoint is a capability URL, so it is stored like the other channel secrets and
+  never written to logs or error messages.
+- It was tested against a local HTTPS push service (real encryption and VAPID signature), not
+  against Google, Mozilla or Apple push services or a real browser: send a test from the channel row first.
 
 ### Webhook headers and body template
 
@@ -290,6 +309,30 @@ curl -X POST "$CRONKO/api/import/kuma?dryRun=true" -H "Authorization: Bearer $TO
   -H "Content-Type: application/json" --data @kuma-backup.json
 ```
 
+### Importing from Cronitor or Dead Man's Snitch
+
+The same dry-run rules apply (`?dryRun=true`, existing names skipped, imported monitors get new
+ping URLs).
+
+**Cronitor** (`POST /api/import/cronitor`). Save the list with
+`curl -u API_KEY: https://cronitor.io/api/monitors -o monitors.json` and send that file.
+Cronitor is not called from Cronko: pagination was not verified, and a silent partial import
+is worse than a file you can check. `job` and `heartbeat` monitors are imported (`check` and
+`site` are active checks and are listed as skipped). The schedule can be a cron expression
+(with its `timezone`), `every N minutes|hours|days|s` or `at HH:MM` (a daily cron); the first
+entry of `schedules` is used on newer API versions. `grace_seconds` and `paused` carry over.
+Notification lists, assertions and tolerances are not imported and are named in the warnings.
+
+**Dead Man's Snitch** (`POST /api/import/dms`). Send the JSON array from `GET /v1/snitches`, or
+`{"apiKey": "..."}` and Cronko fetches it from `api.deadmanssnitch.com` (the key is sent as the
+HTTP Basic user and is never stored or logged). Intervals map as `15_minute` 15 min,
+`30_minute` 30 min, `hourly`, `daily`, `weekly` and `monthly` (taken as 30 days); the API has
+no grace period, so the default is used. Tags and the paused state carry over; notes and alert
+e-mails do not.
+
+These two importers follow each service's published API documentation; they were not run
+against a real account. Check a dry run before importing.
+
 ### Exporting and importing configuration
 
 `GET /api/export` returns your setup as JSON (`format: "cronko-export"`): monitors
@@ -408,13 +451,31 @@ then a code (or a recovery code). Disabling needs the password and a code.
   `UPDATE users SET totp_secret = NULL, totp_enabled_at = NULL, totp_last_step = NULL;`
   (and `DELETE FROM recovery_codes;`).
 
+#### Security keys (WebAuthn)
+
+Once the authenticator app is on, Settings → Two-factor authentication → Security keys lets you
+register hardware keys or passkeys. At sign-in the second step then offers **Use a security key**
+next to the code field; the code and the recovery codes keep working, so a lost key never locks you
+out. Removing a key asks for the password, and turning the authenticator app off removes the keys.
+
+- It needs a known address: set `PUBLIC_URL` (or `WEBAUTHN_ORIGIN`, and `WEBAUTHN_RP_ID` if the
+  relying party is a parent domain). Without one the section only says so, because a wrong origin
+  would make registered keys useless. Changing the host later invalidates the keys.
+- The key is a second factor, not a replacement for the password: touching it is enough, and
+  PIN or fingerprint is not demanded. Attestation is not checked (any authenticator is accepted).
+- Each login challenge is accepted once, the signature counter must not go backwards, and
+  failures share the login rate limit. API tokens cannot manage keys.
+- Tested against a software authenticator that produces real signed registrations and assertions
+  (a bad signature, origin, relying party, a replay and a cloned counter are all refused), **not**
+  against physical keys or a browser: try your own key after enabling it.
+
 ## Security
 
 - Passwords: bcrypt (12 rounds). Sessions: HS256 JWT, 15-minute access token and
   7-day refresh token in `HttpOnly`, `SameSite=Strict` cookies (`Secure` in production).
 - CSRF: state-changing requests with a cookie session must be same-origin
   (`Sec-Fetch-Site`, falling back to `Origin`); `Authorization` clients are exempt.
-- Optional TOTP two-factor login with hashed single-use recovery codes (see above).
+- Optional TOTP two-factor login with hashed single-use recovery codes, plus optional security keys (see above).
 - Logout revokes the access and refresh tokens server-side (denylist by `jti`), not only the cookies.
 - Login limited to 5 attempts per 15 minutes per IP and e-mail (password and 2FA code share the count); pings are rate limited per token.
 - Public status pages expose only names, states, availability and incident times; never tokens or job output.

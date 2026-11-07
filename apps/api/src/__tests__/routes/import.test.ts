@@ -146,4 +146,138 @@ describe("importers (HTTP, real SQLite)", () => {
       expect((await post("/api/import/kuma", { foo: 1 })).status).toBe(400)
     })
   })
+  describe("cronitor", () => {
+    it("imports jobs and heartbeats and skips active checks", async () => {
+      const res = await post("/api/import/cronitor", fixture("cronitor-monitors.json"))
+      const { data } = (await res.json()) as Report
+      expect(data.created.map((c) => c.name)).toEqual([
+        "Daily Database Backup",
+        "worker-alive",
+        "nightly-report",
+        "Multi schedule",
+        "long-grace",
+      ])
+      const reasons = Object.fromEntries(data.skipped.map((s) => [s.source, s.reason]))
+      expect(reasons.Homepage).toMatch(/active check/)
+      expect(reasons["Marketing site"]).toMatch(/active check/)
+      expect(reasons["Odd schedule"]).toMatch(/unsupported schedule/)
+      expect(reasons["No schedule"]).toMatch(/no schedule/)
+    })
+
+    it("maps cron, interval, time-of-day, grace, tags and paused", async () => {
+      await post("/api/import/cronitor", fixture("cronitor-monitors.json"))
+      const byName = Object.fromEntries((await monitors()).map((m) => [m.name, m]))
+      expect(byName["Daily Database Backup"]).toMatchObject({
+        scheduleCron: "0 2 * * *",
+        timezone: "America/New_York",
+        gracePeriodSeconds: 300,
+        tags: ["prod", "db"],
+        paused: false,
+      })
+      expect(byName["worker-alive"]).toMatchObject({
+        expectedIntervalSeconds: 300,
+        scheduleCron: null,
+        paused: true,
+      })
+      expect(byName["nightly-report"]).toMatchObject({
+        scheduleCron: "30 14 * * *",
+        timezone: "Europe/Lisbon",
+      })
+      expect(byName["Multi schedule"]?.expectedIntervalSeconds).toBe(3600)
+      expect(byName["long-grace"]?.gracePeriodSeconds).toBe(86_400)
+    })
+
+    it("warns about what it cannot import", async () => {
+      const res = await post("/api/import/cronitor?dryRun=true", fixture("cronitor-monitors.json"))
+      const { data } = (await res.json()) as Report
+      const warn = (name: string) => data.created.find((c) => c.name === name)?.warnings.join(" ")
+      expect(warn("Daily Database Backup")).toContain("notify")
+      expect(warn("Daily Database Backup")).toContain("assertions")
+      expect(warn("Multi schedule")).toContain("only the first schedule")
+      expect(warn("long-grace")).toContain("reduced")
+      expect(await monitors()).toHaveLength(0)
+    })
+
+    it("accepts a bare array and rejects other bodies", async () => {
+      const bare = (fixture("cronitor-monitors.json") as { monitors: unknown[] }).monitors
+      expect((await post("/api/import/cronitor?dryRun=true", bare)).status).toBe(200)
+      expect((await post("/api/import/cronitor", { nope: 1 })).status).toBe(400)
+    })
+
+    it("is safe to run twice", async () => {
+      await post("/api/import/cronitor", fixture("cronitor-monitors.json"))
+      const again = (await (
+        await post("/api/import/cronitor", fixture("cronitor-monitors.json"))
+      ).json()) as Report
+      expect(again.data.created).toHaveLength(0)
+      expect(again.data.skipped.filter((s) => /already exists/.test(s.reason ?? ""))).toHaveLength(
+        5,
+      )
+    })
+  })
+
+  describe("dead man's snitch", () => {
+    it("maps the intervals the API documents and skips unknown ones", async () => {
+      const res = await post("/api/import/dms", fixture("dms-snitches.json"))
+      const { data } = (await res.json()) as Report
+      expect(data.created.map((c) => c.name)).toEqual([
+        "Daily Backups",
+        "Hourly Emails",
+        "Monthly invoices",
+        "Quarter hour",
+      ])
+      expect(data.skipped.map((s) => s.reason)).toEqual(['unknown interval "yearly"'])
+      const byName = Object.fromEntries((await monitors()).map((m) => [m.name, m]))
+      expect(byName["Daily Backups"]).toMatchObject({
+        expectedIntervalSeconds: 86_400,
+        tags: ["production", "critical"],
+        paused: false,
+      })
+      expect(byName["Hourly Emails"]?.expectedIntervalSeconds).toBe(3600)
+      expect(byName["Quarter hour"]?.expectedIntervalSeconds).toBe(900)
+      expect(byName["Monthly invoices"]).toMatchObject({
+        expectedIntervalSeconds: 2_592_000,
+        paused: true,
+      })
+    })
+
+    it("warns about notes, alert e-mails and the check-in token", async () => {
+      const res = await post("/api/import/dms?dryRun=true", fixture("dms-snitches.json"))
+      const { data } = (await res.json()) as Report
+      const warn = (name: string) => data.created.find((c) => c.name === name)?.warnings.join(" ")
+      expect(warn("Daily Backups")).toContain("notes are not imported")
+      expect(warn("Hourly Emails")).toContain("alert e-mails")
+      expect(warn("Monthly invoices")).toContain("30 days")
+      expect(warn("Daily Backups")).toContain("check-in token")
+    })
+
+    it("fetches with the API key as the Basic auth user and never sends it anywhere else", async () => {
+      const fetchMock = vi.fn(
+        async () => new Response(JSON.stringify(fixture("dms-snitches.json"))),
+      )
+      vi.stubGlobal("fetch", fetchMock)
+      const res = await post("/api/import/dms?dryRun=true", { apiKey: "KEY123" })
+      expect(res.status).toBe(200)
+      const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
+      expect(url).toBe("https://api.deadmanssnitch.com/v1/snitches")
+      expect(new Headers(init.headers).get("authorization")).toBe(
+        `Basic ${Buffer.from("KEY123:").toString("base64")}`,
+      )
+      expect(JSON.stringify(await res.json())).not.toContain("KEY123")
+    })
+
+    it("reports a wrong key (401) and an unreachable service (502)", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => new Response("{}", { status: 401 })),
+      )
+      expect((await post("/api/import/dms", { apiKey: "bad" })).status).toBe(401)
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => Promise.reject(new Error("down"))),
+      )
+      expect((await post("/api/import/dms", { apiKey: "k" })).status).toBe(502)
+      expect((await post("/api/import/dms", { nope: 1 })).status).toBe(400)
+    })
+  })
 })

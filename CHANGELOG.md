@@ -7,8 +7,13 @@ include breaking changes; they are called out below.
 
 ## [Unreleased]
 
+### Security
+
+- A read-only API token no longer receives the monitors' ping tokens: every JSON answer to a `read` token has the `token` field removed. Before, `GET /api/monitors` handed them out, so a leaked read token let someone send pings for every monitor. Sessions and `write` tokens are unchanged (use the ping key to avoid exposing the tokens to CI).
+
 ### Added
 
+- Bulk actions on the monitor list: tick monitors (or "select all" of what the search shows) and pause, resume, mute for an hour, unmute, add or remove a tag, or delete them in one go. The API is `POST /api/monitors/bulk` (up to 200 ids; each id succeeds or fails on its own; one audit event per request, with the ids listed for deletions). The search box now also matches the slug and the tags.
 - Five notification channels: Google Chat, Mattermost and Rocket.Chat (incoming webhooks), Gotify (server URL and app token, priorities by event) and Matrix (homeserver, access token and room id; plain, unencrypted messages). No migration.
 - Apprise channel: notifies through a self-hosted apprise-api, with a saved configuration key or inline URLs, an optional tag and event-to-type mapping.
 - Badges: `GET /badge/tag/:tag` summarises a tag (worst state wins, paused ignored) and is public only while a status page for that tag is switched on; unknown, unpublished and empty tags all answer the same 404. Every badge also comes as `.json` and `.shields.json` (shields.io endpoint schema), and `?states=simple` gives the three-state wording (up, late, down, paused).

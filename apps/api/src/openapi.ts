@@ -811,6 +811,68 @@ const spec = {
         },
       },
     },
+    "/auth/2fa/webauthn": {
+      get: {
+        summary: "Security keys registered for the signed-in user (session only)",
+        security: [{ bearerAuth: [] }],
+        description:
+          "`available` is false until PUBLIC_URL (or WEBAUTHN_ORIGIN) is set. Credentials never include key material.",
+        responses: {
+          "200": {
+            description:
+              "{ data: { available, credentials: [{ id, name, createdAt, lastUsedAt }] } }",
+          },
+        },
+      },
+    },
+    "/auth/2fa/webauthn/register/options": {
+      post: {
+        summary: "Start adding a security key (needs the authenticator app on first)",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        responses: {
+          "200": {
+            description: "PublicKeyCredentialCreationOptions for navigator.credentials.create",
+          },
+          "400": { description: "PUBLIC_URL is not configured" },
+          "409": { description: "TOTP is not enabled yet" },
+        },
+      },
+    },
+    "/auth/2fa/webauthn/register/verify": {
+      post: {
+        summary: "Finish adding a security key with the browser's attestation",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        description: "One try per challenge. Body: `{ name, response }`.",
+        responses: {
+          "201": { description: "Registered" },
+          "400": { description: "The key could not be verified" },
+        },
+      },
+    },
+    "/auth/2fa/webauthn/{id}/delete": {
+      post: {
+        summary: "Remove a security key (needs the password)",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        responses: {
+          "200": { description: "ok" },
+          "401": { description: "Wrong password" },
+          "404": { description: "No such key" },
+        },
+      },
+    },
+    "/auth/login/webauthn": {
+      post: {
+        summary: "Second login step with a security key",
+        description:
+          "Body: `{ challenge, response }` where `challenge` is the login token from /auth/login and `response` is the assertion. The challenge inside it is accepted once. Failures share the login rate limit.",
+        responses: {
+          "200": { description: "Signed in (cookies set)" },
+          "401": { description: "Challenge expired, or the key was not accepted" },
+          "429": { description: "Too many attempts" },
+        },
+      },
+    },
     "/auth/2fa/disable": {
       post: {
         summary: "Disable 2FA: requires the password and a TOTP or recovery code",
@@ -910,6 +972,19 @@ const spec = {
         responses: {
           "201": { description: "Monitor created" },
           "409": { description: "Name already exists" },
+        },
+      },
+    },
+    "/api/monitors/bulk": {
+      post: {
+        summary: "Apply one action to up to 200 monitors",
+        description:
+          "Body: `{ ids: string[], action }` where action is `pause`, `resume`, `delete`, `mute` (with `minutes`, null to unmute), `addTag` or `removeTag` (with `tag`). Each id succeeds or fails on its own: the response is `{ data: { succeeded, failed: [{ id, reason }] } }` with reasons `not_found`, `too_many_tags` or `error`. Needs a session or a write token.",
+        responses: {
+          "200": { description: "Result per request" },
+          "400": {
+            description: "Empty or oversized id list, unknown action, invalid tag or minutes",
+          },
         },
       },
     },
@@ -1106,6 +1181,46 @@ const spec = {
           "400": { description: "Unrecognised body" },
           "401": { description: "Healthchecks rejected the API key" },
           "502": { description: "Healthchecks unreachable or failed" },
+        },
+      },
+    },
+    "/api/import/cronitor": {
+      post: {
+        summary: "Import jobs and heartbeats from a saved Cronitor monitor list",
+        description:
+          "Body: the saved response of GET https://cronitor.io/api/monitors (a bare array or {monitors: [...]}). Jobs and heartbeats are imported (cron, every N unit and at HH:MM schedules); checks and sites are active checks and are skipped. Names that already exist are skipped.",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        parameters: [
+          {
+            name: "dryRun",
+            in: "query",
+            schema: { type: "boolean" },
+            description: "Report what would happen without creating anything",
+          },
+        ],
+        responses: {
+          "200": { description: "{ data: { dryRun, created[], skipped[] } }" },
+          "400": { description: "Body is not in the expected shape" },
+        },
+      },
+    },
+    "/api/import/dms": {
+      post: {
+        summary: "Import snitches from Dead Man's Snitch",
+        description:
+          "Body: the JSON array of GET /v1/snitches, or {apiKey} to fetch it from api.deadmanssnitch.com. The intervals 15_minute, 30_minute, hourly, daily, weekly and monthly (30 days) are mapped; the grace period is the default. Names that already exist are skipped.",
+        security: [{ bearerAuth: [] }, { csrf: [] }],
+        parameters: [
+          {
+            name: "dryRun",
+            in: "query",
+            schema: { type: "boolean" },
+            description: "Report what would happen without creating anything",
+          },
+        ],
+        responses: {
+          "200": { description: "{ data: { dryRun, created[], skipped[] } }" },
+          "400": { description: "Body is not in the expected shape" },
         },
       },
     },
@@ -1323,6 +1438,15 @@ const spec = {
         security: [{ bearerAuth: [] }, { csrf: [] }],
         parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
         responses: { "200": { description: "Deleted" }, "404": { description: "Not found" } },
+      },
+    },
+    "/api/notifications/webpush/key": {
+      get: {
+        summary: "The VAPID public key a browser needs to subscribe to Web Push",
+        description:
+          "Public by design; the key pair is generated on first use. A Web Push channel is created with type `webpush` and the browser's `PushSubscription` (`endpoint` over https plus `keys.p256dh` and `keys.auth`).",
+        security: [{ bearerAuth: [] }],
+        responses: { "200": { description: "{ data: { publicKey } }" } },
       },
     },
     "/api/notifications/deliveries": {

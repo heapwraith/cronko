@@ -51,6 +51,13 @@ const envSchema = z
       .regex(/^[A-Za-z0-9-]+$/)
       .optional(),
     TRUSTED_PROXY_IPS: z.string().optional(),
+    // Security keys (WebAuthn) as an extra second factor. Default: PUBLIC_URL's origin and host.
+    // The relying party id must be the host (or a parent domain) users reach Cronko on.
+    WEBAUTHN_ORIGIN: z.url().optional(),
+    WEBAUTHN_RP_ID: z
+      .string()
+      .regex(/^[a-z0-9.-]+$/i)
+      .optional(),
     // Turn the password form off when SSO is the only way in.
     PASSWORD_LOGIN_DISABLED: z.enum(["true", "false"]).default("false"),
     // Extra origins allowed to make state-changing requests (reverse proxy / custom domain)

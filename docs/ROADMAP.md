@@ -78,7 +78,7 @@ not verified in depth, so claims about them are unconfirmed. In order of value o
 1. ~~Ping API parity: `/log`, `/<exit-status>` in the path, and `rid=<uuid>` to pair concurrent start/finish runs.~~ Done (Unreleased).
 2. ~~Generic webhook with a custom template and headers (covers many missing channels at once).~~ Done (Unreleased).
 3. ~~Cheap channels: Google Chat, Mattermost/Rocket.Chat, Gotify, Matrix.~~ Done (Unreleased). Opsgenie was left out on purpose: Atlassian has announced its end of sale, which I could not re-verify.
-4. ~~2FA (TOTP, later WebAuthn): the UI is internet-facing and holds ping tokens.~~ TOTP done (Settings, recovery codes, login code step; see README). WebAuthn is still open.
+4. ~~2FA (TOTP, later WebAuthn): the UI is internet-facing and holds ping tokens.~~ TOTP done (Settings, recovery codes, login code step; see README). WebAuthn security keys done (Unreleased); tested with a software authenticator only.
 5. ~~Scheduled automatic SQLite backup and a JSON export of monitors and channels.~~ Done (unreleased): `BACKUP_DIR`, `GET /api/export`, `POST /api/import/cronko`.
 6. ~~Ping by slug with a project key and `?create=1` (provisioning from CI/IaC).~~ Done (Unreleased).
 7. ~~Badges per tag, JSON/Shields.io formats, three states.~~ Done (Unreleased).
@@ -86,9 +86,11 @@ not verified in depth, so claims about them are unconfirmed. In order of value o
 9. ~~Proxy-header login and/or OIDC for self-hosters with SSO.~~ Done (Unreleased); only tested against a fake provider, not a real IdP.
 10. ~~Official GitHub Action and a clean OpenAPI for generated clients.~~ Done (Unreleased); the action is untested on a real runner until its workflow runs in CI.
 
-Later: text search and bulk actions in the UI, Web Push, teams and roles, SMS/WhatsApp (paid and
+Later: Web Push, teams and roles, SMS/WhatsApp (paid and
 against the one-container model). To check: that `read` API tokens omit ping tokens from responses,
 and that the Prometheus output exposes grace and paused like Healthchecks does.
+Later: text search and bulk actions in the UI, Web Push, teams and roles, SMS/WhatsApp (paid and
+against the one-container model).
 
 ## Non-goals
 
