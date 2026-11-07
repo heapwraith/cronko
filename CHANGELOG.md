@@ -9,6 +9,7 @@ include breaking changes; they are called out below.
 
 ### Added
 
+- Importers for Cronitor (`POST /api/import/cronitor`, a saved monitor list: jobs and heartbeats; cron, `every N unit` and `at HH:MM` schedules) and Dead Man's Snitch (`POST /api/import/dms`, the snitch list or an API key). Both support `?dryRun=true` and report what they could not carry over.
 - Five notification channels: Google Chat, Mattermost and Rocket.Chat (incoming webhooks), Gotify (server URL and app token, priorities by event) and Matrix (homeserver, access token and room id; plain, unencrypted messages). No migration.
 - Apprise channel: notifies through a self-hosted apprise-api, with a saved configuration key or inline URLs, an optional tag and event-to-type mapping.
 - Badges: `GET /badge/tag/:tag` summarises a tag (worst state wins, paused ignored) and is public only while a status page for that tag is switched on; unknown, unpublished and empty tags all answer the same 404. Every badge also comes as `.json` and `.shields.json` (shields.io endpoint schema), and `?states=simple` gives the three-state wording (up, late, down, paused).
