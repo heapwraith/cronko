@@ -89,3 +89,25 @@ describe("cronko-run wrapper (real sh + curl)", () => {
     expect(spawnSync("sh", [SCRIPT, "https://example.com/nope", "true"]).status).toBe(64)
   })
 })
+
+describe("cronko-run: CRONKO_FAIL_ON_PING_ERROR", () => {
+  const down = "http://127.0.0.1:9/ping/tok"
+  const exec = (env: Record<string, string>, ...cmd: string[]) =>
+    new Promise<number | null>((done) => {
+      const child = spawn("sh", [SCRIPT, down, "--", ...cmd], {
+        env: { PATH: process.env.PATH ?? "", CRONKO_TIMEOUT: "2", ...env },
+      })
+      child.on("close", (status) => done(status))
+    })
+
+  it("keeps the job's exit code by default when Cronko is unreachable", async () => {
+    expect(await exec({}, "sh", "-c", "exit 0")).toBe(0)
+    expect(await exec({}, "sh", "-c", "exit 5")).toBe(5)
+  })
+
+  it("exits 75 only when the job succeeded and the ping failed", async () => {
+    const env = { CRONKO_FAIL_ON_PING_ERROR: "1" }
+    expect(await exec(env, "sh", "-c", "exit 0")).toBe(75)
+    expect(await exec(env, "sh", "-c", "exit 5")).toBe(5)
+  })
+})
