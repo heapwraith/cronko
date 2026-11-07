@@ -78,7 +78,7 @@ Or run the published image (amd64 and arm64) without cloning:
 docker run -d --name cronko -p 3000:3000 -v cronko_data:/app/data \
   -e JWT_SECRET="$(openssl rand -hex 32)" \
   -e ADMIN_EMAIL=you@example.com -e ADMIN_PASSWORD='change-me-now' \
-  ghcr.io/heapwraith/cronko:0.3
+  ghcr.io/heapwraith/cronko:0.4
 ```
 
 Data lives in the `cronko_data` volume (`/app/data/cronko.db`). Behind a reverse

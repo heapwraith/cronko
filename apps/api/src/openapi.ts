@@ -4,7 +4,7 @@ const spec = {
   openapi: "3.1.0",
   info: {
     title: "Cronko",
-    version: "0.3.0",
+    version: "0.4.0",
     description: "Heartbeat monitoring for cron jobs, scripts, and ETLs.",
   },
   servers: [{ url: "http://localhost:3001", description: "Local development" }],
