@@ -7,6 +7,14 @@ include breaking changes; they are called out below.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-06
+
+Adds Prometheus metrics, scoped API tokens, importers, Healthchecks-style ping parity, TOTP
+two-factor login, scheduled backups and a JSON configuration export. **Upgrading from 0.3**
+needs only a new image: migrations `0017` to `0020` are applied on boot. Logout now revokes the
+session on the server, and sessions issued before the upgrade stay valid until they expire.
+If you enable 2FA, rotating `JWT_SECRET` invalidates the enrolled secrets (see the README).
+
 ### Added
 
 - Ping API parity with Healthchecks: `/ping/:token/log` stores an event (optional body, up to 10 KB) without changing state, schedule, runs or statistics, and `GET /api/monitors/:id/logs` lists them; `/ping/:token/<exit-status>` (0-255) is a success for 0 and a failure otherwise, like `?exit=`; `rid=<uuid>` on `/start` pairs it with the `/finish`, `/fail` or success ping carrying the same id, so concurrent runs are timed correctly (and are not flagged as overlapping). A `rid` that is not a UUID gets `400`; without `rid` nothing changes. Log events are API only for now (no UI). Migration `0018`.
@@ -107,6 +115,7 @@ when a ping is late, missing or reports a failure.
 - Security: fetch-metadata CSRF protection, strict CSP, rate-limited pings and login, audit log.
 - Tests against a real SQLite database, a Playwright end-to-end smoke test, and CI with a Docker smoke test.
 
-[Unreleased]: https://github.com/heapwraith/cronko/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/heapwraith/cronko/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/heapwraith/cronko/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/heapwraith/cronko/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/heapwraith/cronko/releases/tag/v0.2.0
